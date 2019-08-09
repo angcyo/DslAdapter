@@ -1,0 +1,2 @@
+include ':DslAdapter'
+rootProject.name='DslAdapter'
