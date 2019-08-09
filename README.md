@@ -180,6 +180,23 @@ private fun DslAdapter.来点数据() {
 
 ```
 
+# 使用方法
+
+下载源码:
+
+```
+git clone https://github.com/angcyo/DslAdapter.git --depth=1
+```
+
+拷贝包 `com.angcyo.dsladapter.dsl` 下的`所有文件`到您的工程.
+
+关于更新:
+
+如果未修改源码, 可以直接覆盖.
+如果修改了源码 可以使用 AS 提供的 `Compare with Clipboard` 功能 进行比对合并.
+
+加油 你可以的!
+
 ---
 **群内有`各(pian)种(ni)各(jin)样(qun)`的大佬,等你来撩.**
 
