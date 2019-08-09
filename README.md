@@ -137,6 +137,42 @@ open class DslLoadMoreItem : DslAdapterItem() {
 
 ```
 
+# 最终使用代码
+
+```kotlin
+private fun initLayout() {
+    dslViewHolder.v<RecyclerView>(R.id.recycler_view).apply {
+        layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+        adapter = dslAdapter
+    }
+
+    dslAdapter.来点数据()
+} 
+
+private fun DslAdapter.来点数据() {
+    val dslAdapter = this
+    for (i in 0..10) {
+        //2种使用item的方式, 喜欢哪种方式, 就用哪一种
+        dslAdapter.dslTextItem()
+        dslAdapter.dslItem(R.layout.item_text_layout) {
+            itemBind = { itemHolder, itemPosition, _ ->
+                itemHolder.v<TextView>(R.id.text_view).text = "文本位置:$itemPosition"
+            }
+        }
+
+        for (j in 0..0) {
+            //2种使用item的方式, 喜欢哪种方式, 就用哪一种
+            dslAdapter.dslImageItem()
+            dslAdapter.dslItem(R.layout.item_image_layout) {
+                itemBind = { itemHolder, itemPosition, _ ->
+                    itemHolder.v<TextView>(R.id.text_view).text = "文本位置:$itemPosition"
+                }
+            }
+        }
+    }
+}
+
+```
 
 ---
 **群内有`各(pian)种(ni)各(jin)样(qun)`的大佬,等你来撩.**
