@@ -11,7 +11,6 @@ import android.view.MenuItem
 import android.widget.TextView
 import android.widget.Toast
 import com.angcyo.dsladapter.dsl.*
-
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -32,6 +31,7 @@ class MainActivity : AppCompatActivity() {
         dslViewHolder = DslViewHolder(window.decorView)
         initLayout()
         initAdapterStatus()
+        initLoadMore()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -65,25 +65,7 @@ class MainActivity : AppCompatActivity() {
             adapter = dslAdapter
         }
 
-        for (i in 0..10) {
-            //2种使用item的方式, 喜欢哪种方式, 就用哪一种
-            dslAdapter.dslTextItem()
-            dslAdapter.dslItem(R.layout.item_text_layout) {
-                itemBind = { itemHolder, itemPosition, _ ->
-                    itemHolder.v<TextView>(R.id.text_view).text = "文本位置:$itemPosition"
-                }
-            }
-
-            for (j in 0..0) {
-                //2种使用item的方式, 喜欢哪种方式, 就用哪一种
-                dslAdapter.dslImageItem()
-                dslAdapter.dslItem(R.layout.item_image_layout) {
-                    itemBind = { itemHolder, itemPosition, _ ->
-                        itemHolder.v<TextView>(R.id.text_view).text = "文本位置:$itemPosition"
-                    }
-                }
-            }
-        }
+        dslAdapter.来点数据()
     }
 
     private fun initAdapterStatus() {
@@ -98,6 +80,63 @@ class MainActivity : AppCompatActivity() {
         }
         dslViewHolder.click(R.id.error) {
             dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_ERROR)
+        }
+    }
+
+    var loadPage = 0
+    private fun initLoadMore() {
+        dslAdapter.dslLoadMoreItem.onLoadMore = {
+            Toast.makeText(this@MainActivity, "加载更多", Toast.LENGTH_SHORT).show()
+
+            it.postDelay(300L) {
+                loadPage++
+                if (loadPage == 2) {
+                    //模拟加载失败
+                    dslAdapter.setLoadMore(DslLoadMoreItem.ADAPTER_LOAD_ERROR)
+                } else if (loadPage > 3) {
+                    //模拟没有更多
+                    dslAdapter.setLoadMore(DslLoadMoreItem.ADAPTER_LOAD_NO_MORE)
+                } else {
+                    dslAdapter.来点数据()
+                    dslAdapter.setLoadMore(DslLoadMoreItem.ADAPTER_LOAD_NORMAL)
+                }
+            }
+        }
+        dslViewHolder.click(R.id.load_more_enable) {
+            loadPage = 0
+            dslAdapter.setLoadMoreEnable(it.isSelected)
+            it.isSelected = !it.isSelected
+        }
+        dslViewHolder.click(R.id.load_more_error) {
+            loadPage = 0
+            dslAdapter.setLoadMore(DslLoadMoreItem.ADAPTER_LOAD_ERROR)
+        }
+        dslViewHolder.click(R.id.load_more_no) {
+            loadPage = 0
+            dslAdapter.setLoadMore(DslLoadMoreItem.ADAPTER_LOAD_NO_MORE)
+        }
+    }
+}
+
+private fun DslAdapter.来点数据() {
+    val dslAdapter = this
+    for (i in 0..10) {
+        //2种使用item的方式, 喜欢哪种方式, 就用哪一种
+        dslAdapter.dslTextItem()
+        dslAdapter.dslItem(R.layout.item_text_layout) {
+            itemBind = { itemHolder, itemPosition, _ ->
+                itemHolder.v<TextView>(R.id.text_view).text = "文本位置:$itemPosition"
+            }
+        }
+
+        for (j in 0..0) {
+            //2种使用item的方式, 喜欢哪种方式, 就用哪一种
+            dslAdapter.dslImageItem()
+            dslAdapter.dslItem(R.layout.item_image_layout) {
+                itemBind = { itemHolder, itemPosition, _ ->
+                    itemHolder.v<TextView>(R.id.text_view).text = "文本位置:$itemPosition"
+                }
+            }
         }
     }
 }

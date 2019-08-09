@@ -49,4 +49,30 @@
             android:layout_height="wrap_content"
             android:text="错误" />
     </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <Button
+            android:id="@+id/load_more_enable"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="关闭/激活 加载更多" />
+
+        <Button
+            android:id="@+id/load_more_error"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="加载更多失败" />
+
+        <Button
+            android:id="@+id/load_more_no"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="无更多" />
+    </LinearLayout>
 </android.support.constraint.ConstraintLayout>

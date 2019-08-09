@@ -16,12 +16,17 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>() {
 
     /*为了简单起见, 这里写死套路, 理论上应该用状态器管理的.*/
     var dslAdapterStatusItem = DslAdapterStatusItem()
+    var dslLoadMoreItem = DslLoadMoreItem()
 
     private val adapterItems = mutableListOf<DslAdapterItem>()
 
     override fun getItemViewType(position: Int): Int {
         return if (dslAdapterStatusItem.isNoStatus()) {
-            adapterItems[position].itemLayoutId
+            if (isLoadMorePosition(position)) {
+                dslLoadMoreItem.itemLayoutId
+            } else {
+                adapterItems[position].itemLayoutId
+            }
         } else {
             dslAdapterStatusItem.itemLayoutId
         }
@@ -37,27 +42,85 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>() {
 
     override fun getItemCount(): Int {
         return if (dslAdapterStatusItem.isNoStatus()) {
-            adapterItems.size
+            if (dslLoadMoreItem.itemEnableLoadMore) {
+                adapterItems.size + 1
+            } else {
+                adapterItems.size
+            }
         } else {
             1
         }
     }
 
+    /**当前位置, 是否是加载更多的[position]*/
+    private fun isLoadMorePosition(position: Int): Boolean {
+        val size = adapterItems.size
+        var result = false
+        if (dslLoadMoreItem.itemEnableLoadMore) {
+            if (position == size) {
+                result = true
+            }
+        }
+        return result
+    }
+
     override fun onBindViewHolder(viewHolder: DslViewHolder, position: Int) {
+        val dslItem = getAdapterItem(position)
+        dslItem.itemDslAdapter = this
+        dslItem.itemBind.invoke(viewHolder, position, dslItem)
+    }
+
+    fun getAdapterItem(position: Int): DslAdapterItem {
         val dslItem: DslAdapterItem
         if (dslAdapterStatusItem.isNoStatus()) {
-            dslItem = adapterItems[position]
+            if (isLoadMorePosition(position)) {
+                dslItem = dslLoadMoreItem
+            } else {
+                dslItem = adapterItems[position]
+            }
         } else {
             dslItem = dslAdapterStatusItem
         }
-        dslItem.itemDslAdapter = this
-        dslItem.itemBind.invoke(viewHolder, position, dslItem)
+        return dslItem
+    }
+
+    override fun onViewAttachedToWindow(holder: DslViewHolder) {
+        super.onViewAttachedToWindow(holder)
+        if (holder.adapterPosition in 0 until itemCount) {
+            getAdapterItem(holder.adapterPosition).onItemViewAttachedToWindow.invoke(holder)
+        }
+    }
+
+    override fun onViewDetachedFromWindow(holder: DslViewHolder) {
+        super.onViewDetachedFromWindow(holder)
+        if (holder.adapterPosition in 0 until itemCount) {
+            getAdapterItem(holder.adapterPosition).onItemViewDetachedToWindow.invoke(holder)
+        }
     }
 
     /**设置[Adapter]需要显示情感图的状态*/
     fun setAdapterStatus(status: Int) {
         dslAdapterStatusItem.itemAdapterStatus = status
         notifyDataSetChanged()
+    }
+
+    fun setLoadMoreEnable(enable: Boolean = true) {
+        if (dslLoadMoreItem.itemEnableLoadMore == enable) {
+            return
+        }
+        dslLoadMoreItem.itemEnableLoadMore = enable
+        if (enable) {
+            notifyItemInserted(adapterItems.size)
+        } else {
+            notifyItemRemoved(adapterItems.size)
+        }
+    }
+
+    fun setLoadMore(status: Int) {
+        dslLoadMoreItem.itemLoadMoreStatus = status
+        if (dslLoadMoreItem.itemEnableLoadMore) {
+            notifyItemChanged(adapterItems.size)
+        }
     }
 
     /**

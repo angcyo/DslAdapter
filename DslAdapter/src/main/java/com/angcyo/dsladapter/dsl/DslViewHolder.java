@@ -55,4 +55,19 @@ public class DslViewHolder extends RecyclerView.ViewHolder {
         }
     }
 
+    public void post(Runnable runnable) {
+        itemView.post(runnable);
+    }
+
+    public void postDelay(Runnable runnable, long delayMillis) {
+        itemView.postDelayed(runnable, delayMillis);
+    }
+
+    public void postDelay(long delayMillis, Runnable runnable) {
+        postDelay(runnable, delayMillis);
+    }
+
+    public void removeCallbacks(Runnable runnable) {
+        itemView.removeCallbacks(runnable);
+    }
 }
