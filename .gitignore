@@ -11,7 +11,7 @@ build
 .externalNativeBuild
 /.idea/
 /gradle/wrapper/gradle-wrapper.properties
-gradle/
+#gradle/
 gradlew
 gradlew.bat
 /RLibrary2
