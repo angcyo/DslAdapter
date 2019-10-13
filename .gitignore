@@ -12,8 +12,8 @@ build
 /.idea/
 #/gradle/wrapper/gradle-wrapper.properties
 #gradle/
-gradlew
-gradlew.bat
+#gradlew
+#gradlew.bat
 /RLibrary2
 /RLibrary
 /apk
