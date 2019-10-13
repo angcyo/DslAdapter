@@ -8,11 +8,11 @@ Dsl 的形式使用 RecyclerView.Adapter, 支持情感图状态切换, 加载更
 
 # 即将支持
 
-- [ ] 分组折叠 (类似QQ联系人好友分组,展开和折叠的效果)
+- [x] 分组折叠 (类似QQ联系人好友分组,展开和折叠的效果)
 - [ ] Item悬停 (类似QQ联系人好友分组,悬停的效果)
 - [ ] 常规的分割线 (一会儿占满屏幕 一会儿有点边距的效果)
 - [ ] 支持单选/多选
-- [ ] 支持某一个Item 定向更新多个其他Item
+- [x] 支持某一个Item 定向更新多个其他Item
 - [ ] 支持群组功能 (指定连续的几个相同/不同的item为一组)
 
 # 使用
@@ -185,7 +185,32 @@ private fun DslAdapter.来点数据() {
 
 # 使用方法
 
-下载源码:
+## 1.JitPack
+
+根 `build.gradle`
+```
+allprojects {
+	repositories {
+		...
+		maven { url 'https://jitpack.io' }
+	}
+}
+```
+
+```
+dependencies {
+    implementation 'com.github.angcyo:DslAdapter:xxx'
+}
+```
+
+快照版本:(能够保持最新代码)
+```
+dependencies {
+    implementation 'com.github.angcyo:DslAdapter:master-SNAPSHOT'
+}
+```
+
+## 2.下载源码
 
 ```
 git clone https://github.com/angcyo/DslAdapter.git --depth=1
