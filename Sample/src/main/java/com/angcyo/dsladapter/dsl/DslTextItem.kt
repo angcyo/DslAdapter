@@ -1,6 +1,8 @@
 package com.angcyo.dsladapter.dsl
 
 import android.widget.TextView
+import com.angcyo.dsladapter.DslAdapterItem
+import com.angcyo.dsladapter.DslViewHolder
 import com.angcyo.dsladapter.R
 
 /**

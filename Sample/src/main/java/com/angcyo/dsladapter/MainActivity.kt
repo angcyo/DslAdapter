@@ -10,7 +10,8 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.TextView
 import android.widget.Toast
-import com.angcyo.dsladapter.dsl.*
+import com.angcyo.dsladapter.dsl.dslImageItem
+import com.angcyo.dsladapter.dsl.dslTextItem
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -61,6 +62,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         dslViewHolder.v<RecyclerView>(R.id.recycler_view).apply {
+            //防止在折叠/展开 即 itemAdd/itemRemove 的时候, 自动滚动到顶部.
+            //这个属性决定了, adapter 中的item 改变, 不会影响 RecyclerView 自身的宽高属性.
+            //如果设置了true, 并且又想影响RecyclerView 自身的宽高属性. 调用 notifyDataSetChanged(),
+            //否则统一 使用notifyItemXXX 变种方法
+            setHasFixedSize(true)
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
             adapter = dslAdapter
         }
@@ -98,6 +104,16 @@ class MainActivity : AppCompatActivity() {
                     dslAdapter.setLoadMore(DslLoadMoreItem.ADAPTER_LOAD_NO_MORE)
                 } else {
                     dslAdapter.来点数据()
+
+//                    for (i in 0..0) {
+//                        dslAdapter.dslItem(R.layout.item_text_layout) {
+//                            itemBind = { itemHolder, itemPosition, _ ->
+//                                itemHolder.v<TextView>(R.id.text_view).text =
+//                                    "新增的数据! 文本位置:$itemPosition"
+//                            }
+//                        }
+//                    }
+
                     dslAdapter.setLoadMore(DslLoadMoreItem.ADAPTER_LOAD_NORMAL)
                 }
             }
@@ -120,7 +136,20 @@ class MainActivity : AppCompatActivity() {
 
 private fun DslAdapter.来点数据() {
     val dslAdapter = this
-    for (i in 0..10) {
+    for (i in 0..5) {
+
+        dslAdapter.dslItem(R.layout.item_group_head) {
+            itemIsGroupHead = true
+            itemBind = { itemHolder, itemPosition, adapterItem ->
+                itemHolder.tv(R.id.fold_button).text =
+                    if (itemGroupExtend) "折叠 $itemPosition" else "展开 $itemPosition"
+
+                itemHolder.click(R.id.fold_button) {
+                    itemGroupExtend = !itemGroupExtend
+                }
+            }
+        }
+
         //2种使用item的方式, 喜欢哪种方式, 就用哪一种
         dslAdapter.dslTextItem()
         dslAdapter.dslItem(R.layout.item_text_layout) {

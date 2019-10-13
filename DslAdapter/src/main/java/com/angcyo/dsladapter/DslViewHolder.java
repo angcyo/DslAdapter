@@ -1,10 +1,11 @@
-package com.angcyo.dsladapter.dsl;
+package com.angcyo.dsladapter;
 
 import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.util.SparseArray;
 import android.view.View;
+import android.widget.TextView;
 
 import java.lang.ref.WeakReference;
 
@@ -55,6 +56,16 @@ public class DslViewHolder extends RecyclerView.ViewHolder {
         }
     }
 
+    public void clickItem(final View.OnClickListener listener) {
+        click(itemView, listener);
+    }
+
+    public void click(View view, final View.OnClickListener listener) {
+        if (view != null) {
+            view.setOnClickListener(listener);
+        }
+    }
+
     public void post(Runnable runnable) {
         itemView.post(runnable);
     }
@@ -69,5 +80,9 @@ public class DslViewHolder extends RecyclerView.ViewHolder {
 
     public void removeCallbacks(Runnable runnable) {
         itemView.removeCallbacks(runnable);
+    }
+
+    public TextView tv(@IdRes int resId) {
+        return (TextView) v(resId);
     }
 }

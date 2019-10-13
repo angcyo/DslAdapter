@@ -1,2 +1,2 @@
-include ':DslAdapter'
-rootProject.name='DslAdapter'
+include ':DslAdapter', ':Sample'
+rootProject.name = 'DslAdapter'

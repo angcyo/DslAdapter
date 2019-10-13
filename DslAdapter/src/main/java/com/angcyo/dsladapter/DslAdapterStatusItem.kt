@@ -1,7 +1,6 @@
-package com.angcyo.dsladapter.dsl
+package com.angcyo.dsladapter
 
 import android.widget.TextView
-import com.angcyo.dsladapter.R
 
 /**
  * [DslAdapter] 中, 控制情感图显示状态的 [Item]
@@ -22,7 +21,8 @@ open class DslAdapterStatusItem : DslAdapterItem() {
         const val ADAPTER_STATUS_ERROR = 2
     }
 
-    var itemAdapterStatus: Int = ADAPTER_STATUS_NONE
+    var itemAdapterStatus: Int =
+        ADAPTER_STATUS_NONE
 
     override var itemBind: (itemHolder: DslViewHolder, itemPosition: Int, adapterItem: DslAdapterItem) -> Unit =
         { itemHolder, _, _ ->

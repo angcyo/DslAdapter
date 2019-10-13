@@ -1,4 +1,4 @@
-package com.angcyo.dsladapter.dsl
+package com.angcyo.dsladapter
 
 import android.support.annotation.LayoutRes
 
@@ -23,12 +23,4 @@ public fun <T : DslAdapterItem> DslAdapter.dslCustomItem(
 ) {
     addLastItem(dslItem)
     dslItem.config()
-}
-
-public fun DslAdapter.dslTextItem(config: DslTextItem.() -> Unit = {}) {
-    dslCustomItem(DslTextItem(), config)
-}
-
-public fun DslAdapter.dslImageItem(config: DslImageItem.() -> Unit = {}) {
-    dslCustomItem(DslImageItem(), config)
 }

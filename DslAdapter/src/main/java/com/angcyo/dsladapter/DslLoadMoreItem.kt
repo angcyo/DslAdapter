@@ -1,10 +1,9 @@
-package com.angcyo.dsladapter.dsl
+package com.angcyo.dsladapter
 
 import android.widget.TextView
-import com.angcyo.dsladapter.R
 
 /**
- * [Adapter] 加载更多实现
+ * [RecyclerView.Adapter] 加载更多实现
  * Email:angcyo@126.com
  * @author angcyo
  * @date 2019/08/09
@@ -18,8 +17,9 @@ open class DslLoadMoreItem : DslAdapterItem() {
     companion object {
         const val ADAPTER_LOAD_NORMAL = 0
         const val ADAPTER_LOAD_LOADING = 1
-        const val ADAPTER_LOAD_ERROR = 2
-        const val ADAPTER_LOAD_NO_MORE = 3
+        const val ADAPTER_LOAD_NO_MORE = 2
+        const val ADAPTER_LOAD_ERROR = 10
+        const val ADAPTER_LOAD_RETRY = 11
     }
 
     /**是否激活加载更多*/
@@ -30,7 +30,8 @@ open class DslLoadMoreItem : DslAdapterItem() {
         }
 
     /**加载更多当前的状态*/
-    var itemLoadMoreStatus: Int = ADAPTER_LOAD_NORMAL
+    var itemLoadMoreStatus: Int =
+        ADAPTER_LOAD_NORMAL
 
     /**加载更多回调*/
     var onLoadMore: (DslViewHolder) -> Unit = {}
@@ -42,7 +43,7 @@ open class DslLoadMoreItem : DslAdapterItem() {
             itemHolder.v<TextView>(R.id.text_view).text = "加载更多: ${when (itemLoadMoreStatus) {
                 ADAPTER_LOAD_NORMAL -> "加载更多中..."
                 ADAPTER_LOAD_LOADING -> "加载更多中..."
-                ADAPTER_LOAD_ERROR -> "加载异常"
+                ADAPTER_LOAD_ERROR, ADAPTER_LOAD_RETRY -> "加载异常"
                 ADAPTER_LOAD_NO_MORE -> "我是有底线的"
                 else -> "未知状态"
             }}"
@@ -50,9 +51,21 @@ open class DslLoadMoreItem : DslAdapterItem() {
             if (itemEnableLoadMore) {
                 if (itemLoadMoreStatus == ADAPTER_LOAD_NORMAL) {
                     //错误和正常的情况下, 才触发加载跟多
-                    itemLoadMoreStatus = ADAPTER_LOAD_LOADING
-                    onLoadMore(itemHolder)
+                    itemLoadMoreStatus =
+                        ADAPTER_LOAD_LOADING
+                    itemHolder.post { onLoadMore(itemHolder) }
                 }
+                itemHolder.clickItem {
+                    if (itemLoadMoreStatus == ADAPTER_LOAD_ERROR || itemLoadMoreStatus == ADAPTER_LOAD_RETRY) {
+                        //失败的情况下, 点击触发重新加载
+                        itemLoadMoreStatus =
+                            ADAPTER_LOAD_LOADING
+                        updateAdapterItem()
+                        itemHolder.post { onLoadMore(itemHolder) }
+                    }
+                }
+            } else {
+                itemHolder.itemView.isClickable = false
             }
         }
 
@@ -60,7 +73,8 @@ open class DslLoadMoreItem : DslAdapterItem() {
         if (itemEnableLoadMore) {
             //加载失败时, 下次是否还需要加载更多?
             if (itemLoadMoreStatus == ADAPTER_LOAD_ERROR) {
-                itemLoadMoreStatus = ADAPTER_LOAD_NORMAL
+                itemLoadMoreStatus =
+                    ADAPTER_LOAD_RETRY
             }
         }
     }
