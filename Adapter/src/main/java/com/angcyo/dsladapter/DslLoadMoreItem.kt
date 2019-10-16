@@ -22,8 +22,8 @@ open class DslLoadMoreItem : DslAdapterItem() {
         const val ADAPTER_LOAD_RETRY = 11
     }
 
-    /**是否激活加载更多*/
-    var itemEnableLoadMore = true
+    /**是否激活加载更多, 默认关闭*/
+    var itemEnableLoadMore = false
         set(value) {
             field = value
             itemLoadMoreStatus = ADAPTER_LOAD_NORMAL

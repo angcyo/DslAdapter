@@ -39,25 +39,36 @@ open class DslDateFilter(val adapter: DslAdapter) {
     }
 
     /**更新过滤后的数据源, 采用的是[android.support.v7.util.DiffUtil]*/
+    @Deprecated("2019-10-16")
     fun updateFilterItemDepend(
         formDslAdapterItem: DslAdapterItem? = null,
         async: Boolean = true,
         just: Boolean = false //立即执行
     ) {
+        updateFilterItemDepend(FilterParams(formDslAdapterItem, async, just))
+    }
+
+    fun updateFilterItemDepend(params: FilterParams) {
         if (handle.hasCallbacks()) {
             diffResultAction.notifyUpdateDependItem()
         }
-        diffResultAction.formDslAdapterItem = formDslAdapterItem
-        updateDependRunnable.formDslAdapterItem = formDslAdapterItem
-        updateDependRunnable.async = async
-        if (just) {
-            updateDependRunnable.async = false
+
+        diffResultAction._params = params
+        updateDependRunnable._params = params
+
+        if (params.justFilter) {
+            params.just = true
+            params.async = false
+        }
+
+        if (params.just) {
             updateDependRunnable.run()
         } else {
             //确保多次触发, 只有一次被执行
             handle.once(updateDependRunnable)
         }
     }
+
 
     /*当前位置, 距离下一个分组头, 还有多少个数据 (startIndex, endIndex)*/
     private fun groupChildSize(originList: List<DslAdapterItem>, startIndex: Int): Int {
@@ -162,8 +173,6 @@ open class DslDateFilter(val adapter: DslAdapter) {
 
     internal inner class DiffSubscribe : SyncOnSubscribe<Int, DiffUtil.DiffResult>() {
 
-        internal var formDslAdapterItem: DslAdapterItem? = null
-
         override fun generateState(): Int {
             return 1
         }
@@ -209,14 +218,12 @@ open class DslDateFilter(val adapter: DslAdapter) {
                 )
             )
 
-            formDslAdapterItem = null
-
             return diffResult
         }
     }
 
     internal inner class DiffResultAction : Action1<DiffUtil.DiffResult> {
-        internal var formDslAdapterItem: DslAdapterItem? = null
+        var _params: FilterParams? = null
 
         var _newList: List<DslAdapterItem>? = null
 
@@ -230,8 +237,11 @@ open class DslDateFilter(val adapter: DslAdapter) {
 
             _newList = null
 
-            //根据diff, 更新adapter
-            diffResult.dispatchUpdatesTo(adapter)
+            if (_params?.justFilter == true) {
+            } else {
+                //根据diff, 更新adapter
+                diffResult.dispatchUpdatesTo(adapter)
+            }
 
             notifyUpdateDependItem()
 
@@ -240,13 +250,13 @@ open class DslDateFilter(val adapter: DslAdapter) {
 
         //仅仅只是通知更新被依赖的子项关系
         fun notifyUpdateDependItem() {
-            if (formDslAdapterItem == null) {
+            if (_params?.formDslAdapterItem == null) {
                 return
             }
             //需要通知更新的子项
             val notifyChildFormItemList = mutableListOf<DslAdapterItem>()
             adapter.getValidFilterDataList().forEachIndexed { index, dslAdapterItem ->
-                if (formDslAdapterItem!!.isItemInUpdateList(dslAdapterItem, index)) {
+                if (_params?.formDslAdapterItem!!.isItemInUpdateList(dslAdapterItem, index)) {
                     notifyChildFormItemList.add(dslAdapterItem)
                 }
             }
@@ -254,7 +264,7 @@ open class DslDateFilter(val adapter: DslAdapter) {
             var index = 0
             notifyChildFormItemList.forEach {
                 it.apply {
-                    onItemUpdateFromInner(formDslAdapterItem!!)
+                    onItemUpdateFromInner(_params?.formDslAdapterItem!!)
                     it.updateAdapterItem(true)
                 }
 
@@ -263,20 +273,19 @@ open class DslDateFilter(val adapter: DslAdapter) {
                 )
             }
 
-            formDslAdapterItem = null
+            _params = null
         }
     }
 
     internal inner class UpdateDependRunnable : Runnable {
-        internal var formDslAdapterItem: DslAdapterItem? = null
-        internal var async = true
-
+        var _params: FilterParams? = null
         override fun run() {
+            if (_params == null) {
+                return
+            }
             subscribe?.unsubscribe()
-            diffSubscribe.formDslAdapterItem = formDslAdapterItem
-            diffResultAction.formDslAdapterItem = formDslAdapterItem
 
-            if (async) {
+            if (_params!!.async) {
                 subscribe = Observable
                     .create(diffSubscribe)
                     .compose<DiffUtil.DiffResult>(Rx.defaultTransformer<DiffUtil.DiffResult>())
@@ -284,7 +293,14 @@ open class DslDateFilter(val adapter: DslAdapter) {
             } else {
                 diffResultAction.call(diffSubscribe.calculateDiff())
             }
-            formDslAdapterItem = null
+            _params = null
         }
     }
 }
+
+data class FilterParams(
+    val formDslAdapterItem: DslAdapterItem? = null, //定向更新其子项
+    var async: Boolean = true, //异步执行
+    var just: Boolean = false, //立即执行
+    var justFilter: Boolean = false //只过滤列表数据, 不通知界面操作, 开启此属性.[async=true][just=true]
+)

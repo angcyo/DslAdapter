@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.support.annotation.LayoutRes
+import android.support.v7.widget.RecyclerView
 import android.view.View
 
 /**
@@ -19,9 +20,21 @@ open class DslAdapterItem {
     /**适配器*/
     var itemDslAdapter: DslAdapter? = null
 
+    /**[notifyItemChanged]*/
     open fun updateAdapterItem(useFilterList: Boolean = true) {
+        if (itemDslAdapter == null) {
+            L.e("updateAdapterItem需要[itemDslAdapter], 请赋值.")
+        }
         itemDslAdapter?.notifyItemChanged(this, useFilterList)
     }
+
+//    /**[notifyItemRemoved]*/
+//    open fun deleteAdapterItem(useFilterList: Boolean = true) {
+//        if (itemDslAdapter == null) {
+//            L.e("updateAdapterItem需要[itemDslAdapter], 请赋值.")
+//        }
+//        itemDslAdapter?.deleteAdapterItem(this, useFilterList)
+//    }
 
     //<editor-fold desc="Grid相关属性">
 
@@ -45,7 +58,24 @@ open class DslAdapterItem {
 
     /**界面绑定*/
     open var itemBind: (itemHolder: DslViewHolder, itemPosition: Int, adapterItem: DslAdapterItem) -> Unit =
-        { _, _, _ -> }
+        { itemHolder, itemPosition, adapterItem ->
+            onItemBind(itemHolder, itemPosition, adapterItem)
+            onItemBindOverride(itemHolder, itemPosition, adapterItem)
+        }
+
+    open fun onItemBind(
+        itemHolder: DslViewHolder,
+        itemPosition: Int,
+        adapterItem: DslAdapterItem
+    ) {
+
+    }
+
+    /**用于覆盖默认操作*/
+    open var onItemBindOverride: (itemHolder: DslViewHolder, itemPosition: Int, adapterItem: DslAdapterItem) -> Unit =
+        { _, _, _ ->
+
+        }
 
     open var onItemViewAttachedToWindow: (itemHolder: DslViewHolder) -> Unit = {
 
@@ -160,6 +190,25 @@ open class DslAdapterItem {
 
     fun setItemOffsets(rect: Rect) {
         rect.set(itemLeftInsert, itemTopInsert, itemRightInsert, itemBottomInsert)
+    }
+
+    fun marginVertical(top: Int, bottom: Int = 0, color: Int = Color.TRANSPARENT) {
+        itemLeftOffset = 0
+        itemRightOffset = 0
+        itemTopInsert = top
+        itemBottomInsert = bottom
+        onlyDrawOffsetArea = false
+        itemDecorationColor = color
+    }
+
+    fun marginHorizontal(left: Int, right: Int = 0, color: Int = Color.TRANSPARENT) {
+        itemTopOffset = 0
+        itemBottomOffset = 0
+
+        itemLeftInsert = left
+        itemRightInsert = right
+        onlyDrawOffsetArea = false
+        itemDecorationColor = color
     }
 
     /**
@@ -380,6 +429,9 @@ open class DslAdapterItem {
         { _, _ -> false }
 
     open fun updateItemDepend(notifyUpdate: Boolean = false) {
+        if (itemDslAdapter == null) {
+            L.e("updateAdapterItem需要[itemDslAdapter], 请赋值.")
+        }
         itemDslAdapter?.updateItemDepend(if (notifyUpdate) this else null)
     }
 
@@ -390,6 +442,26 @@ open class DslAdapterItem {
     }
 
     //</editor-fold desc="Diff 相关">
+
+    //<editor-fold desc="单选, 多选相关">
+
+    /**是否选中, 需要 [DslAdapter.selectorModel] 的支持. */
+    var itemIsSelectInner = false
+//    var itemIsSelect
+//        set(value) {
+//            itemDslAdapter?.updateSelector(this, value)
+//        }
+//        get() = itemIsSelectInner
+
+    /**是否 允许被选中*/
+    var isItemCanSelect: (from: Boolean, to: Boolean) -> Boolean =
+        { _, _ -> true }
+
+    val itemIndexPosition
+        get() = itemDslAdapter?.getValidFilterDataList()?.indexOf(this) ?: RecyclerView.NO_POSITION
+
+    //</editor-fold desc="单选, 多选相关">
+
 }
 
 /**

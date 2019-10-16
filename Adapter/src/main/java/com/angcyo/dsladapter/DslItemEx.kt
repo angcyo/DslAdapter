@@ -17,6 +17,13 @@ public fun DslAdapter.dslItem(@LayoutRes layoutId: Int, config: DslAdapterItem.(
     item.config()
 }
 
+public fun <T : DslAdapterItem> DslAdapter.dslItem(
+    dslItem: T,
+    config: T.() -> Unit = {}
+) {
+    dslCustomItem(dslItem, config)
+}
+
 public fun <T : DslAdapterItem> DslAdapter.dslCustomItem(
     dslItem: T,
     config: T.() -> Unit = {}

@@ -15,26 +15,35 @@ open class DslAdapterStatusItem : DslAdapterItem() {
     }
 
     companion object {
+        //正常状态
         const val ADAPTER_STATUS_NONE = -1
+        //空数据
         const val ADAPTER_STATUS_EMPTY = 0
+        //加载中
         const val ADAPTER_STATUS_LOADING = 1
+        //错误
         const val ADAPTER_STATUS_ERROR = 2
+        //其他状态, 可以自行添加, 手动判断即可. 不受影响
     }
 
-    var itemAdapterStatus: Int =
-        ADAPTER_STATUS_NONE
+    var itemAdapterStatus: Int = ADAPTER_STATUS_NONE
 
-    override var itemBind: (itemHolder: DslViewHolder, itemPosition: Int, adapterItem: DslAdapterItem) -> Unit =
-        { itemHolder, _, _ ->
+    override fun onItemBind(
+        itemHolder: DslViewHolder,
+        itemPosition: Int,
+        adapterItem: DslAdapterItem
+    ) {
+        super.onItemBind(itemHolder, itemPosition, adapterItem)
 
-            /*具体逻辑, 自行处理*/
-            itemHolder.v<TextView>(R.id.text_view).text = "情感图状态: ${when (itemAdapterStatus) {
-                ADAPTER_STATUS_EMPTY -> "空数据"
-                ADAPTER_STATUS_LOADING -> "加载中"
-                ADAPTER_STATUS_ERROR -> "加载异常"
-                else -> "未知状态"
-            }}"
-        }
+        /*具体逻辑, 自行处理*/
+        itemHolder.v<TextView>(R.id.text_view).text = "情感图状态: ${when (itemAdapterStatus) {
+            ADAPTER_STATUS_EMPTY -> "空数据"
+            ADAPTER_STATUS_LOADING -> "加载中"
+            ADAPTER_STATUS_ERROR -> "加载异常"
+            else -> "未知状态"
+        }}"
+
+    }
 
     /**返回[true] 表示不需要显示情感图, 即显示[Adapter]原本的内容*/
     open fun isNoStatus() = itemAdapterStatus == ADAPTER_STATUS_NONE

@@ -30,8 +30,7 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>() {
     /**列表数据*/
     val dataItems = mutableListOf<DslAdapterItem>()
 
-    var dslDateFilter: DslDateFilter? =
-        DslDateFilter(this)
+    var dslDateFilter: DslDateFilter? = DslDateFilter(this)
         set(value) {
             field = value
             updateItemDepend()
@@ -247,7 +246,14 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>() {
         just: Boolean = false //立即执行
     ) {
         dslDateFilter?.let {
-            it.updateFilterItemDepend(fromAdapterItem, async, just)
+            it.updateFilterItemDepend(
+                FilterParams(
+                    fromAdapterItem,
+                    async,
+                    just,
+                    !dslAdapterStatusItem.isNoStatus()
+                )
+            )
         }
     }
 
