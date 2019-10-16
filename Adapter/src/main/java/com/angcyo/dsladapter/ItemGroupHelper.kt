@@ -163,6 +163,7 @@ fun DslAdapter.findItemGroupParams(dslAdapterItem: DslAdapterItem): ItemGroupPar
                 //占满一行
                 edge = edge or EDGE_RIGHT
                 edgeGroup = edgeGroup or EDGE_GROUP_TOP
+                edgeGroup = edgeGroup or EDGE_RIGHT_TOP
             }
         }
         if (spanIndex == spanCount - 1) {
