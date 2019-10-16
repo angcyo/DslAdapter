@@ -388,6 +388,14 @@ git clone https://github.com/angcyo/DslAdapter.git --depth=1
 
 加油 你可以的!
 
+# 备注
+
+更多使用方式, 请下载源码`build`安装体验.
+
+或者扫码安装
+
+![](https://raw.githubusercontent.com/angcyo/DslAdapter/master/png/qrcode.png)
+
 ---
 **群内有`各(pian)种(ni)各(jin)样(qun)`的大佬,等你来撩.**
 
