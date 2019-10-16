@@ -20,53 +20,65 @@ class MainActivity : BaseRecyclerActivity() {
     override fun onInitBaseLayoutAfter() {
         super.onInitBaseLayoutAfter()
 
-        dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
+        renderAdapter {
+            setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
 
-        dslAdapter.dslItem(DslDemoItem()) {
-            itemText = "情感图状态使用示例"
-            onItemClick = {
-                start(AdapterStatusActivity::class.java)
+            dslItem(DslDemoItem()) {
+                itemText = "情感图状态使用示例"
+                onItemClick = {
+                    start(AdapterStatusActivity::class.java)
+                }
+                itemTopInsert = 2 * dpi //控制顶部分割线的高度
             }
-            itemTopInsert = 2 * dpi //控制顶部分割线的高度
-        }
 
-        dslAdapter.dslItem(DslDemoItem()) {
-            itemText = "加载更多使用示例"
-            onItemClick = {
-                start(LoadMoreActivity::class.java)
+            dslItem(DslDemoItem()) {
+                itemText = "加载更多使用示例"
+                onItemClick = {
+                    start(LoadMoreActivity::class.java)
+                }
+                itemTopInsert = 4 * dpi
             }
-            itemTopInsert = 4 * dpi
-        }
 
-        dslAdapter.dslItem(DslDemoItem()) {
-            itemText = "顶部的分割线是红色"
-            itemTopInsert = 8 * dpi
-            itemDecorationColor = Color.RED //控制分割线的颜色
-        }
+            dslItem(DslDemoItem()) {
+                itemText = "群组功能示例"
+                onItemClick = {
+                    start(GroupDemoActivity::class.java)
+                }
+                itemTopInsert = 4 * dpi
+            }
 
-        dslAdapter.dslItem(DslDemoItem()) {
-            itemText = "只绘制偏移量的分割线"
-            itemTopInsert = 8 * dpi
-            itemLeftOffset = 60 * dpi
-            itemDecorationColor = Color.BLUE
-            onlyDrawOffsetArea = true
-        }
+            renderEmptyItem()
 
-        dslAdapter.dslItem(DslDemoItem()) {
-            itemText = "自定义Drawable的分割线"
-            itemBottomInsert = 20 * dpi
-            itemDecorationDrawable = resources.getDrawable(R.drawable.shape_decoration)
-        }
+            dslItem(DslDemoItem()) {
+                itemText = "顶部的分割线是红色"
+                itemTopInsert = 8 * dpi
+                itemDecorationColor = Color.RED //控制分割线的颜色
+            }
 
-        dslAdapter.dslItem(DslDemoItem()) {
-            itemText = "上下都有的分割线"
-            itemTopInsert = 8 * dpi
-            itemBottomInsert = 8 * dpi
-            itemDecorationColor = Color.GREEN
-        }
+            dslItem(DslDemoItem()) {
+                itemText = "只绘制偏移量的分割线"
+                itemTopInsert = 8 * dpi
+                itemLeftOffset = 60 * dpi
+                itemDecorationColor = Color.BLUE
+                onlyDrawOffsetArea = true
+            }
 
-        dslViewHolder.postDelay(1000) {
-            dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
+            dslItem(DslDemoItem()) {
+                itemText = "自定义Drawable的分割线"
+                itemBottomInsert = 20 * dpi
+                itemDecorationDrawable = resources.getDrawable(R.drawable.shape_decoration)
+            }
+
+            dslItem(DslDemoItem()) {
+                itemText = "上下都有的分割线"
+                itemTopInsert = 8 * dpi
+                itemBottomInsert = 8 * dpi
+                itemDecorationColor = Color.GREEN
+            }
+
+            dslViewHolder.postDelay(1000) {
+                setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
+            }
         }
     }
 }

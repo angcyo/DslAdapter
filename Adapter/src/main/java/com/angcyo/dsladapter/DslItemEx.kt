@@ -1,5 +1,6 @@
 package com.angcyo.dsladapter
 
+import android.graphics.Color
 import android.support.annotation.LayoutRes
 
 
@@ -30,4 +31,15 @@ public fun <T : DslAdapterItem> DslAdapter.dslCustomItem(
 ) {
     addLastItem(dslItem)
     dslItem.config()
+}
+
+/**空的占位item*/
+public fun DslAdapter.renderEmptyItem(height: Int = 120 * dpi, color: Int = Color.TRANSPARENT) {
+    val adapterItem = DslAdapterItem()
+    adapterItem.itemLayoutId = R.layout.base_empty_item
+    adapterItem.itemBind = { itemHolder, _, _ ->
+        itemHolder.itemView.setBackgroundColor(color)
+        itemHolder.itemView.setHeight(height)
+    }
+    addLastItem(adapterItem)
 }

@@ -120,13 +120,13 @@ open class DslAdapterItem {
     var itemGroupExtend = true
         set(value) {
             field = value
-            updateItemDepend()
+            updateItemDepend(true)
         }
 
     var itemHidden = false
         set(value) {
             field = value
-            updateItemDepend()
+            updateItemDepend(true)
         }
 
     //</editor-fold>
@@ -424,16 +424,20 @@ open class DslAdapterItem {
      * [android.support.v7.widget.RecyclerView.Adapter.notifyItemRemoved]
      * 的执行
      * */
-    open var thisAreItemsTheSame: (newItem: DslAdapterItem) -> Boolean =
-        {
-            //this.javaClass.name == it.javaClass.name && this.itemLayoutId == it.itemLayoutId
-            this == it
-        }
+    open var thisAreItemsTheSame: (fromItem: DslAdapterItem?, newItem: DslAdapterItem) -> Boolean =
+        { _, newItem -> this == newItem }
 
     /**
      * [android.support.v7.widget.RecyclerView.Adapter.notifyItemChanged]
      * */
-    open var thisAreContentsTheSame: (newItem: DslAdapterItem) -> Boolean = { this == it }
+    open var thisAreContentsTheSame: (fromItem: DslAdapterItem?, newItem: DslAdapterItem) -> Boolean =
+        { fromItem, newItem ->
+            if (fromItem == null) {
+                this == newItem
+            } else {
+                this != fromItem && this == newItem
+            }
+        }
 
     /**
      * [checkItem] 是否需要关联到处理列表
@@ -484,6 +488,35 @@ open class DslAdapterItem {
         get() = itemDslAdapter?.getValidFilterDataList()?.indexOf(this) ?: RecyclerView.NO_POSITION
 
     //</editor-fold desc="单选, 多选相关">
+
+    //<editor-fold desc="群组相关">
+
+    /**动态计算的属性*/
+    val itemGroupParams: ItemGroupParams
+        get() =
+            itemDslAdapter?.findItemGroupParams(this) ?: ItemGroupParams(
+                0,
+                this,
+                mutableListOf(this)
+            )
+
+    /**所在的分组名, 只用来做快捷变量存储*/
+    var itemGroups = mutableListOf<String>()
+
+    /**核心群组判断的方法*/
+    var isItemInGroups: (newItem: DslAdapterItem) -> Boolean = {
+        var result = false
+        for (group in it.itemGroups) {
+            result = result || itemGroups.contains(group)
+
+            if (result) {
+                break
+            }
+        }
+        result
+    }
+
+    //</editor-fold>
 
 }
 

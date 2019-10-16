@@ -136,3 +136,9 @@ public val <T> T.dp: Float by lazy {
 public val <T> T.dpi: Int by lazy {
     Resources.getSystem()?.displayMetrics?.density?.toInt() ?: 0
 }
+
+public fun View.setHeight(height: Int) {
+    val params = layoutParams
+    params.height = height
+    layoutParams = params
+}

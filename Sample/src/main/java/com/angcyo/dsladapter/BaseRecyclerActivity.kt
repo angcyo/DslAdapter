@@ -78,4 +78,8 @@ abstract class BaseRecyclerActivity : AppCompatActivity() {
     open fun onInitBaseLayoutAfter() {
 
     }
+
+    open fun renderAdapter(render: DslAdapter.() -> Unit) {
+        dslAdapter.render()
+    }
 }

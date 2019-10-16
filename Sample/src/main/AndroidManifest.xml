@@ -10,6 +10,9 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
+            android:name=".GroupDemoActivity"
+            android:label="群组功能" />
+        <activity
             android:name=".LoadMoreActivity"
             android:label="加载更多示例" />
         <activity

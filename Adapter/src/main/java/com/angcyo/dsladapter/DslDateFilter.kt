@@ -53,6 +53,7 @@ open class DslDateFilter(val adapter: DslAdapter) {
             diffResultAction.notifyUpdateDependItem()
         }
 
+        diffSubscribe._params = params
         diffResultAction._params = params
         updateDependRunnable._params = params
 
@@ -172,7 +173,7 @@ open class DslDateFilter(val adapter: DslAdapter) {
     }
 
     internal inner class DiffSubscribe : SyncOnSubscribe<Int, DiffUtil.DiffResult>() {
-
+        var _params: FilterParams? = null
         override fun generateState(): Int {
             return 1
         }
@@ -205,14 +206,20 @@ open class DslDateFilter(val adapter: DslAdapter) {
                             oldData: DslAdapterItem,
                             newData: DslAdapterItem
                         ): Boolean {
-                            return oldData.thisAreItemsTheSame(newData)
+                            return oldData.thisAreItemsTheSame(
+                                _params?.formDslAdapterItem,
+                                newData
+                            )
                         }
 
                         override fun areContentsTheSame(
                             oldData: DslAdapterItem,
                             newData: DslAdapterItem
                         ): Boolean {
-                            return oldData.thisAreContentsTheSame(newData)
+                            return oldData.thisAreContentsTheSame(
+                                _params?.formDslAdapterItem,
+                                newData
+                            )
                         }
                     }
                 )
