@@ -394,7 +394,7 @@ git clone https://github.com/angcyo/DslAdapter.git --depth=1
 
 或者扫码安装
 
-![](https://raw.githubusercontent.com/angcyo/DslAdapter/master/png/qrcode.png)
+![](https://raw.githubusercontent.com/angcyo/DslAdapter/master/png/qrcode1.png)
 
 ---
 **群内有`各(pian)种(ni)各(jin)样(qun)`的大佬,等你来撩.**
