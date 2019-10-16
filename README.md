@@ -13,7 +13,30 @@ Dsl 的形式使用 RecyclerView.Adapter, 支持情感图状态切换, 加载更
 - [x] 常规的分割线 (一会儿占满屏幕 一会儿有点边距的效果)
 - [ ] 支持单选/多选
 - [x] 支持某一个Item 定向更新多个其他Item
-- [ ] 支持群组功能 (指定连续的几个相同/不同的item为一组)
+- [x] 支持群组功能 (指定连续的几个相同/不同的item为一组)
+
+# 功能介绍
+
+## 群组功能
+
+![](https://raw.githubusercontent.com/angcyo/DslAdapter/master/png/group.png)
+
+使用动态计算属性`itemGroupParams`,根据位置设置不同的背景
+
+```kotlin
+itemGroupParams.apply {
+    if (isOnlyOne()) {
+        itemHolder.itemView
+            .setBackgroundResource(R.drawable.shape_group_all)
+    } else if (isFirstPosition()) {
+        itemHolder.itemView
+            .setBackgroundResource(R.drawable.shape_group_header)
+    } else {
+        itemHolder.itemView
+            .setBackgroundColor(resources.getColor(R.color.colorAccent))
+    }
+}
+```
 
 # 使用
 # 1. 多类型使用方式
