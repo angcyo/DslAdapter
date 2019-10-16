@@ -1,10 +1,12 @@
 # DslAdapter
-Dsl 的形式使用 RecyclerView.Adapter, 支持情感图状态切换, 加载更多, 多类型Item等
+`Dsl` 的形式使用 `RecyclerView.Adapter`, 支持情感图状态切换, 加载更多, 多类型`Item`等
+
+所有`Item`继承自`DslAdapterItem`即可在`DslAdapter`中使用.
 
 # 特性
-- 1.全网最轻量的多类型Item实现方法
-- 2.支持情感图状态(空布局 加载中 错误异常等)切换 完美支持自定义扩展
-- 3.支持加载更多 完美支持自定义扩展
+- 1.`全网最轻量`的`多类型Item`实现方法
+- 2.支持`情感图状`态(空布局 加载中 错误异常等)切换 完美支持自定义扩展
+- 3.支持`加载更多` 完美支持自定义扩展
 
 # 即将支持
 
@@ -394,7 +396,7 @@ git clone https://github.com/angcyo/DslAdapter.git --depth=1
 
 或者扫码安装
 
-![](https://raw.githubusercontent.com/angcyo/DslAdapter/master/png/qrcode1.png)
+![](https://raw.githubusercontent.com/angcyo/DslAdapter/master/png/qrcode.png)
 
 ---
 **群内有`各(pian)种(ni)各(jin)样(qun)`的大佬,等你来撩.**
