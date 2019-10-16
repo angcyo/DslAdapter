@@ -20,6 +20,12 @@ abstract class BaseRecyclerActivity : AppCompatActivity() {
 
     lateinit var dslViewHolder: DslViewHolder
 
+    /**提供悬停功能*/
+    var hoverItemDecoration = HoverItemDecoration()
+
+    /**提供基本的分割线功能*/
+    var baseDslItemDecoration = DslItemDecoration()
+
     var dslAdapter: DslAdapter = DslAdapter().apply {
         dslAdapterStatusItem = AppAdapterStatusItem()
     }
@@ -41,6 +47,9 @@ abstract class BaseRecyclerActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         dslViewHolder.v<RecyclerView>(R.id.base_recycler_view)?.apply {
             recyclerView = this
+
+            addItemDecoration(baseDslItemDecoration)
+            hoverItemDecoration.attachToRecyclerView(this)
 
             //防止在折叠/展开 即 itemAdd/itemRemove 的时候, 自动滚动到顶部.
             //这个属性决定了, adapter 中的item 改变, 不会影响 RecyclerView 自身的宽高属性.

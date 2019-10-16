@@ -2,6 +2,7 @@ package com.angcyo.dsladapter
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Color
 import android.widget.TextView
 import com.angcyo.dsladapter.dsl.DslDemoItem
 import com.angcyo.dsladapter.dsl.dslImageItem
@@ -26,6 +27,7 @@ class MainActivity : BaseRecyclerActivity() {
             onItemClick = {
                 start(AdapterStatusActivity::class.java)
             }
+            itemTopInsert = 2 * dpi //控制顶部分割线的高度
         }
 
         dslAdapter.dslItem(DslDemoItem()) {
@@ -33,6 +35,34 @@ class MainActivity : BaseRecyclerActivity() {
             onItemClick = {
                 start(LoadMoreActivity::class.java)
             }
+            itemTopInsert = 4 * dpi
+        }
+
+        dslAdapter.dslItem(DslDemoItem()) {
+            itemText = "顶部的分割线是红色"
+            itemTopInsert = 8 * dpi
+            itemDecorationColor = Color.RED //控制分割线的颜色
+        }
+
+        dslAdapter.dslItem(DslDemoItem()) {
+            itemText = "只绘制偏移量的分割线"
+            itemTopInsert = 8 * dpi
+            itemLeftOffset = 60 * dpi
+            itemDecorationColor = Color.BLUE
+            onlyDrawOffsetArea = true
+        }
+
+        dslAdapter.dslItem(DslDemoItem()) {
+            itemText = "自定义Drawable的分割线"
+            itemBottomInsert = 20 * dpi
+            itemDecorationDrawable = resources.getDrawable(R.drawable.shape_decoration)
+        }
+
+        dslAdapter.dslItem(DslDemoItem()) {
+            itemText = "上下都有的分割线"
+            itemTopInsert = 8 * dpi
+            itemBottomInsert = 8 * dpi
+            itemDecorationColor = Color.GREEN
         }
 
         dslViewHolder.postDelay(1000) {

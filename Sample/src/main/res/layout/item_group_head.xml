@@ -2,13 +2,16 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@color/colorAccent"
     android:minHeight="40dp">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
-        android:text="分组头部(测试折叠/展开)" />
+        android:padding="10dp"
+        android:text="分组头部(测试折叠/展开)"
+        android:textColor="@color/default_base_white" />
 
     <Button
         android:id="@+id/fold_button"

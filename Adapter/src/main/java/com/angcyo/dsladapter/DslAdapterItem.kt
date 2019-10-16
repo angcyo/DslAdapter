@@ -4,6 +4,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
+import android.graphics.drawable.Drawable
 import android.support.annotation.LayoutRes
 import android.support.v7.widget.RecyclerView
 import android.view.View
@@ -149,12 +150,15 @@ open class DslAdapterItem {
     var itemRightInsert = 0
     var itemBottomInsert = 0
 
-    var itemDecorationColor = Color.WHITE
+    var itemDecorationColor = Color.TRANSPARENT
+
+    /**更强大的分割线自定义, 在color绘制后绘制*/
+    var itemDecorationDrawable: Drawable? = null
 
     /**
      * 仅绘制offset的区域
      * */
-    var onlyDrawOffsetArea = true
+    var onlyDrawOffsetArea = false
 
     /**
      * 分割线绘制时的偏移
@@ -263,6 +267,7 @@ open class DslAdapterItem {
                         itemView.top
                     )
                     canvas.drawRect(drawRect, paint)
+                    onDrawItemDecorationDrawable(canvas, drawRect)
                 }
                 if (itemRightOffset > 0) {
                     drawRect.set(
@@ -272,6 +277,7 @@ open class DslAdapterItem {
                         itemView.top
                     )
                     canvas.drawRect(drawRect, paint)
+                    onDrawItemDecorationDrawable(canvas, drawRect)
                 }
             } else {
                 drawRect.set(
@@ -281,6 +287,7 @@ open class DslAdapterItem {
                     itemView.top
                 )
                 canvas.drawRect(drawRect, paint)
+                onDrawItemDecorationDrawable(canvas, drawRect)
             }
         }
 
@@ -298,6 +305,7 @@ open class DslAdapterItem {
                         itemView.bottom + offsetRect.bottom
                     )
                     canvas.drawRect(drawRect, paint)
+                    onDrawItemDecorationDrawable(canvas, drawRect)
                 }
                 if (itemRightOffset > 0) {
                     drawRect.set(
@@ -307,6 +315,7 @@ open class DslAdapterItem {
                         itemView.bottom + offsetRect.bottom
                     )
                     canvas.drawRect(drawRect, paint)
+                    onDrawItemDecorationDrawable(canvas, drawRect)
                 }
             } else {
                 drawRect.set(
@@ -316,6 +325,7 @@ open class DslAdapterItem {
                     itemView.bottom + offsetRect.bottom
                 )
                 canvas.drawRect(drawRect, paint)
+                onDrawItemDecorationDrawable(canvas, drawRect)
             }
         }
 
@@ -333,6 +343,7 @@ open class DslAdapterItem {
                         itemTopOffset
                     )
                     canvas.drawRect(drawRect, paint)
+                    onDrawItemDecorationDrawable(canvas, drawRect)
                 }
                 if (itemBottomOffset < 0) {
                     drawRect.set(
@@ -342,6 +353,7 @@ open class DslAdapterItem {
                         itemView.bottom
                     )
                     canvas.drawRect(drawRect, paint)
+                    onDrawItemDecorationDrawable(canvas, drawRect)
                 }
             } else {
                 drawRect.set(
@@ -351,6 +363,7 @@ open class DslAdapterItem {
                     itemView.bottom
                 )
                 canvas.drawRect(drawRect, paint)
+                onDrawItemDecorationDrawable(canvas, drawRect)
             }
         }
 
@@ -368,6 +381,7 @@ open class DslAdapterItem {
                         itemTopOffset
                     )
                     canvas.drawRect(drawRect, paint)
+                    onDrawItemDecorationDrawable(canvas, drawRect)
                 }
                 if (itemBottomOffset < 0) {
                     drawRect.set(
@@ -377,6 +391,7 @@ open class DslAdapterItem {
                         itemView.bottom
                     )
                     canvas.drawRect(drawRect, paint)
+                    onDrawItemDecorationDrawable(canvas, drawRect)
                 }
             } else {
                 drawRect.set(
@@ -386,9 +401,17 @@ open class DslAdapterItem {
                     itemView.bottom
                 )
                 canvas.drawRect(drawRect, paint)
+                onDrawItemDecorationDrawable(canvas, drawRect)
             }
         }
         onlyDrawOffsetArea = drawOffsetArea
+    }
+
+    var onDrawItemDecorationDrawable: (canvas: Canvas, rect: Rect) -> Unit = { canvas, rect ->
+        itemDecorationDrawable?.let {
+            it.setBounds(rect.left, rect.top, rect.right, rect.bottom)
+            it.draw(canvas)
+        }
     }
 
     //</editor-fold desc="表单 分割线配置">
