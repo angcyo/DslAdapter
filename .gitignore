@@ -1,5 +1,4 @@
 *.iml
-*.apk
 .gradle
 /local.properties
 /.idea/workspace.xml
