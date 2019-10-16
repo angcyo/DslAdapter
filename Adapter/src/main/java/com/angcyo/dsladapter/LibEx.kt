@@ -142,3 +142,10 @@ public fun View.setHeight(height: Int) {
     params.height = height
     layoutParams = params
 }
+
+public fun Int.have(value: Int): Boolean = if (this == 0 || value == 0) false
+else if (this == 0 && value == 0) true
+else {
+    ((this > 0 && value > 0) || (this < 0 && value < 0)) &&
+            this and value == value
+}

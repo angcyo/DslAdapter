@@ -30,7 +30,7 @@ public class DslViewHolder extends RecyclerView.ViewHolder {
 
     public DslViewHolder(@NonNull View itemView) {
         super(itemView);
-        sparseArray = new SparseArray(32);
+        sparseArray = new SparseArray<>(32);
     }
 
     public <T extends View> T v(@IdRes int resId) {

@@ -44,6 +44,18 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>() {
 
     //<editor-fold desc="生命周期方法">
 
+    var _recyclerView: RecyclerView? = null
+
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        super.onAttachedToRecyclerView(recyclerView)
+        _recyclerView = recyclerView
+    }
+
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView)
+        _recyclerView = null
+    }
+
     override fun getItemViewType(position: Int): Int {
         return if (dslAdapterStatusItem.isNoStatus()) {
             getItemData(position)?.itemLayoutId ?: 0

@@ -10,8 +10,14 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
+            android:name=".SelectorDemoActivity"
+            android:label="选择功能" />
+        <activity
             android:name=".GroupDemoActivity"
-            android:label="群组功能" />
+            android:label="群组(线性布局)功能" />
+        <activity
+            android:name=".GroupGridDemoActivity"
+            android:label="群组(网格布局)功能" />
         <activity
             android:name=".LoadMoreActivity"
             android:label="加载更多示例" />

@@ -168,6 +168,14 @@ open class DslAdapterItem {
     var itemRightOffset = 0
     var itemBottomOffset = 0
 
+    /**可以覆盖设置分割线的边距*/
+    var onSetItemOffset: (rect: Rect) -> Unit = {}
+
+    fun setItemOffsets(rect: Rect) {
+        rect.set(itemLeftInsert, itemTopInsert, itemRightInsert, itemBottomInsert)
+        onSetItemOffset(rect)
+    }
+
     fun setTopInsert(insert: Int, leftOffset: Int = 0, rightOffset: Int = 0) {
         itemTopInsert = insert
         itemRightOffset = rightOffset
@@ -192,9 +200,6 @@ open class DslAdapterItem {
         itemTopOffset = topOffset
     }
 
-    fun setItemOffsets(rect: Rect) {
-        rect.set(itemLeftInsert, itemTopInsert, itemRightInsert, itemBottomInsert)
-    }
 
     fun marginVertical(top: Int, bottom: Int = 0, color: Int = Color.TRANSPARENT) {
         itemLeftOffset = 0

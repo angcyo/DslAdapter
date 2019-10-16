@@ -40,9 +40,25 @@ class MainActivity : BaseRecyclerActivity() {
             }
 
             dslItem(DslDemoItem()) {
-                itemText = "群组功能示例"
+                itemText = "群组(线性布局)功能示例"
                 onItemClick = {
                     start(GroupDemoActivity::class.java)
+                }
+                itemTopInsert = 4 * dpi
+            }
+
+            dslItem(DslDemoItem()) {
+                itemText = "群组(网格布局)功能示例"
+                onItemClick = {
+                    start(GroupGridDemoActivity::class.java)
+                }
+                itemTopInsert = 4 * dpi
+            }
+
+            dslItem(DslDemoItem()) {
+                itemText = "单选/多选示例"
+                onItemClick = {
+                    start(SelectorDemoActivity::class.java)
                 }
                 itemTopInsert = 4 * dpi
             }
