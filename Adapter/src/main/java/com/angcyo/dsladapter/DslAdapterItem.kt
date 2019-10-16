@@ -120,13 +120,13 @@ open class DslAdapterItem {
     var itemGroupExtend = true
         set(value) {
             field = value
-            updateItemDepend(true)
+            updateItemDepend()
         }
 
     var itemHidden = false
         set(value) {
             field = value
-            updateItemDepend(true)
+            updateItemDepend()
         }
 
     //</editor-fold>
@@ -455,7 +455,7 @@ open class DslAdapterItem {
     open var isItemInUpdateList: (checkItem: DslAdapterItem, itemIndex: Int) -> Boolean =
         { _, _ -> false }
 
-    open fun updateItemDepend(notifyUpdate: Boolean = false) {
+    open fun updateItemDepend(notifyUpdate: Boolean = true) {
         if (itemDslAdapter == null) {
             L.e("updateAdapterItem需要[itemDslAdapter], 请赋值.")
         }
