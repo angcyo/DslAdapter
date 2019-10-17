@@ -179,7 +179,13 @@ dslItem(R.layout.item_group_head) {
 }
 
 ```
+
+在`线性布局`中的表现
 ![](https://raw.githubusercontent.com/angcyo/DslAdapter/master/png/group.png)
+
+在`网格布局`中的表现, (具有`线性布局`的所有属性, 并具有`专属网格`属性)
+
+![](https://raw.githubusercontent.com/angcyo/DslAdapter/master/png/grid.png)
 
 ## 基础功能 1.多类型使用方式
 
@@ -321,7 +327,7 @@ private fun initLayout() {
     }
 
     dslAdapter.来点数据()
-}
+} 
 
 private fun DslAdapter.来点数据() {
     val dslAdapter = this
