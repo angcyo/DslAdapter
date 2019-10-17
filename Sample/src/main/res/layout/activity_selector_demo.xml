@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -30,6 +31,19 @@
             android:layout_height="wrap_content"
             android:text="多选" />
 
+        <Button
+            android:id="@+id/all"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="全选" />
+
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/tip_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        tools:text="测试文本" />
 
 </FrameLayout>

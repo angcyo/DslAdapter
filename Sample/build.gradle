@@ -7,7 +7,7 @@ apply plugin: 'kotlin-android-extensions'
 android {
     compileSdkVersion 28
     defaultConfig {
-        applicationId "com.angcyo.dsladapter"
+        applicationId "com.angcyo.dsladapter.demo"
         minSdkVersion 21
         targetSdkVersion 28
         versionCode 1

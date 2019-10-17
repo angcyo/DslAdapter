@@ -460,11 +460,31 @@ open class DslAdapterItem {
     open var isItemInUpdateList: (checkItem: DslAdapterItem, itemIndex: Int) -> Boolean =
         { _, _ -> false }
 
+    /**
+     * 通过diff更新
+     * @param notifyUpdate 是否需要触发 [Depend] 关系链.
+     * */
     open fun updateItemDepend(notifyUpdate: Boolean = true) {
         if (itemDslAdapter == null) {
-            L.e("updateAdapterItem需要[itemDslAdapter], 请赋值.")
+            L.e("updateItemDepend需要[itemDslAdapter], 请赋值.")
         }
         itemDslAdapter?.updateItemDepend(if (notifyUpdate) this else null)
+    }
+
+    /**更新选项*/
+    open fun updateItemSelector(select: Boolean, notifyUpdate: Boolean = false) {
+        if (itemDslAdapter == null) {
+            L.e("updateItemSelector需要[itemDslAdapter], 请赋值.")
+        }
+        itemDslAdapter?.itemSelectorHelper?.selector(
+            SelectorParams(
+                this,
+                select,
+                notify = true,
+                notifyItemChange = true,
+                updateItemDepend = notifyUpdate
+            )
+        )
     }
 
     var onItemUpdateFrom: (fromItem: DslAdapterItem) -> Unit = {}
@@ -477,17 +497,23 @@ open class DslAdapterItem {
 
     //<editor-fold desc="单选, 多选相关">
 
-    /**是否选中, 需要 [DslAdapter.selectorModel] 的支持. */
-    var itemIsSelectInner = false
-//    var itemIsSelect
-//        set(value) {
-//            itemDslAdapter?.updateSelector(this, value)
-//        }
-//        get() = itemIsSelectInner
+    /**是否选中, 需要 [com.angcyo.dsladapter.ItemSelectorHelper.selectorModel] 的支持. */
+    var itemIsSelectorInner = false
 
     /**是否 允许被选中*/
-    var isItemCanSelect: (from: Boolean, to: Boolean) -> Boolean =
-        { _, _ -> true }
+    var isItemCanSelector: (fromSelector: Boolean, toSelector: Boolean) -> Boolean =
+        { from, to -> from != to }
+
+    var onItemSelectorChange: (selectorParams: SelectorParams) -> Unit = {
+        if (it.updateItemDepend) {
+            updateItemDepend(true)
+        }
+    }
+
+    /**选中变化后触发*/
+    open fun _itemSelectorChange(selectorParams: SelectorParams) {
+        onItemSelectorChange(selectorParams)
+    }
 
     val itemIndexPosition
         get() = itemDslAdapter?.getValidFilterDataList()?.indexOf(this) ?: RecyclerView.NO_POSITION

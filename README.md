@@ -13,7 +13,7 @@
 - [x] 分组折叠 (类似QQ联系人好友分组,展开和折叠的效果)
 - [x] Item悬停 (类似QQ联系人好友分组,悬停的效果)
 - [x] 常规的分割线 (一会儿占满屏幕 一会儿有点边距的效果)
-- [ ] 支持单选/多选
+- [x] 支持单选/多选 (支持固定选项)
 - [x] 支持某一个Item 定向更新多个其他Item
 - [x] 支持群组功能 (指定连续的几个相同/不同的item为一组)
 
@@ -118,11 +118,76 @@ dslItem(DslDemoItem()) {
 
 ## 单选/多选
 
-功能未完成
+单选/多选的功能由`ItemSelectorHelper`提供,通过`DslAdapter`成员变量`itemSelectorHelper`访问.
+
+**选择模式切换:**
+
+```kotlin
+//目前支持 单选/多选 
+dslAdapter.itemSelectorHelper.selectorModel = MODEL_NORMAL
+dslAdapter.itemSelectorHelper.selectorModel = MODEL_SINGLE
+dslAdapter.itemSelectorHelper.selectorModel = MODEL_MULTI
 
 ```
-//...
+
+**固定选项:**
+
+```kotlin
+itemSelectorHelper.fixedSelectorItemList = fixedItemList
 ```
+
+**全部选择/取消:**
+
+```kotlin
+dslAdapter.itemSelectorHelper.selectorAll(SelectorParams(selector = !isSelectorAll))
+
+```
+**选择/取消:**
+
+```kotlin
+itemSelectorHelper.selector(
+    SelectorParams(
+        dslAdapterItem,
+        select,
+        notify = true,
+        notifyItemChange = true,
+        updateItemDepend = notifyUpdate
+    )
+)
+
+```
+
+**参数说明**
+
+```kotlin
+data class SelectorParams(
+    //目标
+    var item: DslAdapterItem? = null,
+    //操作
+    var selector: Boolean = true,
+    //事件通知
+    var notify: Boolean = true,
+
+    /**
+     * 是否需要回调[_itemSelectorChange]
+     * [com.angcyo.dsladapter.ItemSelectorHelper._selectorInner]
+     * */
+    var notifyItemChange: Boolean = true,
+
+    /**
+     * 传递给
+     * [com.angcyo.dsladapter.DslAdapterItem._itemSelectorChange]
+     * */
+    var updateItemDepend: Boolean = false,
+
+    //额外自定义的扩展数据
+    var extend: Any? = null,
+
+    var _useFilterList: Boolean = true
+)
+```
+
+![](https://raw.githubusercontent.com/angcyo/DslAdapter/master/png/selector.png)
 
 ## 定向更新
 

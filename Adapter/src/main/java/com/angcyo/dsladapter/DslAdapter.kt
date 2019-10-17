@@ -30,11 +30,15 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>() {
     /**列表数据*/
     val dataItems = mutableListOf<DslAdapterItem>()
 
+    /**数据过滤规则*/
     var dslDateFilter: DslDateFilter? = DslDateFilter(this)
         set(value) {
             field = value
             updateItemDepend()
         }
+
+    /**单/多选助手*/
+    val itemSelectorHelper = ItemSelectorHelper(this)
 
     init {
         if (dslLoadMoreItem.itemEnableLoadMore) {
