@@ -1,7 +1,9 @@
-package com.angcyo.dsladapter
+package com.angcyo.dsladapter.demo
 
 import android.graphics.Color
 import android.support.v7.widget.GridLayoutManager
+import com.angcyo.dsladapter.*
+import com.angcyo.dsladapter.demo.R
 import com.angcyo.dsladapter.dsl.DslDemoItem
 import kotlin.random.Random.Default.nextInt
 
@@ -26,7 +28,8 @@ class SelectorDemoActivity : BaseRecyclerActivity() {
     override fun onInitBaseLayoutAfter() {
         super.onInitBaseLayoutAfter()
 
-        dslAdapter.itemSelectorHelper.onItemSelectorListener = object : OnItemSelectorListener {
+        dslAdapter.itemSelectorHelper.onItemSelectorListener = object :
+            OnItemSelectorListener {
             override fun onSelectorItemChange(
                 selectorItems: MutableList<DslAdapterItem>,
                 selectorIndexList: MutableList<Int>,

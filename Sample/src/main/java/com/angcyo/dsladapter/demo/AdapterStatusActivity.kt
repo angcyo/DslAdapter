@@ -1,4 +1,7 @@
-package com.angcyo.dsladapter
+package com.angcyo.dsladapter.demo
+
+import com.angcyo.dsladapter.DslAdapterStatusItem
+import com.angcyo.dsladapter.demo.R
 
 /**
  *

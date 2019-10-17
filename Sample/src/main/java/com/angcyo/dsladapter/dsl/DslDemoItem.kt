@@ -2,7 +2,7 @@ package com.angcyo.dsladapter.dsl
 
 import com.angcyo.dsladapter.DslAdapterItem
 import com.angcyo.dsladapter.DslViewHolder
-import com.angcyo.dsladapter.R
+import com.angcyo.dsladapter.demo.R
 
 /**
  *

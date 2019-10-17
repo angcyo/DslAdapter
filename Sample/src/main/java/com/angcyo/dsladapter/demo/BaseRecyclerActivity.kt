@@ -1,4 +1,4 @@
-package com.angcyo.dsladapter
+package com.angcyo.dsladapter.demo
 
 import android.os.Bundle
 import android.support.v4.widget.SwipeRefreshLayout
@@ -6,6 +6,11 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.widget.Toast
+import com.angcyo.dsladapter.DslAdapter
+import com.angcyo.dsladapter.DslItemDecoration
+import com.angcyo.dsladapter.DslViewHolder
+import com.angcyo.dsladapter.HoverItemDecoration
+import com.angcyo.dsladapter.demo.R
 import com.angcyo.dsladapter.dsl.AppAdapterStatusItem
 import kotlinx.android.synthetic.main.base_recycler_layout.*
 

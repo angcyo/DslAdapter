@@ -1,6 +1,9 @@
-package com.angcyo.dsladapter
+package com.angcyo.dsladapter.demo
 
 import android.widget.Toast
+import com.angcyo.dsladapter.DslAdapterStatusItem
+import com.angcyo.dsladapter.DslLoadMoreItem
+import com.angcyo.dsladapter.demo.R
 
 /**
  *

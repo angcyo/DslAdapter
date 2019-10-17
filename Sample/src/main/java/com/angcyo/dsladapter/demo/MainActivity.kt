@@ -1,9 +1,11 @@
-package com.angcyo.dsladapter
+package com.angcyo.dsladapter.demo
 
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
 import android.widget.TextView
+import com.angcyo.dsladapter.*
+import com.angcyo.dsladapter.demo.R
 import com.angcyo.dsladapter.dsl.DslDemoItem
 import com.angcyo.dsladapter.dsl.dslImageItem
 import com.angcyo.dsladapter.dsl.dslTextItem
