@@ -1,11 +1,11 @@
 package com.angcyo.dsladapter
 
+import android.os.Handler
+import android.os.Looper
 import android.support.v7.util.DiffUtil
-import rx.Observable
-import rx.Observer
-import rx.Subscription
-import rx.functions.Action1
-import rx.observables.SyncOnSubscribe
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 /**
  *
@@ -24,15 +24,22 @@ open class DslDateFilter(val adapter: DslAdapter) {
      * */
     val filterDataList: MutableList<DslAdapterItem> = mutableListOf()
 
-    /**diff订阅*/
-    private var subscribe: Subscription? = null
-
-    //需要执行的diff算法操作
-    private val diffSubscribe = DiffSubscribe()
-    //diff之后的结果
-    private val diffResultAction = DiffResultAction()
     //抖动控制
     private val updateDependRunnable = UpdateDependRunnable()
+
+    //异步调度器
+    private val asyncExecutor: ExecutorService by lazy {
+        Executors.newFixedThreadPool(1)
+    }
+
+    //diff操作
+    private val diffRunnable = DiffRunnable()
+    //diff操作取消
+    private var diffSubmit: Future<*>? = null
+
+    private val mainHandler: Handler by lazy {
+        Handler(Looper.getMainLooper())
+    }
 
     private val handle: OnceHandler by lazy {
         OnceHandler()
@@ -50,11 +57,10 @@ open class DslDateFilter(val adapter: DslAdapter) {
 
     fun updateFilterItemDepend(params: FilterParams) {
         if (handle.hasCallbacks()) {
-            diffResultAction.notifyUpdateDependItem()
+            diffRunnable.notifyUpdateDependItem()
         }
 
-        diffSubscribe._params = params
-        diffResultAction._params = params
+        diffRunnable._params = params
         updateDependRunnable._params = params
 
         if (params.justFilter) {
@@ -172,16 +178,44 @@ open class DslDateFilter(val adapter: DslAdapter) {
         return result
     }
 
-    internal inner class DiffSubscribe : SyncOnSubscribe<Int, DiffUtil.DiffResult>() {
+    /**Diff调用处理*/
+    internal inner class DiffRunnable : Runnable {
         var _params: FilterParams? = null
-        override fun generateState(): Int {
-            return 1
+        var _newList: List<DslAdapterItem>? = null
+        var _diffResult: DiffUtil.DiffResult? = null
+
+        val _resultRunnable = Runnable {
+            //因为是异步操作, 所以在 [dispatchUpdatesTo] 时, 才覆盖 filterDataList 数据源
+            _newList?.let {
+                filterDataList.clear()
+                filterDataList.addAll(it)
+            }
+
+            _newList = null
+
+            if (_params?.justFilter == true) {
+                //仅过滤数据源,不更新界面
+            } else {
+                //根据diff, 更新adapter
+                _diffResult?.dispatchUpdatesTo(adapter)
+            }
+
+            notifyUpdateDependItem()
+
+            diffSubmit = null
+            _diffResult = null
         }
 
-        override fun next(state: Int, observer: Observer<in DiffUtil.DiffResult>): Int? {
-            observer.onNext(calculateDiff())
-            observer.onCompleted()
-            return 0
+        override fun run() {
+            val diffResult = calculateDiff()
+            _diffResult = diffResult
+
+            //回调到主线程
+            if (Looper.getMainLooper() == Looper.myLooper()) {
+                _resultRunnable.run()
+            } else {
+                mainHandler.post(_resultRunnable)
+            }
         }
 
         /**计算[Diff]*/
@@ -192,7 +226,7 @@ open class DslDateFilter(val adapter: DslAdapter) {
             val newList = filterItemList(adapter.adapterItems)
 
             //异步操作, 先保存数据源
-            diffResultAction._newList = newList
+            _newList = newList
 
             //开始计算diff
             val diffResult = DiffUtil.calculateDiff(
@@ -227,33 +261,6 @@ open class DslDateFilter(val adapter: DslAdapter) {
 
             return diffResult
         }
-    }
-
-    internal inner class DiffResultAction : Action1<DiffUtil.DiffResult> {
-        var _params: FilterParams? = null
-
-        var _newList: List<DslAdapterItem>? = null
-
-        override fun call(diffResult: DiffUtil.DiffResult) {
-
-            //因为是异步操作, 所以在 [dispatchUpdatesTo] 时, 才覆盖 filterDataList 数据源
-            _newList?.let {
-                filterDataList.clear()
-                filterDataList.addAll(it)
-            }
-
-            _newList = null
-
-            if (_params?.justFilter == true) {
-            } else {
-                //根据diff, 更新adapter
-                diffResult.dispatchUpdatesTo(adapter)
-            }
-
-            notifyUpdateDependItem()
-
-            subscribe = null
-        }
 
         //仅仅只是通知更新被依赖的子项关系
         fun notifyUpdateDependItem() {
@@ -284,21 +291,19 @@ open class DslDateFilter(val adapter: DslAdapter) {
         }
     }
 
+    /**抖动过滤处理*/
     internal inner class UpdateDependRunnable : Runnable {
         var _params: FilterParams? = null
         override fun run() {
             if (_params == null) {
                 return
             }
-            subscribe?.unsubscribe()
+            diffSubmit?.cancel(true)
 
             if (_params!!.async) {
-                subscribe = Observable
-                    .create(diffSubscribe)
-                    .compose<DiffUtil.DiffResult>(Rx.defaultTransformer<DiffUtil.DiffResult>())
-                    .subscribe(diffResultAction)
+                diffSubmit = asyncExecutor.submit(diffRunnable)
             } else {
-                diffResultAction.call(diffSubscribe.calculateDiff())
+                diffRunnable.run()
             }
             _params = null
         }
