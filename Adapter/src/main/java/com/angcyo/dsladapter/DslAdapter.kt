@@ -61,10 +61,10 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>() {
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (dslAdapterStatusItem.isNoStatus()) {
-            getItemData(position)?.itemLayoutId ?: 0
-        } else {
+        return if (isAdapterStatus()) {
             dslAdapterStatusItem.itemLayoutId
+        } else {
+            getItemData(position)?.itemLayoutId ?: 0
         }
     }
 
@@ -77,10 +77,10 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>() {
     }
 
     override fun getItemCount(): Int {
-        return if (dslAdapterStatusItem.isNoStatus()) {
-            getValidFilterDataList().size
-        } else {
+        return if (isAdapterStatus()) {
             1
+        } else {
+            getValidFilterDataList().size
         }
     }
 
@@ -108,11 +108,18 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>() {
 
     //<editor-fold desc="辅助方法">
 
+    /**
+     * 适配器当前是情感图状态
+     * */
+    fun isAdapterStatus(): Boolean {
+        return !dslAdapterStatusItem.isNoStatus()
+    }
+
     fun getAdapterItem(position: Int): DslAdapterItem {
-        return if (dslAdapterStatusItem.isNoStatus()) {
-            getItemData(position)!!
-        } else {
+        return if (isAdapterStatus()) {
             dslAdapterStatusItem
+        } else {
+            getItemData(position)!!
         }
     }
 
@@ -257,19 +264,14 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>() {
 
     /**调用[DiffUtil]更新界面*/
     fun updateItemDepend(
-        fromAdapterItem: DslAdapterItem? = null,
-        async: Boolean = true,
-        just: Boolean = false //立即执行
+        filterParams: FilterParams = FilterParams(
+            just = dataItems.isEmpty(),
+            async = dataItems.isNotEmpty(),
+            justFilter = isAdapterStatus()
+        )
     ) {
         dslDateFilter?.let {
-            it.updateFilterItemDepend(
-                FilterParams(
-                    fromAdapterItem,
-                    async,
-                    just,
-                    !dslAdapterStatusItem.isNoStatus()
-                )
-            )
+            it.updateFilterItemDepend(filterParams)
         }
     }
 

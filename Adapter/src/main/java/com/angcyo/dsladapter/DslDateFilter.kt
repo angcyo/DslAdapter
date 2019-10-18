@@ -15,7 +15,7 @@ import java.util.concurrent.Future
  * Copyright (c) 2019 ShenZhen O&M Cloud Co., Ltd. All rights reserved.
  */
 
-open class DslDateFilter(val adapter: DslAdapter) {
+open class DslDateFilter(val dslAdapter: DslAdapter) {
 
     /**
      * 过滤后的数据源, 缓存过滤后的数据源, 防止每次都计算.
@@ -46,15 +46,6 @@ open class DslDateFilter(val adapter: DslAdapter) {
     }
 
     /**更新过滤后的数据源, 采用的是[android.support.v7.util.DiffUtil]*/
-    @Deprecated("2019-10-16")
-    fun updateFilterItemDepend(
-        formDslAdapterItem: DslAdapterItem? = null,
-        async: Boolean = true,
-        just: Boolean = false //立即执行
-    ) {
-        updateFilterItemDepend(FilterParams(formDslAdapterItem, async, just))
-    }
-
     fun updateFilterItemDepend(params: FilterParams) {
         if (handle.hasCallbacks()) {
             diffRunnable.notifyUpdateDependItem()
@@ -84,7 +75,7 @@ open class DslDateFilter(val adapter: DslAdapter) {
         for (i in (startIndex + 1) until originList.size) {
             val item = originList[i]
 
-            if (item.itemIsGroupHead || adapter.footerItems.indexOf(item) != -1 /*在底部数据列表中*/) {
+            if (item.itemIsGroupHead || dslAdapter.footerItems.indexOf(item) != -1 /*在底部数据列表中*/) {
                 result = i - startIndex - 1
                 break
             } else if (i == originList.size - 1) {
@@ -193,17 +184,26 @@ open class DslDateFilter(val adapter: DslAdapter) {
 
             _newList = null
 
+            val updateDependItemList = _getUpdateDependItemList()
+
             if (_params?.justFilter == true) {
                 //仅过滤数据源,不更新界面
             } else {
                 //根据diff, 更新adapter
-                _diffResult?.dispatchUpdatesTo(adapter)
+                if (dslAdapter.isAdapterStatus()) {
+                    //情感图状态模式, 不刷新界面
+                } else if (updateDependItemList.isEmpty() && _params?.updateDependItemWithEmpty == false) {
+                    //跳过刷新界面
+                } else {
+                    _diffResult?.dispatchUpdatesTo(dslAdapter)
+                }
             }
 
-            notifyUpdateDependItem()
+            notifyUpdateDependItem(updateDependItemList)
 
             diffSubmit = null
             _diffResult = null
+            _params = null
         }
 
         override fun run() {
@@ -223,7 +223,7 @@ open class DslDateFilter(val adapter: DslAdapter) {
 
             //2个数据源
             val oldList = ArrayList(filterDataList)
-            val newList = filterItemList(adapter.adapterItems)
+            val newList = filterItemList(dslAdapter.adapterItems)
 
             //异步操作, 先保存数据源
             _newList = newList
@@ -262,32 +262,41 @@ open class DslDateFilter(val adapter: DslAdapter) {
             return diffResult
         }
 
-        //仅仅只是通知更新被依赖的子项关系
-        fun notifyUpdateDependItem() {
+        fun _getUpdateDependItemList(): List<DslAdapterItem> {
+            //需要通知更新的子项
+            val notifyChildFormItemList = mutableListOf<DslAdapterItem>()
+
+            _params?.formDslAdapterItem?.let { fromItem ->
+                dslAdapter.getValidFilterDataList().forEachIndexed { index, dslAdapterItem ->
+                    if (fromItem.isItemInUpdateList(dslAdapterItem, index)) {
+                        notifyChildFormItemList.add(dslAdapterItem)
+                    }
+                }
+            }
+
+            return notifyChildFormItemList
+        }
+
+        fun notifyUpdateDependItem(itemList: List<DslAdapterItem>) {
             if (_params?.formDslAdapterItem == null) {
                 return
             }
-            //需要通知更新的子项
-            val notifyChildFormItemList = mutableListOf<DslAdapterItem>()
-            adapter.getValidFilterDataList().forEachIndexed { index, dslAdapterItem ->
-                if (_params?.formDslAdapterItem!!.isItemInUpdateList(dslAdapterItem, index)) {
-                    notifyChildFormItemList.add(dslAdapterItem)
-                }
-            }
 
-            var index = 0
-            notifyChildFormItemList.forEach {
-                it.apply {
-                    onItemUpdateFromInner(_params?.formDslAdapterItem!!)
-                    it.updateAdapterItem(true)
+            itemList.forEachIndexed { index, dslAdapterItem ->
+                dslAdapterItem.apply {
+                    onItemUpdateFromInner(_params!!.formDslAdapterItem!!)
+                    dslAdapterItem.updateAdapterItem(true)
                 }
 
-                L.v(
-                    "${index++}. 通知更新:${it.javaClass.simpleName} ${it.itemTag ?: ""}"
-                )
+                L.v("$index. 通知更新:${dslAdapterItem.javaClass.simpleName} ${dslAdapterItem.itemTag}")
             }
 
             _params = null
+        }
+
+        //仅仅只是通知更新被依赖的子项关系
+        fun notifyUpdateDependItem() {
+            notifyUpdateDependItem(_getUpdateDependItemList())
         }
     }
 
@@ -311,8 +320,24 @@ open class DslDateFilter(val adapter: DslAdapter) {
 }
 
 data class FilterParams(
-    val formDslAdapterItem: DslAdapterItem? = null, //定向更新其子项
-    var async: Boolean = true, //异步执行
-    var just: Boolean = false, //立即执行
-    var justFilter: Boolean = false //只过滤列表数据, 不通知界面操作, 开启此属性.[async=true][just=true]
+    /**
+     * 触发更新的来源, 定向更新其子项.
+     * */
+    val formDslAdapterItem: DslAdapterItem? = null,
+    /**
+     * 异步执行
+     * */
+    var async: Boolean = true,
+    /**
+     * 立即执行
+     * */
+    var just: Boolean = false,
+    /**
+     * 只过滤列表数据, 不通知界面操作, 开启此属性.[async=true][just=true]
+     * */
+    var justFilter: Boolean = false,
+    /**
+     * 当依赖的[DslAdapterItem]列表为空时, 是否要调用[dispatchUpdatesTo]更新界面
+     * */
+    var updateDependItemWithEmpty: Boolean = true
 )

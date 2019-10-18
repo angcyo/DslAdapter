@@ -468,7 +468,12 @@ open class DslAdapterItem {
         if (itemDslAdapter == null) {
             L.e("updateItemDepend需要[itemDslAdapter], 请赋值.")
         }
-        itemDslAdapter?.updateItemDepend(if (notifyUpdate) this else null)
+        itemDslAdapter?.updateItemDepend(
+            FilterParams(
+                if (notifyUpdate) this else null,
+                updateDependItemWithEmpty = false
+            )
+        )
     }
 
     /**更新选项*/
