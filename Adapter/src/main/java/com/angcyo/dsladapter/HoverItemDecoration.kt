@@ -8,7 +8,7 @@ import android.view.*
 import android.widget.FrameLayout
 
 /**
- *
+ * 悬停功能实现类
  * Email:angcyo@126.com
  * @author angcyo
  * @date 2019/05/08

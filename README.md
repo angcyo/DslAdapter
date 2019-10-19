@@ -7,16 +7,13 @@
 1. `全网最轻量`的`多类型Item`实现方法
 2. 支持`情感图状`态(空布局 加载中 错误异常等)切换 完美支持自定义扩展
 3. 支持`加载更多` 完美支持自定义扩展
-4. 分组`折叠` (类似QQ联系人好友分组,展开和折叠的效果) 
-5. Item`悬停` (类似QQ联系人好友分组,悬停的效果)
-6. 常规的`分割线` (一会儿占满屏幕 一会儿有点边距的效果)
+4. 支持分组`折叠` (类似QQ联系人好友分组,展开和折叠的效果) 
+5. 支持Item`悬停` (类似QQ联系人好友分组,悬停的效果)
+6. 支持常规的`分割线` (一会儿占满屏幕 一会儿有点边距的效果)
 7. 支持单`选/多选` (支持固定选项)
 8. 支持某一个Item `定向更新`多个其他Item
 9. 支持`群组`功能 (指定连续的几个相同/不同的item为一组)
-
-# 即将支持
-
-- [ ] 滑动选择(手指拖拽, 就可以选中范围内item)
+10. 支持`滑动选择`(手指拖拽, 就可以选中范围内item)
 
 
 # 功能介绍
@@ -190,6 +187,23 @@ data class SelectorParams(
 ```
 
 ![](https://raw.githubusercontent.com/angcyo/DslAdapter/master/png/selector.png)
+
+## 滑动选择
+
+滑动选择使用`RecyclerView.OnItemTouchListener`实现.
+
+需要组件`SlidingSelectorHelper`的支持.
+
+开启也特别简单:
+
+```kotlin
+recyclerView.addOnItemTouchListener(SlidingSelectorHelper(applicationContext, dslAdapter))
+
+```
+
+在界面上, 长按. 即可进入`滑动选择模式`, 手指在`顶部or底部`会触发滑动.
+
+离`顶部or底部`距离越近, 会智能滑动提速.
 
 ## 定向更新
 

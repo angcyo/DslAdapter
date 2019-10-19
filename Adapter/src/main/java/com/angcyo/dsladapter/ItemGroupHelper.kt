@@ -4,7 +4,7 @@ import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
 
 /**
- *
+ * 群组/分组 助手
  * Email:angcyo@126.com
  * @author angcyo
  * @date 2019/10/16

@@ -3,7 +3,6 @@ package com.angcyo.dsladapter.demo
 import android.graphics.Color
 import android.support.v7.widget.GridLayoutManager
 import com.angcyo.dsladapter.*
-import com.angcyo.dsladapter.demo.R
 import com.angcyo.dsladapter.dsl.DslDemoItem
 import kotlin.random.Random.Default.nextInt
 
@@ -16,7 +15,6 @@ import kotlin.random.Random.Default.nextInt
  */
 class SelectorDemoActivity : BaseRecyclerActivity() {
 
-
     override fun getBaseLayoutId(): Int {
         return R.layout.activity_selector_demo
     }
@@ -28,6 +26,10 @@ class SelectorDemoActivity : BaseRecyclerActivity() {
     override fun onInitBaseLayoutAfter() {
         super.onInitBaseLayoutAfter()
 
+        //滑动选择支持
+        recyclerView.addOnItemTouchListener(SlidingSelectorHelper(applicationContext, dslAdapter))
+
+        //单选/多选 监听
         dslAdapter.itemSelectorHelper.onItemSelectorListener = object :
             OnItemSelectorListener {
             override fun onSelectorItemChange(
@@ -53,23 +55,25 @@ class SelectorDemoActivity : BaseRecyclerActivity() {
             }
         }
 
+        //控制按钮事件
         dslViewHolder.click(R.id.normal) {
-            dslAdapter.itemSelectorHelper.selectorAll(SelectorParams(selector = false))
+            dslAdapter.itemSelectorHelper.selectorAll(SelectorParams(selector = false.toSelectOption()))
             dslAdapter.itemSelectorHelper.selectorModel = MODEL_NORMAL
         }
         dslViewHolder.click(R.id.single) {
-            dslAdapter.itemSelectorHelper.selectorAll(SelectorParams(selector = false))
+            dslAdapter.itemSelectorHelper.selectorAll(SelectorParams(selector = false.toSelectOption()))
             dslAdapter.itemSelectorHelper.selectorModel = MODEL_SINGLE
         }
         dslViewHolder.click(R.id.multi) {
-            dslAdapter.itemSelectorHelper.selectorAll(SelectorParams(selector = false))
+            dslAdapter.itemSelectorHelper.selectorAll(SelectorParams(selector = false.toSelectOption()))
             dslAdapter.itemSelectorHelper.selectorModel = MODEL_MULTI
         }
         dslViewHolder.click(R.id.all) {
             dslAdapter.itemSelectorHelper.selectorModel = MODEL_MULTI
-            dslAdapter.itemSelectorHelper.selectorAll(SelectorParams(selector = !isSelectorAll))
+            dslAdapter.itemSelectorHelper.selectorAll(SelectorParams(selector = (!isSelectorAll).toSelectOption()))
         }
 
+        //设置span size
         val spanCount = 4
         val spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
             override fun getSpanSize(position: Int): Int {
@@ -87,9 +91,10 @@ class SelectorDemoActivity : BaseRecyclerActivity() {
             this.spanSizeLookup = spanSizeLookup
         }
 
+        //渲染adapter数据
         renderAdapter {
             //默认的选择模式
-            itemSelectorHelper.selectorModel = MODEL_SINGLE
+            itemSelectorHelper.selectorModel = MODEL_MULTI
 
             //切换到加载中...
             setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
@@ -108,7 +113,7 @@ class SelectorDemoActivity : BaseRecyclerActivity() {
         dslAdapter.resetItem(listOf())
         renderAdapter {
 
-            for (i in 0..nextInt(20, 60)) {
+            for (i in 0..nextInt(160, 360)) {
                 dslItem(DslDemoItem()) {
 
                     //初始化固定列表
@@ -133,7 +138,7 @@ class SelectorDemoActivity : BaseRecyclerActivity() {
                             setBackgroundColor(
                                 when {
                                     fixedItemList.contains(adapterItem) -> Color.GRAY
-                                    itemIsSelectorInner -> Color.GREEN
+                                    itemIsSelected -> Color.GREEN
                                     else -> Color.WHITE
                                 }
                             )
@@ -141,14 +146,16 @@ class SelectorDemoActivity : BaseRecyclerActivity() {
                         itemHolder.tv(R.id.text_view).apply {
                             height = 100 * dpi
                             text =
-                                "选我 $itemPosition \n${if (itemIsSelectorInner) "true" else "false"}"
+                                "选我 $itemPosition \n${if (itemIsSelected) "true" else "false"}"
                         }
                     }
                     onItemClick = {
-                        updateItemSelector(!itemIsSelectorInner)
+                        updateItemSelector(!itemIsSelected)
                     }
                 }
             }
+
+            itemSelectorHelper.fixedSelectorItemList = fixedItemList
 
             dslViewHolder.postDelay(60) {
                 //adapter的数据源是异步diff才显示到界面上的,所以加一个延迟

@@ -1,9 +1,11 @@
 package com.angcyo.dsladapter
 
 import android.support.annotation.IntDef
+import kotlin.math.max
+import kotlin.math.min
 
 /**
- *
+ * 单选/多选 实现类
  * Email:angcyo@126.com
  * @author angcyo
  * @date 2019/10/16
@@ -21,7 +23,7 @@ class ItemSelectorHelper(val dslAdapter: DslAdapter) {
                     it,
                     SelectorParams(
                         it.lastOrNull(),
-                        selector = true,
+                        selector = OPTION_SELECT,
                         notify = true,
                         notifyItemChange = true,
                         updateItemDepend = true
@@ -56,20 +58,31 @@ class ItemSelectorHelper(val dslAdapter: DslAdapter) {
         }
         _check {
             val item = selectorParams.item!!
+            val isSelectorItem = _isSelectItem(selectorParams)
             when {
                 _isInFiexedList(item) -> {
                     //在固定列表中
                     _selector(selectorParams.apply {
-                        selector = true
+                        selector = OPTION_SELECT
                     })
                 }
-                item.isItemCanSelector(item.itemIsSelectorInner, selectorParams.selector) -> {
+                item.isItemCanSelected(item.itemIsSelected, isSelectorItem) -> {
                     _selector(selectorParams)
                 }
                 else -> {
                     //不允许被选中
                 }
             }
+        }
+    }
+
+    //是否是需要选中目标
+    fun _isSelectItem(selectorParams: SelectorParams): Boolean {
+        return when {
+            selectorParams.item == null -> false
+            selectorParams.selector == OPTION_SELECT -> true
+            selectorParams.selector == OPTION_MUTEX -> !selectorParams.item!!.itemIsSelected
+            else -> false
         }
     }
 
@@ -89,8 +102,33 @@ class ItemSelectorHelper(val dslAdapter: DslAdapter) {
             selector(SelectorParams(it, selectorParams.selector, false))
         }
         if (selectorParams.notify) {
-            _notifySelectorChange(selectorParams)
+            if (itemList.isEmpty() && !selectorParams.notifyWithListEmpty) {
+            } else {
+                _notifySelectorChange(selectorParams)
+            }
         }
+    }
+
+    /**
+     * 选择/取消 一个范围
+     * */
+    fun selector(indexRange: IntRange, selectorParams: SelectorParams) {
+        val allItems = dslAdapter.getDataList(selectorParams._useFilterList)
+        val list = mutableListOf<DslAdapterItem>()
+
+        //修正一下范围
+        val range = IntRange(
+            min(indexRange.first, indexRange.last),
+            max(indexRange.first, indexRange.last)
+        )
+
+        for (index in range) {
+            if (index in allItems.indices) {
+                list.add(allItems[index])
+            }
+        }
+
+        selector(list, selectorParams)
     }
 
     /**
@@ -104,10 +142,10 @@ class ItemSelectorHelper(val dslAdapter: DslAdapter) {
         if (selectorParams.item == null) {
             return
         }
-
+        val isSelectorItem = _isSelectItem(selectorParams)
         val item = selectorParams.item!!
 
-        if (item.itemIsSelectorInner == selectorParams.selector) {
+        if (item.itemIsSelected == isSelectorItem) {
             //重复操作
             return
         }
@@ -123,8 +161,14 @@ class ItemSelectorHelper(val dslAdapter: DslAdapter) {
                     //取消之前选中的项
                     oldSelectorList.forEach {
                         if (it != item) {
-                            if (it.isItemCanSelector(it.itemIsSelectorInner, false)) {
-                                _selectorInner(SelectorParams(it, selector = false, notify = true))
+                            if (it.isItemCanSelected(it.itemIsSelected, false)) {
+                                _selectorInner(
+                                    SelectorParams(
+                                        it,
+                                        selector = OPTION_DESELECT,
+                                        notify = true
+                                    )
+                                )
                             }
                         }
                     }
@@ -146,7 +190,10 @@ class ItemSelectorHelper(val dslAdapter: DslAdapter) {
         if (selectorParams.item == null) {
             return
         }
-        if (!selectorParams.selector) {
+
+        val isSelectorItem = _isSelectItem(selectorParams)
+
+        if (!isSelectorItem) {
             //取消选择
             if (_isInFiexedList(selectorParams.item)) {
                 //在固定列表中, 不允许取消
@@ -155,7 +202,7 @@ class ItemSelectorHelper(val dslAdapter: DslAdapter) {
         }
 
         val item = selectorParams.item!!
-        item.itemIsSelectorInner = selectorParams.selector
+        item.itemIsSelected = isSelectorItem
         if (selectorParams.notifyItemChange) {
             item._itemSelectorChange(selectorParams)
         }
@@ -176,7 +223,7 @@ class ItemSelectorHelper(val dslAdapter: DslAdapter) {
         var isSelectorAll = false
         dslAdapter.getDataList(selectorParams._useFilterList).apply {
             forEachIndexed { index, dslAdapterItem ->
-                if (dslAdapterItem.itemIsSelectorInner) {
+                if (dslAdapterItem.itemIsSelected) {
                     selectorIndexList.add(index)
                     selectorItemList.add(dslAdapterItem)
                 }
@@ -195,29 +242,51 @@ class ItemSelectorHelper(val dslAdapter: DslAdapter) {
     fun getSelectorItemList(useFilterList: Boolean = true): MutableList<DslAdapterItem> {
         val result = mutableListOf<DslAdapterItem>()
         dslAdapter.getDataList(useFilterList).filterTo(result) {
-            it.itemIsSelectorInner
+            it.itemIsSelected
         }
         return result
     }
 }
 
-//正常
+/** 正常 状态 */
 const val MODEL_NORMAL = 0
-//单选
+
+/** 单选 状态 */
 const val MODEL_SINGLE = 1
-//多选
+
+/** 多选 状态 */
 const val MODEL_MULTI = 2
 
 @IntDef(MODEL_NORMAL, MODEL_SINGLE, MODEL_MULTI)
 @Retention(AnnotationRetention.SOURCE)
 annotation class MODEL
 
+/**互斥选择*/
+const val OPTION_MUTEX = 0
+
+/**选择*/
+const val OPTION_SELECT = 1
+
+/**取消*/
+const val OPTION_DESELECT = 2
+
+@IntDef(OPTION_MUTEX, OPTION_SELECT, OPTION_DESELECT)
+@Retention(AnnotationRetention.SOURCE)
+annotation class SELECTOR
+
 data class SelectorParams(
-    //目标
+
+    /**操作的 目标*/
     var item: DslAdapterItem? = null,
-    //操作
-    var selector: Boolean = true,
-    //事件通知
+
+    /**操作*/
+    @SELECTOR
+    var selector: Int = OPTION_SELECT,
+
+    /**
+     * 是否要通知事件
+     * [com.angcyo.dsladapter.ItemSelectorHelper._notifySelectorChange]
+     * */
     var notify: Boolean = true,
 
     /**
@@ -235,8 +304,22 @@ data class SelectorParams(
     //额外自定义的扩展数据
     var extend: Any? = null,
 
-    var _useFilterList: Boolean = true
+    //使用过滤后的数据源
+    var _useFilterList: Boolean = true,
+
+    /**
+     * 当调用
+     * [selector(kotlin.ranges.IntRange, com.angcyo.dsladapter.SelectorParams)]
+     * or
+     * [selector(java.util.List<? extends com.angcyo.dsladapter.DslAdapterItem>, com.angcyo.dsladapter.SelectorParams)]
+     * 操作列表为空时, 是否继续通知事件.
+     *
+     * 需要优先开启[notify]
+     * */
+    var notifyWithListEmpty: Boolean = false
 )
+
+public fun Boolean.toSelectOption(): Int = if (this) OPTION_SELECT else OPTION_DESELECT
 
 private fun Int._modelToString(): String {
     return when (this) {

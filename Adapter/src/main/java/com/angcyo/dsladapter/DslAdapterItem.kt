@@ -484,7 +484,7 @@ open class DslAdapterItem {
         itemDslAdapter?.itemSelectorHelper?.selector(
             SelectorParams(
                 this,
-                select,
+                select.toSelectOption(),
                 notify = true,
                 notifyItemChange = true,
                 updateItemDepend = notifyUpdate
@@ -503,10 +503,10 @@ open class DslAdapterItem {
     //<editor-fold desc="单选, 多选相关">
 
     /**是否选中, 需要 [com.angcyo.dsladapter.ItemSelectorHelper.selectorModel] 的支持. */
-    var itemIsSelectorInner = false
+    var itemIsSelected = false
 
     /**是否 允许被选中*/
-    var isItemCanSelector: (fromSelector: Boolean, toSelector: Boolean) -> Boolean =
+    var isItemCanSelected: (fromSelector: Boolean, toSelector: Boolean) -> Boolean =
         { from, to -> from != to }
 
     var onItemSelectorChange: (selectorParams: SelectorParams) -> Unit = {
