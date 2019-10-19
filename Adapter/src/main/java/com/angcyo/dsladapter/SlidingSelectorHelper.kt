@@ -1,10 +1,12 @@
 package com.angcyo.dsladapter
 
+import android.animation.TimeInterpolator
 import android.content.Context
 import android.support.v4.view.GestureDetectorCompat
 import android.support.v7.widget.RecyclerView
 import android.view.GestureDetector
 import android.view.MotionEvent
+import kotlin.math.max
 
 /**
  * 滑动选择, 实现类
@@ -24,6 +26,18 @@ class SlidingSelectorHelper(val context: Context, val dslAdapter: DslAdapter) :
 
     /**滚动的步进长度, 会根据离边界的距离 自动放大补偿.*/
     var scrollStepValue: Int = (3 * context.resources.displayMetrics.density).toInt()
+
+    /**补偿算法*/
+    var scrollStepValueInterpolator: TimeInterpolator = TimeInterpolator { ratio ->
+        //智能计算 scrollStepValue
+        (scrollStepValue + when {
+            ratio > 0.9f -> 5f
+            ratio > 0.8f -> 3f
+            ratio > 0.5f -> 2f
+            ratio > 0.3f -> 1f
+            else -> 0f
+        } * scrollStepValue)
+    }
 
     //是否处于长按状态, 会激活滑动选择
     var _isLongPress = false
@@ -108,40 +122,22 @@ class SlidingSelectorHelper(val context: Context, val dslAdapter: DslAdapter) :
             if (recyclerView.measuredHeight - event.y < scrollThresholdValue) {
                 //手指在RV的底部, 需要滚动了
                 _slidingRunnable._slidingDirection = 1
-                (recyclerView.measuredHeight - event.y).apply {
-                    dy = if (this > 0) {
-                        this
-                    } else {
-                        1f
-                    }
-                }
+                dy = max(recyclerView.measuredHeight - event.y, 0f)
             } else if (event.y < scrollThresholdValue) {
                 //手指在RV的顶部, 需要滚动了
                 _slidingRunnable._slidingDirection = -1
-                event.y.apply {
-                    dy = if (this > 0) {
-                        this
-                    } else {
-                        1f
-                    }
-                }
+                dy = max(event.y, 0f)
             } else {
                 _slidingRunnable._slidingDirection = 0
-                dy = 0f
+                dy = -1f
                 _selectorItem()
             }
 
             //智能快进
-            if (dy > 0) {
+            if (dy >= 0) {
                 //智能计算 scrollStepValue
                 val ratio = 1 - dy / scrollThresholdValue
-                stepValue = (scrollStepValue + when {
-                    ratio > 0.9f -> 5f
-                    ratio > 0.8f -> 3f
-                    ratio > 0.5f -> 2f
-                    ratio > 0.3f -> 1f
-                    else -> 0f
-                } * scrollStepValue).toInt()
+                stepValue = scrollStepValueInterpolator.getInterpolation(ratio).toInt()
             }
             _slidingRunnable._scrollStepValue = stepValue
         }
