@@ -4,18 +4,20 @@
 所有`Item`继承自`DslAdapterItem`即可在`DslAdapter`中使用.
 
 # 特性
-- 1.`全网最轻量`的`多类型Item`实现方法
-- 2.支持`情感图状`态(空布局 加载中 错误异常等)切换 完美支持自定义扩展
-- 3.支持`加载更多` 完美支持自定义扩展
+1. `全网最轻量`的`多类型Item`实现方法
+2. 支持`情感图状`态(空布局 加载中 错误异常等)切换 完美支持自定义扩展
+3. 支持`加载更多` 完美支持自定义扩展
+4. 分组`折叠` (类似QQ联系人好友分组,展开和折叠的效果) 
+5. Item`悬停` (类似QQ联系人好友分组,悬停的效果)
+6. 常规的`分割线` (一会儿占满屏幕 一会儿有点边距的效果)
+7. 支持单`选/多选` (支持固定选项)
+8. 支持某一个Item `定向更新`多个其他Item
+9. 支持`群组`功能 (指定连续的几个相同/不同的item为一组)
 
 # 即将支持
 
-- [x] 分组折叠 (类似QQ联系人好友分组,展开和折叠的效果)
-- [x] Item悬停 (类似QQ联系人好友分组,悬停的效果)
-- [x] 常规的分割线 (一会儿占满屏幕 一会儿有点边距的效果)
-- [x] 支持单选/多选 (支持固定选项)
-- [x] 支持某一个Item 定向更新多个其他Item
-- [x] 支持群组功能 (指定连续的几个相同/不同的item为一组)
+- [ ] 滑动选择(手指拖拽, 就可以选中范围内item)
+
 
 # 功能介绍
 
@@ -474,15 +476,10 @@ git clone https://github.com/angcyo/DslAdapter.git --depth=1
 **群内有`各(pian)种(ni)各(jin)样(qun)`的大佬,等你来撩.**
 
 # 联系作者
-[点此快速加群](https://shang.qq.com/wpa/qunwpa?idkey=cbcf9a42faf2fe730b51004d33ac70863617e6999fce7daf43231f3cf2997460)
 
-> 请使用QQ扫码加群, 小伙伴们都在等着你哦!
+[点此QQ对话](http://wpa.qq.com/msgrd?v=3&uin=664738095&site=qq&menu=yes)  `该死的空格`    [点此快速加群](https://shang.qq.com/wpa/qunwpa?idkey=cbcf9a42faf2fe730b51004d33ac70863617e6999fce7daf43231f3cf2997460)
 
-![](https://raw.githubusercontent.com/angcyo/res/master/image/qq/qq_group_code.png)
+![](https://raw.githubusercontent.com/angcyo/res/master/code/all_in1.jpg)
 
-> 关注我的公众号, 每天都能一起玩耍哦!
-
-![](https://raw.githubusercontent.com/angcyo/res/master/image/weixin/%E8%AE%A2%E9%98%85%E5%8F%B7_%E4%BA%8C%E7%BB%B4%E7%A0%81/qrcode_for_gh_59fa6d9a51d8_258_8cm.jpg)
-
- 
+![](https://raw.githubusercontent.com/angcyo/res/master/code/all_in2.jpg)
   
