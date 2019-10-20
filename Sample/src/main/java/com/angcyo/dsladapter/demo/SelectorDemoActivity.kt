@@ -155,13 +155,14 @@ class SelectorDemoActivity : BaseRecyclerActivity() {
                 }
             }
 
-            itemSelectorHelper.fixedSelectorItemList = fixedItemList
-
-            dslViewHolder.postDelay(60) {
-                //adapter的数据源是异步diff才显示到界面上的,所以加一个延迟
-
-                //固定选项
-                itemSelectorHelper.fixedSelectorItemList = fixedItemList
+            dslDateFilter?.also {
+                it.addDispatchUpdatesListener(object : OnDispatchUpdatesListener {
+                    override fun onDispatchUpdatesAfter(dslAdapter: DslAdapter) {
+                        it.removeDispatchUpdatesListener(this)
+                        //固定选项
+                        itemSelectorHelper.fixedSelectorItemList = fixedItemList
+                    }
+                })
             }
         }
     }

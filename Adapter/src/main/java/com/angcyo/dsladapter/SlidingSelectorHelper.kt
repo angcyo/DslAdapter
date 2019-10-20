@@ -69,7 +69,7 @@ class SlidingSelectorHelper(val context: Context, val dslAdapter: DslAdapter) :
 
     override fun onInterceptTouchEvent(recyclerView: RecyclerView, event: MotionEvent): Boolean {
         _recyclerView = recyclerView
-        L.w(MotionEvent.actionToString(event.actionMasked) + " x:${event.x} ${event.rawX} y:${event.y} ${event.rawY}")
+        //L.w(MotionEvent.actionToString(event.actionMasked) + " x:${event.x} ${event.rawX} y:${event.y} ${event.rawY}")
         _handleEvent(event)
         if (enableSliding) {
             if (_isLongPress || _gestureDetector.onTouchEvent(event)) {
@@ -81,7 +81,7 @@ class SlidingSelectorHelper(val context: Context, val dslAdapter: DslAdapter) :
 
     override fun onTouchEvent(recyclerView: RecyclerView, event: MotionEvent) {
         _recyclerView = recyclerView
-        L.i(MotionEvent.actionToString(event.actionMasked) + " x:${event.x} ${event.rawX} y:${event.y} ${event.rawY}")
+        //L.i(MotionEvent.actionToString(event.actionMasked) + " x:${event.x} ${event.rawX} y:${event.y} ${event.rawY}")
         _handleEvent(event)
         if (enableSliding) {
             _gestureDetector.onTouchEvent(event)

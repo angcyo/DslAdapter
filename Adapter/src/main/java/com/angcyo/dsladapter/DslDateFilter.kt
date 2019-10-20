@@ -24,8 +24,11 @@ open class DslDateFilter(val dslAdapter: DslAdapter) {
      * */
     val filterDataList: MutableList<DslAdapterItem> = mutableListOf()
 
+    val _dispatchUpdatesSet = mutableSetOf<OnDispatchUpdatesListener>()
+
     //抖动控制
-    private val updateDependRunnable = UpdateDependRunnable()
+    private
+    val updateDependRunnable = UpdateDependRunnable()
 
     //异步调度器
     private val asyncExecutor: ExecutorService by lazy {
@@ -66,7 +69,6 @@ open class DslDateFilter(val dslAdapter: DslAdapter) {
             handle.once(updateDependRunnable)
         }
     }
-
 
     /*当前位置, 距离下一个分组头, 还有多少个数据 (startIndex, endIndex)*/
     private fun groupChildSize(originList: List<DslAdapterItem>, startIndex: Int): Int {
@@ -169,6 +171,14 @@ open class DslDateFilter(val dslAdapter: DslAdapter) {
         return result
     }
 
+    fun addDispatchUpdatesListener(listener: OnDispatchUpdatesListener) {
+        _dispatchUpdatesSet.add(listener)
+    }
+
+    fun removeDispatchUpdatesListener(listener: OnDispatchUpdatesListener) {
+        _dispatchUpdatesSet.remove(listener)
+    }
+
     /**Diff调用处理*/
     internal inner class DiffRunnable : Runnable {
         var _params: FilterParams? = null
@@ -196,6 +206,10 @@ open class DslDateFilter(val dslAdapter: DslAdapter) {
                     //跳过刷新界面
                 } else {
                     _diffResult?.dispatchUpdatesTo(dslAdapter)
+
+                    _dispatchUpdatesSet.forEach {
+                        it.onDispatchUpdatesAfter(dslAdapter)
+                    }
                 }
             }
 
@@ -341,3 +355,10 @@ data class FilterParams(
      * */
     var updateDependItemWithEmpty: Boolean = true
 )
+
+interface OnDispatchUpdatesListener {
+    /**
+     * 当触发了[dispatchUpdatesTo]后回调
+     * */
+    fun onDispatchUpdatesAfter(dslAdapter: DslAdapter)
+}
