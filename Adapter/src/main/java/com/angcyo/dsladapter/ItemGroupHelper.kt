@@ -101,7 +101,7 @@ fun DslAdapter.findItemGroupParams(dslAdapterItem: DslAdapterItem): ItemGroupPar
             edgeGroup = edgeGroup or EDGE_GROUP_BOTTOM
         }
 
-        if (currentSpanParams.spanIndex == 0) {
+        if (currentSpanParams.isFirstSpan()) {
             //第0列, 肯定是在左边界
             edge = edge or EDGE_LEFT
             edgeGroup = edgeGroup or EDGE_LEFT
@@ -132,15 +132,13 @@ fun DslAdapter.findItemGroupParams(dslAdapterItem: DslAdapterItem): ItemGroupPar
                 edgeGroup = edgeGroup or EDGE_RIGHT_TOP
             }
         }
-        if (currentSpanParams.spanIndex == spanCount - 1) {
+
+        if (currentSpanParams.isLastSpan(spanCount)) {
             //最后一列, 肯定是在右边界
             edge = edge or EDGE_RIGHT
             edgeGroup = edgeGroup or EDGE_RIGHT
-
-            if (params.groupItems.size - 1 == itemPosition) {
-                edgeGroup = edgeGroup or EDGE_RIGHT_BOTTOM
-            }
         }
+
         if (currentSpanParams.spanGroupIndex == 0) {
             //第0行, 肯定是在顶边界
             edge = edge or EDGE_TOP
@@ -153,7 +151,6 @@ fun DslAdapter.findItemGroupParams(dslAdapterItem: DslAdapterItem): ItemGroupPar
 
         if (params.indexInGroup == params.groupItems.size - 1) {
             //一组中的最后一个
-            edgeGroup = edgeGroup or EDGE_RIGHT_BOTTOM
             edgeGroup = edgeGroup or EDGE_RIGHT_BOTTOM
         }
 
@@ -234,6 +231,12 @@ data class SpanParams(
     //占多少列
     var spanSize: Int = RecyclerView.NO_POSITION
 )
+
+//是否是首列
+fun SpanParams.isFirstSpan(): Boolean = spanIndex == 0
+
+//是否是尾列
+fun SpanParams.isLastSpan(spanCount: Int): Boolean = spanIndex + spanSize == spanCount
 
 const val EDGE_NONE = 0x00
 //在网格布局的左边界
