@@ -464,16 +464,16 @@ open class DslAdapterItem {
      * 通过diff更新
      * @param notifyUpdate 是否需要触发 [Depend] 关系链.
      * */
-    open fun updateItemDepend(notifyUpdate: Boolean = true) {
+    open fun updateItemDepend(
+        filterParams: FilterParams = FilterParams(
+            this,
+            updateDependItemWithEmpty = false
+        )
+    ) {
         if (itemDslAdapter == null) {
             L.e("updateItemDepend需要[itemDslAdapter], 请赋值.")
         }
-        itemDslAdapter?.updateItemDepend(
-            FilterParams(
-                if (notifyUpdate) this else null,
-                updateDependItemWithEmpty = false
-            )
-        )
+        itemDslAdapter?.updateItemDepend(filterParams)
     }
 
     /**更新选项*/
@@ -511,7 +511,7 @@ open class DslAdapterItem {
 
     var onItemSelectorChange: (selectorParams: SelectorParams) -> Unit = {
         if (it.updateItemDepend) {
-            updateItemDepend(true)
+            updateItemDepend()
         }
     }
 

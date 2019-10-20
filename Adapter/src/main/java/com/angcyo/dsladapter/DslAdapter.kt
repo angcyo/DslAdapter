@@ -266,12 +266,13 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>() {
     fun updateItemDepend(
         filterParams: FilterParams = FilterParams(
             just = dataItems.isEmpty(),
-            async = dataItems.isNotEmpty(),
-            justFilter = isAdapterStatus()
+            async = dataItems.isNotEmpty()
         )
     ) {
         dslDateFilter?.let {
-            it.updateFilterItemDepend(filterParams)
+            it.updateFilterItemDepend(filterParams.apply {
+                justFilter = isAdapterStatus()
+            })
         }
     }
 

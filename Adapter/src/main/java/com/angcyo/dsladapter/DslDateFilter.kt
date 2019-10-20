@@ -187,7 +187,12 @@ open class DslDateFilter(val dslAdapter: DslAdapter) {
 
         val _resultRunnable = Runnable {
             //因为是异步操作, 所以在 [dispatchUpdatesTo] 时, 才覆盖 filterDataList 数据源
+
+            val oldSize = filterDataList.size
+            var newSize = 0
+
             _newList?.let {
+                newSize = it.size
                 filterDataList.clear()
                 filterDataList.addAll(it)
             }
@@ -202,8 +207,12 @@ open class DslDateFilter(val dslAdapter: DslAdapter) {
                 //根据diff, 更新adapter
                 if (dslAdapter.isAdapterStatus()) {
                     //情感图状态模式, 不刷新界面
-                } else if (updateDependItemList.isEmpty() && _params?.updateDependItemWithEmpty == false) {
-                    //跳过刷新界面
+                } else if (updateDependItemList.isEmpty() &&
+                    _params?.updateDependItemWithEmpty == false &&
+                    oldSize == newSize
+                ) {
+                    //跳过[dispatchUpdatesTo]刷新界面, 但是要更新自己
+                    dslAdapter.notifyItemChanged(_params?.formDslAdapterItem)
                 } else {
                     _diffResult?.dispatchUpdatesTo(dslAdapter)
 
@@ -351,7 +360,9 @@ data class FilterParams(
      * */
     var justFilter: Boolean = false,
     /**
-     * 当依赖的[DslAdapterItem]列表为空时, 是否要调用[dispatchUpdatesTo]更新界面
+     * 前提, Diff 之后, 2个数据列表的大小要一致.
+     *
+     * 当依赖的[DslAdapterItem] [isItemInUpdateList]列表为空时, 是否要调用[dispatchUpdatesTo]更新界面
      * */
     var updateDependItemWithEmpty: Boolean = true
 )
