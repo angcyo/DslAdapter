@@ -4,8 +4,11 @@ import android.app.Activity
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.Rect
+import android.support.annotation.LayoutRes
 import android.support.v7.widget.RecyclerView
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.Window
 
 /**
@@ -148,4 +151,21 @@ else if (this == 0 && value == 0) true
 else {
     ((this > 0 && value > 0) || (this < 0 && value < 0)) &&
             this and value == value
+}
+
+public fun ViewGroup.inflate(@LayoutRes layoutId: Int, attachToRoot: Boolean = true): View {
+    if (layoutId == -1) {
+        return this
+    }
+    return LayoutInflater.from(context).inflate(layoutId, this, attachToRoot)
+}
+
+/**
+ * 设置视图的宽高
+ * */
+public fun View.setWidthHeight(width: Int, height: Int) {
+    val params = layoutParams
+    params.width = width
+    params.height = height
+    layoutParams = params
 }

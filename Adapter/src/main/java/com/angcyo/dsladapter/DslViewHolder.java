@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.util.SparseArray;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
 import java.lang.ref.WeakReference;
@@ -49,6 +50,22 @@ public class DslViewHolder extends RecyclerView.ViewHolder {
         return (T) view;
     }
 
+    /**
+     * 单击某个View
+     */
+    public void clickView(View view) {
+        if (view != null) {
+            view.performClick();
+        }
+    }
+
+    /**
+     * 清理缓存
+     */
+    public void clear() {
+        sparseArray.clear();
+    }
+
     public void click(@IdRes int id, final View.OnClickListener listener) {
         View view = v(id);
         if (view != null) {
@@ -84,5 +101,13 @@ public class DslViewHolder extends RecyclerView.ViewHolder {
 
     public TextView tv(@IdRes int resId) {
         return (TextView) v(resId);
+    }
+
+    public ViewGroup group(@IdRes int resId) {
+        return group(v(resId));
+    }
+
+    public ViewGroup group(View view) {
+        return (ViewGroup) view;
     }
 }

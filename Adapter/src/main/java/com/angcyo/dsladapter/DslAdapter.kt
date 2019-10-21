@@ -14,7 +14,7 @@ import kotlin.math.min
  * @date 2019/08/09
  * Copyright (c) 2019 ShenZhen O&M Cloud Co., Ltd. All rights reserved.
  */
-open class DslAdapter : RecyclerView.Adapter<DslViewHolder>() {
+open class DslAdapter : RecyclerView.Adapter<DslViewHolder> {
 
     /*为了简单起见, 这里写死套路, 理论上应该用状态器管理的.*/
     var dslAdapterStatusItem = DslAdapterStatusItem()
@@ -39,6 +39,17 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>() {
 
     /**单/多选助手*/
     val itemSelectorHelper = ItemSelectorHelper(this)
+
+    constructor() : super()
+
+    constructor(dataItems: List<DslAdapterItem>?) {
+        dataItems?.let {
+            this.dataItems.clear()
+            this.dataItems.addAll(dataItems)
+            _updateAdapterItems()
+            updateItemDepend(FilterParams(async = false, just = true))
+        }
+    }
 
     init {
         if (dslLoadMoreItem.itemEnableLoadMore) {
@@ -137,7 +148,10 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>() {
 
     /**设置[Adapter]需要显示情感图的状态*/
     fun setAdapterStatus(status: Int) {
-        dslAdapterStatusItem.itemAdapterStatus = status
+        if (dslAdapterStatusItem.itemState == status) {
+            return
+        }
+        dslAdapterStatusItem.itemState = status
         notifyDataSetChanged()
     }
 
@@ -159,7 +173,10 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>() {
     }
 
     fun setLoadMore(status: Int) {
-        dslLoadMoreItem.itemLoadMoreStatus = status
+        if (dslLoadMoreItem.itemState == status) {
+            return
+        }
+        dslLoadMoreItem.itemState = status
         if (dslLoadMoreItem.itemEnableLoadMore) {
             notifyItemChanged(dslLoadMoreItem)
         }
@@ -202,6 +219,12 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>() {
         dataItems.addAll(bean)
         _updateAdapterItems()
         updateItemDepend()
+    }
+
+    /**清理数据列表, 但不刷新界面*/
+    fun clearItems() {
+        dataItems.clear()
+        _updateAdapterItems()
     }
 
     /**可以在回调中改变数据, 并且会自动刷新界面*/

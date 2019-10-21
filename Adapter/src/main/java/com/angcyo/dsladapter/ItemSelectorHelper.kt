@@ -1,6 +1,7 @@
 package com.angcyo.dsladapter
 
 import android.support.annotation.IntDef
+import android.support.v7.widget.RecyclerView
 import kotlin.math.max
 import kotlin.math.min
 
@@ -349,4 +350,28 @@ interface OnItemSelectorListener {
     ) {
         L.i("选择改变->${selectorIndexList}")
     }
+}
+
+public fun DslAdapter?.normalModel() {
+    this?.itemSelectorHelper?.selectorModel = MODEL_NORMAL
+}
+
+public fun DslAdapter?.singleModel() {
+    this?.itemSelectorHelper?.selectorModel = MODEL_SINGLE
+}
+
+public fun DslAdapter?.multiModel() {
+    this?.itemSelectorHelper?.selectorModel = MODEL_MULTI
+}
+
+public fun RecyclerView?.normalModel() {
+    (this?.adapter as? DslAdapter)?.normalModel()
+}
+
+public fun RecyclerView?.singleModel() {
+    (this?.adapter as? DslAdapter)?.singleModel()
+}
+
+public fun RecyclerView?.multiModel() {
+    (this?.adapter as? DslAdapter)?.multiModel()
 }
