@@ -103,15 +103,23 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder> {
 
     override fun onViewAttachedToWindow(holder: DslViewHolder) {
         super.onViewAttachedToWindow(holder)
-        if (holder.adapterPosition in 0 until itemCount) {
-            getAdapterItem(holder.adapterPosition).onItemViewAttachedToWindow.invoke(holder)
+        if (isAdapterStatus()) {
+            dslAdapterStatusItem.onItemViewAttachedToWindow.invoke(holder)
+        } else {
+            if (holder.adapterPosition in getValidFilterDataList().indices) {
+                getAdapterItem(holder.adapterPosition).onItemViewAttachedToWindow.invoke(holder)
+            }
         }
     }
 
     override fun onViewDetachedFromWindow(holder: DslViewHolder) {
         super.onViewDetachedFromWindow(holder)
-        if (holder.adapterPosition in 0 until itemCount) {
-            getAdapterItem(holder.adapterPosition).onItemViewDetachedToWindow.invoke(holder)
+        if (isAdapterStatus()) {
+            dslAdapterStatusItem.onItemViewDetachedToWindow.invoke(holder)
+        } else {
+            if (holder.adapterPosition in getValidFilterDataList().indices) {
+                getAdapterItem(holder.adapterPosition).onItemViewDetachedToWindow.invoke(holder)
+            }
         }
     }
 
