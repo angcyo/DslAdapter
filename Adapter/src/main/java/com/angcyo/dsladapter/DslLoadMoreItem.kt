@@ -25,6 +25,9 @@ open class DslLoadMoreItem : BaseDslStateItem() {
                 }
             }
         }
+        thisAreContentsTheSame = { _, _ ->
+            false
+        }
     }
 
     companion object {

@@ -15,7 +15,7 @@ import java.util.concurrent.Future
  * Copyright (c) 2019 ShenZhen O&M Cloud Co., Ltd. All rights reserved.
  */
 
-open class DslDateFilter(val dslAdapter: DslAdapter) {
+open class DslDataFilter(val dslAdapter: DslAdapter) {
 
     /**
      * 过滤后的数据源, 缓存过滤后的数据源, 防止每次都计算.
@@ -25,6 +25,15 @@ open class DslDateFilter(val dslAdapter: DslAdapter) {
     val filterDataList: MutableList<DslAdapterItem> = mutableListOf()
 
     val _dispatchUpdatesSet = mutableSetOf<OnDispatchUpdatesListener>()
+
+    /**
+     * 可以拦截参与计算[diff]的数据源
+     * @param oldDataList 界面显示的数据源
+     * @param newDataList 即将显示的数据源
+     * @return 需要显示的数据源
+     * */
+    var onFilterDataList: (oldDataList: List<DslAdapterItem>, newDataList: List<DslAdapterItem>) -> List<DslAdapterItem> =
+        { _, newDataList -> newDataList }
 
     //抖动控制
     private
@@ -216,7 +225,9 @@ open class DslDateFilter(val dslAdapter: DslAdapter) {
                 } else {
                     _diffResult?.dispatchUpdatesTo(dslAdapter)
 
-                    _dispatchUpdatesSet.forEach {
+                    val updatesSet = mutableSetOf<OnDispatchUpdatesListener>()
+                    updatesSet.addAll(_dispatchUpdatesSet)
+                    updatesSet.forEach {
                         it.onDispatchUpdatesAfter(dslAdapter)
                     }
                 }
@@ -249,7 +260,7 @@ open class DslDateFilter(val dslAdapter: DslAdapter) {
             val newList = filterItemList(dslAdapter.adapterItems)
 
             //异步操作, 先保存数据源
-            _newList = newList
+            _newList = onFilterDataList(oldList, newList)
 
             //开始计算diff
             val diffResult = DiffUtil.calculateDiff(
@@ -348,11 +359,11 @@ data class FilterParams(
      * */
     val formDslAdapterItem: DslAdapterItem? = null,
     /**
-     * 异步执行
+     * 异步计算Diff
      * */
     var async: Boolean = true,
     /**
-     * 立即执行
+     * 立即执行, 不检查抖动
      * */
     var just: Boolean = false,
     /**

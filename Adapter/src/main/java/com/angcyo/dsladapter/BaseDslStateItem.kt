@@ -12,6 +12,7 @@ import android.view.View
 abstract class BaseDslStateItem : DslAdapterItem() {
     init {
         itemLayoutId = R.layout.item_base_state
+        itemSpanCount = -1
     }
 
     /**

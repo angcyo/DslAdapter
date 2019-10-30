@@ -7,6 +7,7 @@ import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.support.annotation.LayoutRes
 import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.StaggeredGridLayoutManager
 import android.view.View
 
 /**
@@ -69,7 +70,23 @@ open class DslAdapterItem {
         itemPosition: Int,
         adapterItem: DslAdapterItem
     ) {
+        val layoutParams = itemHolder.itemView.layoutParams
+        if (layoutParams is StaggeredGridLayoutManager.LayoutParams) {
 
+            if (itemSpanCount == -1) {
+                //full
+                if (!layoutParams.isFullSpan) {
+                    layoutParams.isFullSpan = true
+                    itemHolder.itemView.layoutParams = layoutParams
+                }
+            } else {
+                //not full
+                if (layoutParams.isFullSpan) {
+                    layoutParams.isFullSpan = false
+                    itemHolder.itemView.layoutParams = layoutParams
+                }
+            }
+        }
     }
 
     /**用于覆盖默认操作*/
@@ -111,6 +128,7 @@ open class DslAdapterItem {
             field = value
             if (value) {
                 itemIsHover = true
+                itemSpanCount = -1
             }
         }
 
@@ -199,7 +217,6 @@ open class DslAdapterItem {
         itemBottomOffset = bottomOffset
         itemTopOffset = topOffset
     }
-
 
     fun marginVertical(top: Int, bottom: Int = 0, color: Int = Color.TRANSPARENT) {
         itemLeftOffset = 0

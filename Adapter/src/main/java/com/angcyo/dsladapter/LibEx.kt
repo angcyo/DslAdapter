@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.Rect
 import android.support.annotation.LayoutRes
+import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -168,4 +169,23 @@ public fun View.setWidthHeight(width: Int, height: Int) {
     params.width = width
     params.height = height
     layoutParams = params
+}
+
+/**SpanSizeLookup*/
+public fun GridLayoutManager.dslSpanSizeLookup(dslAdapter: DslAdapter): GridLayoutManager.SpanSizeLookup {
+    //设置span size
+    val spanCount = spanCount
+    val spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+        override fun getSpanSize(position: Int): Int {
+            return if (dslAdapter.isAdapterStatus() ||
+                dslAdapter.getItemData(position)?.itemIsGroupHead == true
+            ) {
+                spanCount
+            } else {
+                dslAdapter.getItemData(position)?.itemSpanCount ?: 1
+            }
+        }
+    }
+    this.spanSizeLookup = spanSizeLookup
+    return spanSizeLookup
 }

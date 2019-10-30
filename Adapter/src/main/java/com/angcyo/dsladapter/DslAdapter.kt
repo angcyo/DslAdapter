@@ -31,7 +31,7 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder> {
     val dataItems = mutableListOf<DslAdapterItem>()
 
     /**数据过滤规则*/
-    var dslDateFilter: DslDateFilter? = DslDateFilter(this)
+    var dslDataFilter: DslDataFilter? = DslDataFilter(this)
         set(value) {
             field = value
             updateItemDepend()
@@ -131,7 +131,7 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder> {
      * 适配器当前是情感图状态
      * */
     fun isAdapterStatus(): Boolean {
-        return !dslAdapterStatusItem.isNoStatus()
+        return dslAdapterStatusItem.isInAdapterStatus()
     }
 
     fun getAdapterItem(position: Int): DslAdapterItem {
@@ -154,19 +154,26 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder> {
 
     //<editor-fold desc="操作方法">
 
-    /**设置[Adapter]需要显示情感图的状态*/
+    /**
+     * 设置[Adapter]需要显示情感图的状态
+     * [DslAdapterStatusItem.ADAPTER_STATUS_NONE]
+     * [DslAdapterStatusItem.ADAPTER_STATUS_EMPTY]
+     * [DslAdapterStatusItem.ADAPTER_STATUS_LOADING]
+     * [DslAdapterStatusItem.ADAPTER_STATUS_ERROR]
+     * */
     fun setAdapterStatus(status: Int) {
         if (dslAdapterStatusItem.itemState == status) {
             return
         }
         dslAdapterStatusItem.itemState = status
         notifyDataSetChanged()
+        if (status == DslAdapterStatusItem.ADAPTER_STATUS_NONE) {
+            updateItemDepend(defaultFilterParams())
+        }
     }
 
     fun setLoadMoreEnable(enable: Boolean = true) {
-        if (dslLoadMoreItem.itemEnableLoadMore == enable &&
-            getValidFilterDataList().indexOf(dslLoadMoreItem) != -1
-        ) {
+        if (dslLoadMoreItem.itemEnableLoadMore == enable) {
             return
         }
         dslLoadMoreItem.itemEnableLoadMore = enable
@@ -180,12 +187,17 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder> {
         }
     }
 
-    fun setLoadMore(status: Int) {
-        if (dslLoadMoreItem.itemState == status) {
+    /**
+     * [DslLoadMoreItem.ADAPTER_LOAD_NORMAL]
+     * [DslLoadMoreItem.ADAPTER_LOAD_NO_MORE]
+     * [DslLoadMoreItem.ADAPTER_LOAD_ERROR]
+     * */
+    fun setLoadMore(status: Int, notify: Boolean = true) {
+        if (dslLoadMoreItem.itemEnableLoadMore && dslLoadMoreItem.itemState == status) {
             return
         }
         dslLoadMoreItem.itemState = status
-        if (dslLoadMoreItem.itemEnableLoadMore) {
+        if (notify) {
             notifyItemChanged(dslLoadMoreItem)
         }
     }
@@ -210,21 +222,24 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder> {
         }
     }
 
+    /**插入数据列表*/
     fun insertItem(index: Int, bean: List<DslAdapterItem>) {
         dataItems.addAll(_validIndex(dataItems, index), bean)
         _updateAdapterItems()
         updateItemDepend()
     }
 
+    /**插入数据列表*/
     fun insertItem(index: Int, bean: DslAdapterItem) {
         dataItems.add(_validIndex(dataItems, index), bean)
         _updateAdapterItems()
         updateItemDepend()
     }
 
-    fun resetItem(bean: List<DslAdapterItem>) {
+    /**重置数据列表*/
+    fun resetItem(list: List<DslAdapterItem>) {
         dataItems.clear()
-        dataItems.addAll(bean)
+        dataItems.addAll(list)
         _updateAdapterItems()
         updateItemDepend()
     }
@@ -236,26 +251,35 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder> {
     }
 
     /**可以在回调中改变数据, 并且会自动刷新界面*/
-    fun changeItems(change: () -> Unit) {
+    fun changeItems(filterParams: FilterParams = defaultFilterParams(), change: () -> Unit) {
         change()
         _updateAdapterItems()
-        updateItemDepend()
+        updateItemDepend(filterParams)
     }
 
-    fun changeDataItems(change: (dataItems: MutableList<DslAdapterItem>) -> Unit) {
-        changeItems {
+    fun changeDataItems(
+        filterParams: FilterParams = defaultFilterParams(),
+        change: (dataItems: MutableList<DslAdapterItem>) -> Unit
+    ) {
+        changeItems(filterParams) {
             change(dataItems)
         }
     }
 
-    fun changeHeaderItems(change: (headerItems: MutableList<DslAdapterItem>) -> Unit) {
-        changeItems {
+    fun changeHeaderItems(
+        filterParams: FilterParams = defaultFilterParams(),
+        change: (headerItems: MutableList<DslAdapterItem>) -> Unit
+    ) {
+        changeItems(filterParams) {
             change(headerItems)
         }
     }
 
-    fun changeFooterItems(change: (footerItems: MutableList<DslAdapterItem>) -> Unit) {
-        changeItems {
+    fun changeFooterItems(
+        filterParams: FilterParams = defaultFilterParams(),
+        change: (footerItems: MutableList<DslAdapterItem>) -> Unit
+    ) {
+        changeItems(filterParams) {
             change(footerItems)
         }
     }
@@ -293,23 +317,29 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder> {
         return if (useFilterList) getValidFilterDataList() else adapterItems
     }
 
-    /**调用[DiffUtil]更新界面*/
-    fun updateItemDepend(
-        filterParams: FilterParams = FilterParams(
+    fun defaultFilterParams(): FilterParams {
+        return FilterParams(
             just = dataItems.isEmpty(),
-            async = dataItems.isNotEmpty()
+            async = getDataList().isNotEmpty(),
+            justFilter = isAdapterStatus()
         )
-    ) {
-        dslDateFilter?.let {
-            it.updateFilterItemDepend(filterParams.apply {
-                justFilter = isAdapterStatus()
-            })
+    }
+
+    /**调用[DiffUtil]更新界面*/
+    fun updateItemDepend(filterParams: FilterParams = defaultFilterParams()) {
+        if (isAdapterStatus()) {
+            //如果是情感图状态, 更新数据源没有意义
+            return
+        }
+
+        dslDataFilter?.let {
+            it.updateFilterItemDepend(filterParams)
         }
     }
 
     /**获取有效过滤后的数据集合*/
     fun getValidFilterDataList(): List<DslAdapterItem> {
-        return dslDateFilter?.filterDataList ?: adapterItems
+        return dslDataFilter?.filterDataList ?: adapterItems
     }
 
     //</editor-fold desc="操作方法">
