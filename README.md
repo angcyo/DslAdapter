@@ -186,7 +186,7 @@ data class SelectorParams(
 )
 ```
 
-![](https://raw.githubusercontent.com/angcyo/DslAdapter/master/png/selector.png)
+![](https://gitee.com/angcyo/DslAdapter/raw/master/png/selector.png)
 
 ## 滑动选择
 
@@ -263,11 +263,11 @@ dslItem(R.layout.item_group_head) {
 
 在`线性布局`中的表现:
 
-![](https://raw.githubusercontent.com/angcyo/DslAdapter/master/png/group.png)
+![](https://gitee.com/angcyo/DslAdapter/raw/master/png/group.png)
 
 在`网格布局`中的表现 (具有`线性布局`的所有属性, 并具有`专属网格`属性):
 
-![](https://raw.githubusercontent.com/angcyo/DslAdapter/master/png/grid.png)
+![](https://gitee.com/angcyo/DslAdapter/raw/master/png/grid.png)
 
 ## 基础功能 1.多类型使用方式
 
@@ -484,7 +484,7 @@ git clone https://github.com/angcyo/DslAdapter.git --depth=1
 
 或者扫码安装
 
-![](https://raw.githubusercontent.com/angcyo/DslAdapter/master/png/qrcode1.png)
+![](https://gitee.com/angcyo/DslAdapter/raw/master/png/qrcode1.png)
 
 ---
 **群内有`各(pian)种(ni)各(jin)样(qun)`的大佬,等你来撩.**
@@ -493,7 +493,7 @@ git clone https://github.com/angcyo/DslAdapter.git --depth=1
 
 [点此QQ对话](http://wpa.qq.com/msgrd?v=3&uin=664738095&site=qq&menu=yes)  `该死的空格`    [点此快速加群](https://shang.qq.com/wpa/qunwpa?idkey=cbcf9a42faf2fe730b51004d33ac70863617e6999fce7daf43231f3cf2997460)
 
-![](https://raw.githubusercontent.com/angcyo/res/master/code/all_in1.jpg)
+![](https://gitee.com/angcyo/res/raw/master/code/all_in1.jpg)
 
-![](https://raw.githubusercontent.com/angcyo/res/master/code/all_in2.jpg)
+![](https://gitee.com/angcyo/res/raw/master/code/all_in2.jpg)
   
