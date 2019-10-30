@@ -2,7 +2,6 @@ package com.angcyo.dsladapter.demo
 
 import android.support.v7.widget.GridLayoutManager
 import com.angcyo.dsladapter.*
-import com.angcyo.dsladapter.demo.R
 import com.angcyo.dsladapter.dsl.DslDemoItem
 import kotlin.random.Random.Default.nextInt
 
@@ -19,21 +18,12 @@ class GroupGridDemoActivity : BaseRecyclerActivity() {
         super.onInitBaseLayoutAfter()
 
         val spanCount = 4
-        val spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
-            override fun getSpanSize(position: Int): Int {
-                return if (!dslAdapter.dslAdapterStatusItem.isNoStatus() ||
-                    dslAdapter.getItemData(position)?.itemIsGroupHead == true
-                ) {
-                    spanCount
-                } else {
-                    1
-                }
-            }
-        }
+        val spanSizeLookup: GridLayoutManager.SpanSizeLookup
 
-        recyclerView.layoutManager = GridLayoutManager(this, spanCount).apply {
-            this.spanSizeLookup = spanSizeLookup
-        }
+        recyclerView.layoutManager =
+            GridLayoutManager(this, spanCount).apply {
+                spanSizeLookup = dslSpanSizeLookup(dslAdapter)
+            }
 
         dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
 

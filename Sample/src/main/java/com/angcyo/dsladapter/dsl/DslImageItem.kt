@@ -17,8 +17,13 @@ class DslImageItem : DslAdapterItem() {
         itemLayoutId = R.layout.item_image_layout
     }
 
-    override var itemBind: (itemHolder: DslViewHolder, itemPosition: Int, adapterItem: DslAdapterItem) -> Unit =
-        { itemHolder, itemPosition, _ ->
-            itemHolder.v<TextView>(R.id.text_view).text = "文本位置:$itemPosition"
-        }
+    override fun onItemBind(
+        itemHolder: DslViewHolder,
+        itemPosition: Int,
+        adapterItem: DslAdapterItem
+    ) {
+        super.onItemBind(itemHolder, itemPosition, adapterItem)
+        itemHolder.v<TextView>(R.id.text_view).text = "文本位置:$itemPosition"
+    }
+
 }

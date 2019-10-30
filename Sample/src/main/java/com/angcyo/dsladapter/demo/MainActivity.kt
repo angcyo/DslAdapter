@@ -5,7 +5,6 @@ import android.content.Intent
 import android.graphics.Color
 import android.widget.TextView
 import com.angcyo.dsladapter.*
-import com.angcyo.dsladapter.demo.R
 import com.angcyo.dsladapter.dsl.DslDemoItem
 import com.angcyo.dsladapter.dsl.dslImageItem
 import com.angcyo.dsladapter.dsl.dslTextItem
@@ -65,6 +64,14 @@ class MainActivity : BaseRecyclerActivity() {
                 itemTopInsert = 4 * dpi
             }
 
+            dslItem(DslDemoItem()) {
+                itemText = "StaggeredGridLayout"
+                onItemClick = {
+                    start(StaggeredGridLayoutActivity::class.java)
+                }
+                itemTopInsert = 4 * dpi
+            }
+
             renderEmptyItem()
 
             dslItem(DslDemoItem()) {
@@ -112,7 +119,7 @@ fun DslAdapter.来点数据() {
 
         dslAdapter.dslItem(R.layout.item_group_head) {
             itemIsGroupHead = true
-            itemBind = { itemHolder, itemPosition, adapterItem ->
+            onItemBindOverride = { itemHolder, itemPosition, adapterItem ->
                 itemHolder.tv(R.id.fold_button).text =
                     if (itemGroupExtend) "折叠 $itemPosition" else "展开 $itemPosition"
 
@@ -125,7 +132,7 @@ fun DslAdapter.来点数据() {
         //2种使用item的方式, 喜欢哪种方式, 就用哪一种
         dslAdapter.dslTextItem()
         dslAdapter.dslItem(R.layout.item_text_layout) {
-            itemBind = { itemHolder, itemPosition, _ ->
+            onItemBindOverride = { itemHolder, itemPosition, _ ->
                 itemHolder.v<TextView>(R.id.text_view).text = "文本位置:$itemPosition"
             }
         }
@@ -134,7 +141,7 @@ fun DslAdapter.来点数据() {
             //2种使用item的方式, 喜欢哪种方式, 就用哪一种
             dslAdapter.dslImageItem()
             dslAdapter.dslItem(R.layout.item_image_layout) {
-                itemBind = { itemHolder, itemPosition, _ ->
+                onItemBindOverride = { itemHolder, itemPosition, _ ->
                     itemHolder.v<TextView>(R.id.text_view).text = "文本位置:$itemPosition"
                 }
             }

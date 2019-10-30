@@ -2,6 +2,7 @@ package com.angcyo.dsladapter.demo
 
 import android.graphics.Color
 import android.support.v7.widget.GridLayoutManager
+import android.widget.Toast
 import com.angcyo.dsladapter.*
 import com.angcyo.dsladapter.dsl.DslDemoItem
 import kotlin.random.Random.Default.nextInt
@@ -73,23 +74,10 @@ class SelectorDemoActivity : BaseRecyclerActivity() {
             dslAdapter.itemSelectorHelper.selectorAll(SelectorParams(selector = (!isSelectorAll).toSelectOption()))
         }
 
-        //设置span size
-        val spanCount = 4
-        val spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
-            override fun getSpanSize(position: Int): Int {
-                return if (!dslAdapter.dslAdapterStatusItem.isNoStatus() ||
-                    dslAdapter.getItemData(position)?.itemIsGroupHead == true
-                ) {
-                    spanCount
-                } else {
-                    1
-                }
+        recyclerView.layoutManager =
+            GridLayoutManager(this, 4).apply {
+                dslSpanSizeLookup(dslAdapter)
             }
-        }
-
-        recyclerView.layoutManager = GridLayoutManager(this, spanCount).apply {
-            this.spanSizeLookup = spanSizeLookup
-        }
 
         //渲染adapter数据
         renderAdapter {
@@ -106,6 +94,8 @@ class SelectorDemoActivity : BaseRecyclerActivity() {
                 onRefresh()
             }
         }
+
+        Toast.makeText(this, "长按Item, 可以滑动选择", Toast.LENGTH_LONG).show()
     }
 
     override fun onRefresh() {
@@ -155,7 +145,7 @@ class SelectorDemoActivity : BaseRecyclerActivity() {
                 }
             }
 
-            dslDateFilter?.also {
+            dslDataFilter?.also {
                 it.addDispatchUpdatesListener(object : OnDispatchUpdatesListener {
                     override fun onDispatchUpdatesAfter(dslAdapter: DslAdapter) {
                         it.removeDispatchUpdatesListener(this)
