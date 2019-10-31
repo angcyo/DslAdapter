@@ -32,7 +32,7 @@
 ```
 dslItem(R.layout.item_group_head) {
     itemIsGroupHead = true
-    itemBind = { itemHolder, itemPosition, adapterItem ->
+    onItemBindOverride = { itemHolder, itemPosition, adapterItem ->
         itemHolder.tv(R.id.fold_button).text =
             if (itemGroupExtend) "折叠 $itemPosition" else "展开 $itemPosition"
 
@@ -273,7 +273,7 @@ dslItem(R.layout.item_group_head) {
 
 ### 1.1 方式1(推荐)
 
-继承 `DslAdapterItem`  重写 `itemLayoutId`  实现 `itemBind` 搞定.
+继承 `DslAdapterItem`  重写 `itemLayoutId`  重写 `onItemBind` 搞定.
 
 ```kotlin
 class DslTextItem : DslAdapterItem() {
@@ -281,123 +281,81 @@ class DslTextItem : DslAdapterItem() {
         itemLayoutId = R.layout.item_text_layout
     }
 
-    override var itemBind: (itemHolder: DslViewHolder, itemPosition: Int, adapterItem: DslAdapterItem) -> Unit =
-        { itemHolder, itemPosition, _ ->
-            itemHolder.v<TextView>(R.id.text_view).text = "文本位置:$itemPosition"
-        }
+    override fun onItemBind(
+        itemHolder: DslViewHolder,
+        itemPosition: Int,
+        adapterItem: DslAdapterItem
+    ) {
+        super.onItemBind(itemHolder, itemPosition, adapterItem)
+        itemHolder.v<TextView>(R.id.text_view).text = "文本位置:$itemPosition"
+    }
 }
 ```
 
 ### 1.2 方式2
 
-调用扩展方法`dslItem` 传入`layoutId`参数 实现 `itemBind` 搞定.
+调用扩展方法`dslItem` 传入`layoutId`参数 实现 `onItemBindOverride` 搞定.
 
 ```kotlin
 dslAdapter.dslItem(R.layout.item_text_layout) {
-          itemBind = { itemHolder, itemPosition, _ ->
-              itemHolder.v<TextView>(R.id.text_view).text = "文本位置:$itemPosition"
-          }
+      onItemBindOverride = { itemHolder, itemPosition, _ ->
+          itemHolder.v<TextView>(R.id.text_view).text = "文本位置:$itemPosition"
       }
+  }
 ```
 
 ## 基础功能 2.情感图自定义
 
 继承`DslAdapterStatusItem` 将对象设置给`DslAdapter`的`dslAdapterStatusItem`变量 即可.
 
+
+**有一种很简单的方式:**
+1. 继承`DslAdapterStatusItem`
+2. 设置对应`情感状态`需要展示的`状态布局`即可.
 ```kotlin
-open class DslAdapterStatusItem : DslAdapterItem() {
+open class CustomStatusItem : DslAdapterStatusItem() {
     init {
-        itemLayoutId = R.layout.item_adapter_status
+        itemStateLayoutMap[ADAPTER_STATUS_LOADING] = R.layout.base_loading_layout
+        itemStateLayoutMap[ADAPTER_STATUS_ERROR] = R.layout.base_error_layout
+        itemStateLayoutMap[ADAPTER_STATUS_EMPTY] = R.layout.base_empty_layout
     }
-
-    companion object {
-        const val ADAPTER_STATUS_NONE = -1
-        const val ADAPTER_STATUS_EMPTY = 0
-        const val ADAPTER_STATUS_LOADING = 1
-        const val ADAPTER_STATUS_ERROR = 2
-    }
-
-    var itemAdapterStatus: Int = ADAPTER_STATUS_NONE
-
-    override var itemBind: (itemHolder: DslViewHolder, itemPosition: Int, adapterItem: DslAdapterItem) -> Unit =
-        { itemHolder, _, _ ->
-
-            /*具体逻辑, 自行处理*/
-            itemHolder.v<TextView>(R.id.text_view).text = "情感图状态: ${when (itemAdapterStatus) {
-                ADAPTER_STATUS_EMPTY -> "空数据"
-                ADAPTER_STATUS_LOADING -> "加载中"
-                ADAPTER_STATUS_ERROR -> "加载异常"
-                else -> "未知状态"
-            }}"
-        }
-
-    /**返回[true] 表示不需要显示情感图, 即显示[Adapter]原本的内容*/
-    open fun isNoStatus() = itemAdapterStatus == ADAPTER_STATUS_NONE
 }
 
 ```
+
+想要更多控制, 可以重写`_onBindStateLayout`方法
+```kotlin
+override fun _onBindStateLayout(itemHolder: DslViewHolder, state: Int) {
+    super._onBindStateLayout(itemHolder, state)
+    
+    if (state == ADAPTER_STATUS_LOADING) {
+        itemHolder.v<TextView>(R.id.text_view).text = "精彩即将呈现..."
+    }
+}
+```
+
+如果还想更多的控制, 可以重写`onItemBind`方法.
+
+更多的一切, 都可以完全控制. 请查看`Demo`源码
+
 
 ## 基础功能 3.加载更多自定义
 继承`DslLoadMoreItem` 将对象设置给`DslAdapter`的`dslLoadMoreItem`变量 即可.
 
-```kotlin
-open class DslLoadMoreItem : DslAdapterItem() {
-    init {
-        itemLayoutId = R.layout.item_load_more
-    }
-
-    companion object {
-        const val ADAPTER_LOAD_NORMAL = 0
-        const val ADAPTER_LOAD_LOADING = 1
-        const val ADAPTER_LOAD_ERROR = 2
-        const val ADAPTER_LOAD_NO_MORE = 3
-    }
-
-    /**是否激活加载更多*/
-    var itemEnableLoadMore = true
-        set(value) {
-            field = value
-            itemLoadMoreStatus = ADAPTER_LOAD_NORMAL
-        }
-
-    /**加载更多当前的状态*/
-    var itemLoadMoreStatus: Int = ADAPTER_LOAD_NORMAL
-
-    /**加载更多回调*/
-    var onLoadMore: (DslViewHolder) -> Unit = {}
-
-    override var itemBind: (itemHolder: DslViewHolder, itemPosition: Int, adapterItem: DslAdapterItem) -> Unit =
-        { itemHolder, _, _ ->
-
-            /*具体逻辑, 自行处理*/
-            itemHolder.v<TextView>(R.id.text_view).text = "加载更多: ${when (itemLoadMoreStatus) {
-                ADAPTER_LOAD_NORMAL -> "加载更多中..."
-                ADAPTER_LOAD_LOADING -> "加载更多中..."
-                ADAPTER_LOAD_ERROR -> "加载异常"
-                ADAPTER_LOAD_NO_MORE -> "我是有底线的"
-                else -> "未知状态"
-            }}"
-
-            if (itemEnableLoadMore) {
-                if (itemLoadMoreStatus == ADAPTER_LOAD_NORMAL) {
-                    //错误和正常的情况下, 才触发加载跟多
-                    itemLoadMoreStatus = ADAPTER_LOAD_LOADING
-                    onLoadMore(itemHolder)
-                }
-            }
-        }
-
-    override var onItemViewDetachedToWindow: (itemHolder: DslViewHolder) -> Unit = {
-        if (itemEnableLoadMore) {
-            //加载失败时, 下次是否还需要加载更多?
-            if (itemLoadMoreStatus == ADAPTER_LOAD_ERROR) {
-                itemLoadMoreStatus = ADAPTER_LOAD_NORMAL
-            }
-        }
-    }
-}
+和情感图的自定义`如出一辙`, 完全可以`如法炮制`, 这里不介绍了.
 
 ```
+open class CustomLoadMoreItem : DslLoadMoreItem() {
+    init {
+        itemStateLayoutMap[ADAPTER_LOAD_NORMAL] = R.layout.base_loading_layout
+        itemStateLayoutMap[ADAPTER_LOAD_LOADING] = R.layout.base_loading_layout
+        itemStateLayoutMap[ADAPTER_LOAD_NO_MORE] = R.layout.base_no_more_layout
+        itemStateLayoutMap[ADAPTER_LOAD_ERROR] = R.layout.base_error_layout
+        itemStateLayoutMap[ADAPTER_LOAD_RETRY] = R.layout.base_error_layout
+    }
+}
+```
+
 
 # 最终使用代码
 
@@ -526,7 +484,7 @@ private fun DslAdapter.来点数据() {
         //2种使用item的方式, 喜欢哪种方式, 就用哪一种
         dslAdapter.dslTextItem()
         dslAdapter.dslItem(R.layout.item_text_layout) {
-            itemBind = { itemHolder, itemPosition, _ ->
+            onItemBindOverride = { itemHolder, itemPosition, _ ->
                 itemHolder.v<TextView>(R.id.text_view).text = "文本位置:$itemPosition"
             }
         }
@@ -535,7 +493,7 @@ private fun DslAdapter.来点数据() {
             //2种使用item的方式, 喜欢哪种方式, 就用哪一种
             dslAdapter.dslImageItem()
             dslAdapter.dslItem(R.layout.item_image_layout) {
-                itemBind = { itemHolder, itemPosition, _ ->
+                onItemBindOverride = { itemHolder, itemPosition, _ ->
                     itemHolder.v<TextView>(R.id.text_view).text = "文本位置:$itemPosition"
                 }
             }
