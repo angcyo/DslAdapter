@@ -223,8 +223,11 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder> {
     }
 
     /**插入数据列表*/
-    fun insertItem(index: Int, bean: List<DslAdapterItem>) {
-        dataItems.addAll(_validIndex(dataItems, index), bean)
+    fun insertItem(index: Int, list: List<DslAdapterItem>) {
+        if (list.isEmpty()) {
+            return
+        }
+        dataItems.addAll(_validIndex(dataItems, index), list)
         _updateAdapterItems()
         updateItemDepend()
     }
@@ -234,6 +237,28 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder> {
         dataItems.add(_validIndex(dataItems, index), bean)
         _updateAdapterItems()
         updateItemDepend()
+    }
+
+    /**移除一组数据*/
+    fun removeItem(list: List<DslAdapterItem>) {
+        val listInclude = mutableListOf<DslAdapterItem>()
+
+        list.filterTo(listInclude) {
+            dataItems.contains(it)
+        }
+
+        if (dataItems.removeAll(listInclude)) {
+            _updateAdapterItems()
+            updateItemDepend()
+        }
+    }
+
+    /**移除数据*/
+    fun removeItem(bean: DslAdapterItem) {
+        if (dataItems.remove(bean)) {
+            _updateAdapterItems()
+            updateItemDepend()
+        }
     }
 
     /**重置数据列表*/
@@ -332,6 +357,11 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder> {
             return
         }
 
+        if (adapterItems.isEmpty() && getValidFilterDataList().isEmpty()) {
+            //都是空数据
+            return
+        }
+
         dslDataFilter?.let {
             it.updateFilterItemDepend(filterParams)
         }
@@ -340,6 +370,46 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder> {
     /**获取有效过滤后的数据集合*/
     fun getValidFilterDataList(): List<DslAdapterItem> {
         return dslDataFilter?.filterDataList ?: adapterItems
+    }
+
+    /**
+     * <pre>
+     *  DslDemoItem()(){}
+     * </pre>
+     * */
+    operator fun <T : DslAdapterItem> T.invoke(config: T.() -> Unit) {
+        this.config()
+        addLastItem(this)
+    }
+
+    /**
+     * <pre>
+     * this + DslAdapterItem()
+     * </pre>
+     * */
+    operator fun <T : DslAdapterItem> plus(item: T): DslAdapter {
+        addLastItem(item)
+        return this
+    }
+
+    operator fun <T : DslAdapterItem> plus(list: List<T>): DslAdapter {
+        addLastItem(list)
+        return this
+    }
+
+    /**
+     * <pre>
+     * this - DslAdapterItem()
+     * </pre>
+     * */
+    operator fun <T : DslAdapterItem> minus(item: T): DslAdapter {
+        removeItem(item)
+        return this
+    }
+
+    operator fun <T : DslAdapterItem> minus(list: List<T>): DslAdapter {
+        removeItem(list)
+        return this
     }
 
     //</editor-fold desc="操作方法">

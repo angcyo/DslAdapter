@@ -401,6 +401,115 @@ open class DslLoadMoreItem : DslAdapterItem() {
 
 # 最终使用代码
 
+
+```kotlin
+open fun renderAdapter(render: DslAdapter.() -> Unit) {
+    dslAdapter.render()
+}
+
+```
+
+```kotlin
+renderAdapter {
+    //设置情感图状态, loading
+    setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
+
+    /**
+     * 扩展方式 追加[DslAdapterItem]
+     * */
+    dslItem(DslDemoItem()) {
+        itemText = "情感图状态使用示例"
+        onItemClick = {
+            start(AdapterStatusActivity::class.java)
+        }
+        itemTopInsert = 2 * dpi //控制顶部分割线的高度
+    }
+
+    dslItem(DslDemoItem()) {
+        itemText = "加载更多使用示例"
+        onItemClick = {
+            start(LoadMoreActivity::class.java)
+        }
+        itemTopInsert = 4 * dpi
+    }
+
+    /**
+     * [invoke]运算符重载方式 追加[DslAdapterItem]
+     * */
+    DslDemoItem()() {
+        itemText = "群组(线性布局)功能示例"
+        onItemClick = {
+            start(GroupDemoActivity::class.java)
+        }
+        itemTopInsert = 4 * dpi
+    }
+
+    DslDemoItem()() {
+        itemText = "群组(网格布局)功能示例"
+        onItemClick = {
+            start(GroupGridDemoActivity::class.java)
+        }
+        itemTopInsert = 4 * dpi
+    }
+
+    DslDemoItem()() {
+        itemText = "单选/多选示例"
+        onItemClick = {
+            start(SelectorDemoActivity::class.java)
+        }
+        itemTopInsert = 4 * dpi
+    }
+
+    DslDemoItem()() {
+        itemText = "StaggeredGridLayout"
+        onItemClick = {
+            start(StaggeredGridLayoutActivity::class.java)
+        }
+        itemTopInsert = 4 * dpi
+    }
+
+    renderEmptyItem()
+
+    /**
+     * [plus]运算符重载方式 追加[DslAdapterItem]
+     * */
+    this + DslDemoItem().apply {
+        itemText = "顶部的分割线是红色"
+        itemTopInsert = 8 * dpi
+        itemDecorationColor = Color.RED //控制分割线的颜色
+    } + DslDemoItem().apply {
+        itemText = "只绘制偏移量的分割线"
+        itemTopInsert = 8 * dpi
+        itemLeftOffset = 60 * dpi
+        itemDecorationColor = Color.BLUE
+        onlyDrawOffsetArea = true
+    } + DslDemoItem().apply {
+        itemText = "自定义Drawable的分割线"
+        itemBottomInsert = 20 * dpi
+        itemDecorationDrawable = resources.getDrawable(R.drawable.shape_decoration)
+    } + DslDemoItem().apply {
+        itemText = "上下都有的分割线"
+        itemTopInsert = 8 * dpi
+        itemBottomInsert = 8 * dpi
+        itemDecorationColor = Color.GREEN
+    }
+
+    /**
+     * [minus]运算符重载方式, 移除[DslAdapterItem]
+     * */
+    this - DslAdapterItem() - DslAdapterItem() - DslAdapterItem() - DslAdapterItem()
+
+    //模拟网络延迟
+    dslViewHolder.postDelay(1000) {
+        //设置情感图状态, 正常
+        setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
+    }
+}
+```
+
+你也可以像下面这样:
+
+
 ```kotlin
 private fun initLayout() {
     dslViewHolder.v<RecyclerView>(R.id.recycler_view).apply {
@@ -435,6 +544,8 @@ private fun DslAdapter.来点数据() {
 }
 
 ```
+
+更多代码, 请查看`Demo`源码.
 
 # 依赖使用方法
 
