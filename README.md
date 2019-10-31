@@ -29,7 +29,7 @@
 折叠的`Item`, 会在`itemIsGroupHead=true`到下一个`itemIsGroupHead=true`之间的`Item`
 
 
-```
+```kotlin
 dslItem(R.layout.item_group_head) {
     itemIsGroupHead = true
     onItemBindOverride = { itemHolder, itemPosition, adapterItem ->
@@ -65,7 +65,7 @@ RecyclerView.addItemDecoration(DslItemDecoration())
 
 分割线相关的属性:
 
-```
+```kotlin
 //控制item上下左右的间距
 itemTopInsert
 itemLeftInsert
@@ -312,6 +312,7 @@ dslAdapter.dslItem(R.layout.item_text_layout) {
 **有一种很简单的方式:**
 1. 继承`DslAdapterStatusItem`
 2. 设置对应`情感状态`需要展示的`状态布局`即可.
+
 ```kotlin
 open class CustomStatusItem : DslAdapterStatusItem() {
     init {
@@ -324,6 +325,7 @@ open class CustomStatusItem : DslAdapterStatusItem() {
 ```
 
 想要更多控制, 可以重写`_onBindStateLayout`方法
+
 ```kotlin
 override fun _onBindStateLayout(itemHolder: DslViewHolder, state: Int) {
     super._onBindStateLayout(itemHolder, state)
@@ -344,7 +346,7 @@ override fun _onBindStateLayout(itemHolder: DslViewHolder, state: Int) {
 
 和情感图的自定义`如出一辙`, 完全可以`如法炮制`, 这里不介绍了.
 
-```
+```kotlin
 open class CustomLoadMoreItem : DslLoadMoreItem() {
     init {
         itemStateLayoutMap[ADAPTER_LOAD_NORMAL] = R.layout.base_loading_layout
