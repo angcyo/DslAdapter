@@ -22,17 +22,23 @@ class OnceHandler(looper: Looper = Looper.getMainLooper()) : Handler(looper) {
 
     fun once(delayMillis: Long = 0, runnable: Runnable) {
 
-        innerRunnable?.let {
-            removeCallbacks(it)
+        clear()
+
+        InnerRunnable(runnable).apply {
+            innerRunnable = this
+            postDelayed(this, delayMillis)
         }
-
-        innerRunnable = InnerRunnable(runnable)
-
-        postDelayed(innerRunnable, delayMillis)
     }
 
     fun once(delayMillis: Long = 0, run: () -> Unit) {
         once(delayMillis, Runnable(run))
+    }
+
+    fun clear() {
+        innerRunnable?.let {
+            removeCallbacks(it)
+        }
+        innerRunnable = null
     }
 
     private inner class InnerRunnable(val raw: Runnable) : Runnable {
