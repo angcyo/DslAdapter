@@ -7,6 +7,7 @@ import android.graphics.Rect
 import android.support.annotation.LayoutRes
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.StaggeredGridLayoutManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -188,4 +189,14 @@ public fun GridLayoutManager.dslSpanSizeLookup(dslAdapter: DslAdapter): GridLayo
     }
     this.spanSizeLookup = spanSizeLookup
     return spanSizeLookup
+}
+
+public fun View.fullSpan(full: Boolean = true) {
+    val layoutParams = layoutParams
+    if (layoutParams is StaggeredGridLayoutManager.LayoutParams) {
+        if (full != layoutParams.isFullSpan) {
+            layoutParams.isFullSpan = true
+            this.layoutParams = layoutParams
+        }
+    }
 }

@@ -114,23 +114,30 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder> {
 
     override fun onViewAttachedToWindow(holder: DslViewHolder) {
         super.onViewAttachedToWindow(holder)
-        if (isAdapterStatus()) {
-            dslAdapterStatusItem.onItemViewAttachedToWindow.invoke(holder)
-        } else {
-            if (holder.adapterPosition in getValidFilterDataList().indices) {
-                getAdapterItem(holder.adapterPosition).onItemViewAttachedToWindow.invoke(holder)
-            }
+
+        val dslAdapterItem = when {
+            isAdapterStatus() -> dslAdapterStatusItem
+            holder.adapterPosition in getValidFilterDataList().indices -> getAdapterItem(holder.adapterPosition)
+            else -> null
+        }
+
+        dslAdapterItem?.apply {
+            holder.itemView.fullSpan(itemSpanCount == -1)
+            onItemViewAttachedToWindow.invoke(holder)
         }
     }
 
     override fun onViewDetachedFromWindow(holder: DslViewHolder) {
         super.onViewDetachedFromWindow(holder)
-        if (isAdapterStatus()) {
-            dslAdapterStatusItem.onItemViewDetachedToWindow.invoke(holder)
-        } else {
-            if (holder.adapterPosition in getValidFilterDataList().indices) {
-                getAdapterItem(holder.adapterPosition).onItemViewDetachedToWindow.invoke(holder)
-            }
+
+        val dslAdapterItem = when {
+            isAdapterStatus() -> dslAdapterStatusItem
+            holder.adapterPosition in getValidFilterDataList().indices -> getAdapterItem(holder.adapterPosition)
+            else -> null
+        }
+
+        dslAdapterItem?.apply {
+            onItemViewDetachedToWindow.invoke(holder)
         }
     }
 

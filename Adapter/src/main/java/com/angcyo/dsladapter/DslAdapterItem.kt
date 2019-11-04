@@ -32,14 +32,6 @@ open class DslAdapterItem {
         itemDslAdapter?.notifyItemChanged(this, useFilterList)
     }
 
-//    /**[notifyItemRemoved]*/
-//    open fun deleteAdapterItem(useFilterList: Boolean = true) {
-//        if (itemDslAdapter == null) {
-//            L.e("updateAdapterItem需要[itemDslAdapter], 请赋值.")
-//        }
-//        itemDslAdapter?.deleteAdapterItem(this, useFilterList)
-//    }
-
     //<editor-fold desc="Grid相关属性">
 
     /**
@@ -60,7 +52,10 @@ open class DslAdapterItem {
     /**唯一标识此item的值*/
     var itemTag: String? = null
 
-    /**界面绑定*/
+    /**
+     * 界面绑定入口
+     * [DslAdapter.onBindView]
+     * */
     open var itemBind: (itemHolder: DslViewHolder, itemPosition: Int, adapterItem: DslAdapterItem) -> Unit =
         { itemHolder, itemPosition, adapterItem ->
             onItemBind(itemHolder, itemPosition, adapterItem)
@@ -72,23 +67,7 @@ open class DslAdapterItem {
         itemPosition: Int,
         adapterItem: DslAdapterItem
     ) {
-        val layoutParams = itemHolder.itemView.layoutParams
-        if (layoutParams is StaggeredGridLayoutManager.LayoutParams) {
 
-            if (itemSpanCount == -1) {
-                //full
-                if (!layoutParams.isFullSpan) {
-                    layoutParams.isFullSpan = true
-                    itemHolder.itemView.layoutParams = layoutParams
-                }
-            } else {
-                //not full
-                if (layoutParams.isFullSpan) {
-                    layoutParams.isFullSpan = false
-                    itemHolder.itemView.layoutParams = layoutParams
-                }
-            }
-        }
     }
 
     /**用于覆盖默认操作*/
@@ -97,23 +76,19 @@ open class DslAdapterItem {
 
         }
 
+    /**
+     * [DslAdapter.onViewAttachedToWindow]
+     * */
     open var onItemViewAttachedToWindow: (itemHolder: DslViewHolder) -> Unit = {
 
     }
 
+    /**
+     * [DslAdapter.onViewDetachedFromWindow]
+     * */
     open var onItemViewDetachedToWindow: (itemHolder: DslViewHolder) -> Unit = {
 
     }
-
-    open var onItemChildViewDetachedFromWindow: (itemHolder: DslViewHolder, itemPosition: Int) -> Unit =
-        { _, _ ->
-
-        }
-
-    open var onItemChildViewAttachedToWindow: (itemHolder: DslViewHolder, itemPosition: Int) -> Unit =
-        { _, _ ->
-
-        }
 
     //</editor-fold>
 
@@ -437,15 +412,15 @@ open class DslAdapterItem {
 
     /**
      * 决定
-     * [android.support.v7.widget.RecyclerView.Adapter.notifyItemInserted]
-     * [android.support.v7.widget.RecyclerView.Adapter.notifyItemRemoved]
+     * [RecyclerView.Adapter.notifyItemInserted]
+     * [RecyclerView.Adapter.notifyItemRemoved]
      * 的执行
      * */
     open var thisAreItemsTheSame: (fromItem: DslAdapterItem?, newItem: DslAdapterItem) -> Boolean =
         { _, newItem -> this == newItem }
 
     /**
-     * [android.support.v7.widget.RecyclerView.Adapter.notifyItemChanged]
+     * [RecyclerView.Adapter.notifyItemChanged]
      * */
     open var thisAreContentsTheSame: (fromItem: DslAdapterItem?, newItem: DslAdapterItem) -> Boolean =
         { fromItem, newItem ->
@@ -514,7 +489,7 @@ open class DslAdapterItem {
 
     //<editor-fold desc="单选, 多选相关">
 
-    /**是否选中, 需要 [com.angcyo.dsladapter.ItemSelectorHelper.selectorModel] 的支持. */
+    /**是否选中, 需要 [ItemSelectorHelper.selectorModel] 的支持. */
     var itemIsSelected = false
 
     /**是否 允许被选中*/
