@@ -3,6 +3,7 @@ package com.angcyo.dsladapter.demo
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
+import android.view.Gravity
 import android.widget.TextView
 import com.angcyo.dsladapter.*
 import com.angcyo.dsladapter.dsl.DslDemoItem
@@ -72,7 +73,7 @@ class MainActivity : BaseRecyclerActivity() {
             }
 
             DslDemoItem()() {
-                itemText = "StaggeredGridLayout"
+                itemText = "StaggeredGridLayout(拖拽/滑动删除示例)"
                 onItemClick = {
                     start(StaggeredGridLayoutActivity::class.java)
                 }
@@ -80,6 +81,16 @@ class MainActivity : BaseRecyclerActivity() {
             }
 
             renderEmptyItem()
+
+            dslItem(R.layout.item_demo_list) {
+                onItemBindOverride = { itemHolder, _, _ ->
+                    itemHolder.itemView.setBackgroundColor(Color.TRANSPARENT)
+                    itemHolder.tv(R.id.text_view).apply {
+                        gravity = Gravity.CENTER
+                        text = "以下是分割线展示"
+                    }
+                }
+            }
 
             /**
              * [plus]运算符重载方式 追加[DslAdapterItem]
@@ -109,6 +120,8 @@ class MainActivity : BaseRecyclerActivity() {
              * [minus]运算符重载方式, 移除[DslAdapterItem]
              * */
             this - DslAdapterItem() - DslAdapterItem() - DslAdapterItem() - DslAdapterItem()
+
+            renderEmptyItem()
 
             //模拟网络延迟
             dslViewHolder.postDelay(1000) {

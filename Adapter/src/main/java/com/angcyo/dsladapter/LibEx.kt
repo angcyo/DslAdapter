@@ -3,11 +3,13 @@ package com.angcyo.dsladapter
 import android.app.Activity
 import android.content.Context
 import android.content.res.Resources
+import android.graphics.Paint
 import android.graphics.Rect
 import android.support.annotation.LayoutRes
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.StaggeredGridLayoutManager
+import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,8 +22,6 @@ import android.view.Window
  * @date 2019/10/16
  * Copyright (c) 2019 ShenZhen O&M Cloud Co., Ltd. All rights reserved.
  */
-
-
 public fun RecyclerView.eachChildRViewHolder(
     targetView: View? = null,/*指定目标, 则只回调目标前后的ViewHolder*/
     callback: (
@@ -172,18 +172,34 @@ public fun View.setWidthHeight(width: Int, height: Int) {
     layoutParams = params
 }
 
+/**快速创建网格布局*/
+public fun gridLayout(
+    context: Context,
+    dslAdapter: DslAdapter,
+    spanCount: Int = 4,
+    orientation: Int = RecyclerView.VERTICAL,
+    reverseLayout: Boolean = false
+): GridLayoutManager {
+    return GridLayoutManager(context, spanCount, orientation, reverseLayout).apply {
+        dslSpanSizeLookup(dslAdapter)
+    }
+}
+
 /**SpanSizeLookup*/
 public fun GridLayoutManager.dslSpanSizeLookup(dslAdapter: DslAdapter): GridLayoutManager.SpanSizeLookup {
     //设置span size
     val spanCount = spanCount
     val spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
         override fun getSpanSize(position: Int): Int {
-            return if (dslAdapter.isAdapterStatus() ||
-                dslAdapter.getItemData(position)?.itemIsGroupHead == true
-            ) {
-                spanCount
-            } else {
-                dslAdapter.getItemData(position)?.itemSpanCount ?: 1
+            return when {
+                dslAdapter.isAdapterStatus() -> spanCount
+                else -> dslAdapter.getItemData(position)?.run {
+                    if (itemSpanCount == -1) {
+                        spanCount
+                    } else {
+                        itemSpanCount
+                    }
+                } ?: 1
             }
         }
     }
@@ -200,3 +216,20 @@ public fun View.fullSpan(full: Boolean = true) {
         }
     }
 }
+
+/**文本的高度*/
+public fun Paint.textHeight(): Float = descent() - ascent()
+
+public val FLAG_NO_INIT = -1
+
+public val FLAG_NONE = 0
+
+public val FLAG_ALL = ItemTouchHelper.LEFT or
+        ItemTouchHelper.RIGHT or
+        ItemTouchHelper.DOWN or
+        ItemTouchHelper.UP
+
+public val FLAG_VERTICAL = ItemTouchHelper.DOWN or ItemTouchHelper.UP
+
+public val FLAG_HORIZONTAL = ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+

@@ -400,6 +400,11 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder> {
         return dslDataFilter?.filterDataList ?: adapterItems
     }
 
+    /**更新界面上所有[DslAdapterItem]*/
+    fun updateAllItem() {
+        notifyItemRangeChanged(0, itemCount)
+    }
+
     //</editor-fold desc="操作方法">
 
     //<editor-fold desc="操作符重载">
