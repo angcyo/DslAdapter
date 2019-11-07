@@ -14,6 +14,8 @@
 8. 支持某一个Item `定向更新`多个其他Item
 9. 支持`群组`功能 (指定连续的几个相同/不同的item为一组)
 10. 支持`滑动选择`(手指拖拽, 就可以选中范围内item)
+11. 支持`拖拽排序` `侧滑删除` (注意不是侧滑菜单)
+
 
 # 功能介绍
 
@@ -268,6 +270,21 @@ dslItem(R.layout.item_group_head) {
 
 ![](https://gitee.com/angcyo/DslAdapter/raw/master/png/grid.png)
 
+## 拖拽排序/侧滑删除
+
+此功能需要`DragCallbackHelper`的支持.
+
+```
+DragCallbackHelper().attachToRecyclerView(recyclerView)
+```
+
+属性`itemDragFlag` `itemSwipeFlag` 可以控制激活的方向.
+
+
+![](https://gitee.com/angcyo/DslAdapter/raw/master/png/drag1.png)
+
+![](https://gitee.com/angcyo/DslAdapter/raw/master/png/swipe1.png)
+
 ## 基础功能 1.多类型使用方式
 
 ### 1.1 方式1(推荐)
@@ -511,7 +528,8 @@ private fun DslAdapter.来点数据() {
 ## 1.JitPack
 
 根 `build.gradle`
-```
+
+```kotlin
 allprojects {
 	repositories {
 		...
@@ -520,14 +538,15 @@ allprojects {
 }
 ```
 
-```
+```kotlin
 dependencies {
     implementation 'com.github.angcyo:DslAdapter:xxx'
 }
 ```
 
 快照版本:(能够保持最新代码)
-```
+
+```kotlin
 dependencies {
     implementation 'com.github.angcyo:DslAdapter:master-SNAPSHOT'
 }
@@ -535,7 +554,7 @@ dependencies {
 
 ## 2.下载源码
 
-```
+```kotlin
 git clone https://github.com/angcyo/DslAdapter.git --depth=1
 ```
 
