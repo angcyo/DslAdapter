@@ -552,6 +552,8 @@ dependencies {
 }
 ```
 
+发布的版本号,可以在这里查看. [点击查看](https://github.com/angcyo/DslAdapter/tags)
+
 ## 2.下载源码
 
 ```kotlin
