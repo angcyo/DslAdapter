@@ -239,7 +239,7 @@ fun SpanParams.isFirstSpan(): Boolean = spanIndex == 0
 fun SpanParams.isLastSpan(spanCount: Int): Boolean = spanIndex + spanSize == spanCount
 
 const val EDGE_NONE = 0x00
-//在网格布局的左边界
+//左边界
 const val EDGE_LEFT = 0x01
 //顶边界
 const val EDGE_TOP = 0x02
@@ -268,26 +268,35 @@ fun ItemGroupParams.isFirstPosition(): Boolean = indexInGroup == 0 && currentAda
 fun ItemGroupParams.isLastPosition(): Boolean =
     currentAdapterItem != null && indexInGroup == groupItems.lastIndex
 
-/**边界扩展方法*/
-fun ItemGroupParams.isEdgeLeft(): Boolean = edgeInGrid.have(EDGE_LEFT)
 
+/**网格布局, 边界扩展方法*/
+//是否在4条边上
+fun ItemGroupParams.isEdgeLeft(): Boolean = edgeInGrid.have(EDGE_LEFT)
 fun ItemGroupParams.isEdgeRight(): Boolean = edgeInGrid.have(EDGE_RIGHT)
 fun ItemGroupParams.isEdgeTop(): Boolean = edgeInGrid.have(EDGE_TOP)
 fun ItemGroupParams.isEdgeBottom(): Boolean = edgeInGrid.have(EDGE_BOTTOM)
+
+//全屏占满整个一行
 fun ItemGroupParams.isEdgeHorizontal(): Boolean = isEdgeLeft() && isEdgeRight()
+//全屏占满整个一列
 fun ItemGroupParams.isEdgeVertical(): Boolean = isEdgeTop() && isEdgeBottom()
 
+//是否在4个角
 fun ItemGroupParams.isEdgeGroupLeftTop(): Boolean = edgeInGroup.have(EDGE_LEFT_TOP)
 fun ItemGroupParams.isEdgeGroupRightTop(): Boolean = edgeInGroup.have(EDGE_RIGHT_TOP)
 fun ItemGroupParams.isEdgeGroupLeftBottom(): Boolean = edgeInGroup.have(EDGE_LEFT_BOTTOM)
 fun ItemGroupParams.isEdgeGroupRightBottom(): Boolean = edgeInGroup.have(EDGE_RIGHT_BOTTOM)
 
+//在一组中的第一行
 fun ItemGroupParams.isEdgeGroupTop(): Boolean = edgeInGroup.have(EDGE_GROUP_TOP)
+//在一组中的最后一行
 fun ItemGroupParams.isEdgeGroupBottom(): Boolean = edgeInGroup.have(EDGE_GROUP_BOTTOM)
 
+//占满整个一行(允许非全屏)
 fun ItemGroupParams.isEdgeGroupHorizontal(): Boolean =
     (isEdgeGroupLeftTop() && isEdgeGroupRightTop()) || (isEdgeGroupLeftBottom() && isEdgeGroupRightBottom())
 
+//占满整个一列(允许非全屏)
 fun ItemGroupParams.isEdgeGroupVertical(): Boolean =
     (isEdgeGroupLeftTop() && isEdgeGroupLeftBottom()) || (isEdgeGroupRightTop() && isEdgeGroupRightBottom())
 

@@ -130,7 +130,7 @@ class DragCallbackHelper : ItemTouchHelper.Callback() {
     }
 
     /**滑动的时候, 是否绘制提示信息*/
-    var enableSwipeTip = true
+        var enableSwipeTip = true
 
     /**提示文本*/
     var swipeTipText: CharSequence = "滑动可删除"
