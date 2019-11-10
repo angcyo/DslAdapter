@@ -19,7 +19,7 @@
 
 # 功能介绍
 
-请访问[WIKI文档](https://github.com/angcyo/DslAdapter/wiki)查看下详情说明.
+请访问[WIKI文档](https://github.com/angcyo/DslAdapter/wiki)查看详情说明.
 
 ## 分组折叠
 
