@@ -19,6 +19,8 @@
 
 # 功能介绍
 
+请访问[WIKI文档](./wiki)查看下详情说明.
+
 ## 分组折叠
 
 折叠功能需要属性`itemIsGroupHead=true`和`itemGroupExtend`的配置
