@@ -1,4 +1,7 @@
 # DslAdapter
+
+`Kotlin`时代的`Adapter`.
+
 `Dsl` 的形式使用 `RecyclerView.Adapter`, 支持情感图状态切换, 加载更多, 多类型`Item`等
 
 所有`Item`继承自`DslAdapterItem`即可在`DslAdapter`中使用.
