@@ -14,7 +14,7 @@ import kotlin.math.min
  * @date 2019/08/09
  * Copyright (c) 2019 ShenZhen O&M Cloud Co., Ltd. All rights reserved.
  */
-open class DslAdapter : RecyclerView.Adapter<DslViewHolder> {
+open class DslAdapter : RecyclerView.Adapter<DslViewHolder>, OnDispatchUpdatesListener {
 
     /*为了简单起见, 这里写死套路, 理论上应该用状态器管理的.*/
     var dslAdapterStatusItem = DslAdapterStatusItem()
@@ -31,9 +31,14 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder> {
     val dataItems = mutableListOf<DslAdapterItem>()
 
     /**数据过滤规则*/
-    var dslDataFilter: DslDataFilter? = DslDataFilter(this)
+    var dslDataFilter: DslDataFilter? = null
         set(value) {
+            if (field == value) {
+                return
+            }
+            field?.removeDispatchUpdatesListener(this)
             field = value
+            field?.addDispatchUpdatesListener(this)
             updateItemDepend()
         }
 
@@ -142,6 +147,23 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder> {
     }
 
     //</editor-fold desc="生命周期方法">
+
+    //<editor-fold desc="其他方法">
+
+    /**
+     * 只会执行一次
+     * */
+    var onDispatchUpdatesAfterOnce: ((dslAdapter: DslAdapter) -> Unit)? = null
+
+    /**
+     * [Diff]操作结束之后的通知事件
+     * */
+    override fun onDispatchUpdatesAfter(dslAdapter: DslAdapter) {
+        onDispatchUpdatesAfterOnce?.invoke(dslAdapter)
+        onDispatchUpdatesAfterOnce = null
+    }
+
+    //</editor-fold>
 
     //<editor-fold desc="辅助方法">
 

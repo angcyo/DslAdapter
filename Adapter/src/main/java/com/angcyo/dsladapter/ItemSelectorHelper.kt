@@ -47,7 +47,8 @@ class ItemSelectorHelper(val dslAdapter: DslAdapter) {
         }
 
     /**事件监听*/
-    var onItemSelectorListener: OnItemSelectorListener = object : OnItemSelectorListener {}
+    var onItemSelectorListener: OnItemSelectorListener = object :
+        OnItemSelectorListener {}
 
     /**
      * 选择/取消 单项
@@ -71,7 +72,7 @@ class ItemSelectorHelper(val dslAdapter: DslAdapter) {
                     _selector(selectorParams)
                 }
                 else -> {
-                    //不允许被选中
+                    //不允许被选择
                 }
             }
         }
@@ -98,9 +99,18 @@ class ItemSelectorHelper(val dslAdapter: DslAdapter) {
      * 选择/取消 多个项.
      * 单选模式下, 只会选择最后一个
      * */
-    fun selector(itemList: List<DslAdapterItem>, selectorParams: SelectorParams) {
+    fun selector(
+        itemList: List<DslAdapterItem>,
+        selectorParams: SelectorParams = SelectorParams()
+    ) {
         itemList.forEach {
-            selector(SelectorParams(it, selectorParams.selector, false))
+            selector(
+                SelectorParams(
+                    it,
+                    selectorParams.selector,
+                    false
+                )
+            )
         }
         if (selectorParams.notify) {
             if (itemList.isEmpty() && !selectorParams.notifyWithListEmpty) {
@@ -111,9 +121,18 @@ class ItemSelectorHelper(val dslAdapter: DslAdapter) {
     }
 
     /**
+     * 选择/取消 一个
+     * */
+    fun selector(position: Int, selectorParams: SelectorParams = SelectorParams()) {
+        val allItems = dslAdapter.getDataList(selectorParams._useFilterList)
+        selectorParams.item = allItems.getOrNull(position)
+        selector(selectorParams)
+    }
+
+    /**
      * 选择/取消 一个范围
      * */
-    fun selector(indexRange: IntRange, selectorParams: SelectorParams) {
+    fun selector(indexRange: IntRange, selectorParams: SelectorParams = SelectorParams()) {
         val allItems = dslAdapter.getDataList(selectorParams._useFilterList)
         val list = mutableListOf<DslAdapterItem>()
 
@@ -135,7 +154,7 @@ class ItemSelectorHelper(val dslAdapter: DslAdapter) {
     /**
      * 选择/取消 全部
      * */
-    fun selectorAll(selectorParams: SelectorParams) {
+    fun selectorAll(selectorParams: SelectorParams = SelectorParams()) {
         selector(dslAdapter.getDataList(selectorParams._useFilterList), selectorParams)
     }
 
@@ -258,7 +277,11 @@ const val MODEL_SINGLE = 1
 /** 多选 状态 */
 const val MODEL_MULTI = 2
 
-@IntDef(MODEL_NORMAL, MODEL_SINGLE, MODEL_MULTI)
+@IntDef(
+    MODEL_NORMAL,
+    MODEL_SINGLE,
+    MODEL_MULTI
+)
 @Retention(AnnotationRetention.SOURCE)
 annotation class MODEL
 
@@ -271,7 +294,11 @@ const val OPTION_SELECT = 1
 /**取消*/
 const val OPTION_DESELECT = 2
 
-@IntDef(OPTION_MUTEX, OPTION_SELECT, OPTION_DESELECT)
+@IntDef(
+    OPTION_MUTEX,
+    OPTION_SELECT,
+    OPTION_DESELECT
+)
 @Retention(AnnotationRetention.SOURCE)
 annotation class SELECTOR
 
@@ -375,3 +402,4 @@ public fun RecyclerView?.singleModel() {
 public fun RecyclerView?.multiModel() {
     (this?.adapter as? DslAdapter)?.multiModel()
 }
+

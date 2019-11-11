@@ -8,6 +8,7 @@ import android.graphics.drawable.Drawable
 import android.support.annotation.LayoutRes
 import android.support.v7.widget.RecyclerView
 import android.view.View
+import kotlin.properties.Delegates.notNull
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -62,12 +63,39 @@ open class DslAdapterItem {
             onItemBindOverride(itemHolder, itemPosition, adapterItem)
         }
 
+    /**
+     * 点击事件和长按事件封装
+     * */
+    var onItemClick: ((View) -> Unit)? = null
+    var onItemLongClick: ((View) -> Boolean)? = null
+
+    var _clickListener: View.OnClickListener? = object : View.OnClickListener {
+        override fun onClick(view: View?) {
+            notNull(onItemClick, view) {
+                onItemClick?.invoke(view!!)
+            }
+        }
+    }
+
+    var _longClickListener: View.OnLongClickListener? =
+        View.OnLongClickListener { view -> onItemLongClick?.invoke(view) ?: false }
+
     open fun onItemBind(
         itemHolder: DslViewHolder,
         itemPosition: Int,
         adapterItem: DslAdapterItem
     ) {
+        if (onItemClick == null || _clickListener == null) {
+            itemHolder.itemView.isClickable = false
+        } else {
+            itemHolder.clickItem(_clickListener)
+        }
 
+        if (onItemLongClick == null || _longClickListener == null) {
+            itemHolder.itemView.isLongClickable = false
+        } else {
+            itemHolder.itemView.setOnLongClickListener(_longClickListener)
+        }
     }
 
     /**用于覆盖默认操作*/
@@ -412,6 +440,18 @@ open class DslAdapterItem {
 
     //<editor-fold desc="Diff 相关">
 
+    /**[Item]是否发生过改变*/
+    var itemChanged = false
+
+    /**[Item]是否正在改变, 会影响[thisAreContentsTheSame]的判断, 并且会在[Diff]计算完之后, 设置为`false`*/
+    var itemChanging = false
+        set(value) {
+            field = value
+            if (value) {
+                itemChanged = true
+            }
+        }
+
     /**
      * 决定
      * [RecyclerView.Adapter.notifyItemInserted]
@@ -426,10 +466,10 @@ open class DslAdapterItem {
      * */
     open var thisAreContentsTheSame: (fromItem: DslAdapterItem?, newItem: DslAdapterItem) -> Boolean =
         { fromItem, newItem ->
-            if (fromItem == null) {
-                this == newItem
-            } else {
-                this != fromItem && this == newItem
+            when {
+                itemChanging -> false
+                fromItem == null -> this == newItem
+                else -> this != fromItem && this == newItem
             }
         }
 

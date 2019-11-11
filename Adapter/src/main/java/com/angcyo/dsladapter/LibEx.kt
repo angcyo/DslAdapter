@@ -128,6 +128,21 @@ fun navBarHeight(context: Context): Int {
     return result
 }
 
+public fun notNull(vararg anys: Any?, doIt: (Array<Any>) -> Unit) {
+    var haveNull = false
+
+    for (any in anys) {
+        if (any == null) {
+            haveNull = true
+            break
+        }
+    }
+
+    if (!haveNull) {
+        doIt(anys as Array<Any>)
+    }
+}
+
 fun Rect.clear() {
     set(0, 0, 0, 0)
 }

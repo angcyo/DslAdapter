@@ -202,15 +202,24 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
             val oldSize = filterDataList.size
             var newSize = 0
 
-            _newList?.let {
+            val diffList = _newList
+            _newList = null
+
+            diffList?.let {
                 newSize = it.size
                 filterDataList.clear()
                 filterDataList.addAll(it)
             }
 
-            _newList = null
+            diffList?.forEach {
+                //清空标志
+                it.itemChanging = false
+            }
 
             val updateDependItemList = _getUpdateDependItemList()
+
+            //是否调用了[Dispatch]
+            var isDispatchUpdatesTo = false
 
             if (_params?.justFilter == true) {
                 //仅过滤数据源,不更新界面
@@ -226,16 +235,19 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
                     dslAdapter.notifyItemChanged(_params?.formDslAdapterItem)
                 } else {
                     _diffResult?.dispatchUpdatesTo(dslAdapter)
-
-                    val updatesSet = mutableSetOf<OnDispatchUpdatesListener>()
-                    updatesSet.addAll(_dispatchUpdatesSet)
-                    updatesSet.forEach {
-                        it.onDispatchUpdatesAfter(dslAdapter)
-                    }
+                    isDispatchUpdatesTo = true
                 }
             }
 
             notifyUpdateDependItem(updateDependItemList)
+
+            if (isDispatchUpdatesTo && _dispatchUpdatesSet.isNotEmpty()) {
+                val updatesSet = mutableSetOf<OnDispatchUpdatesListener>()
+                updatesSet.addAll(_dispatchUpdatesSet)
+                updatesSet.forEach {
+                    it.onDispatchUpdatesAfter(dslAdapter)
+                }
+            }
 
             diffSubmit = null
             _diffResult = null
@@ -268,7 +280,7 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
             val diffResult = DiffUtil.calculateDiff(
                 RDiffCallback(
                     oldList,
-                    newList,
+                    _newList,
                     object :
                         RDiffCallback<DslAdapterItem>() {
 
