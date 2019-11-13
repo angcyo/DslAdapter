@@ -18,8 +18,6 @@ class DslDemoItem : DslAdapterItem() {
 
     var itemText: CharSequence? = null
 
-    var onItemClick: () -> Unit = { }
-
     override fun onItemBind(
         itemHolder: DslViewHolder,
         itemPosition: Int,
@@ -27,8 +25,5 @@ class DslDemoItem : DslAdapterItem() {
     ) {
         super.onItemBind(itemHolder, itemPosition, adapterItem)
         itemHolder.tv(R.id.text_view).text = itemText
-        itemHolder.clickItem {
-            onItemClick()
-        }
     }
 }

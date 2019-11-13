@@ -68,6 +68,7 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>, OnDispatchUpdatesLi
     }
 
     init {
+        dslDataFilter = DslDataFilter(this)
         if (dslLoadMoreItem.itemEnableLoadMore) {
             setLoadMoreEnable(true)
         }

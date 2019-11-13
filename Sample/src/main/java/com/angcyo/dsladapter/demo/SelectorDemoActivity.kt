@@ -145,14 +145,8 @@ class SelectorDemoActivity : BaseRecyclerActivity() {
                 }
             }
 
-            dslDataFilter?.also {
-                it.addDispatchUpdatesListener(object : OnDispatchUpdatesListener {
-                    override fun onDispatchUpdatesAfter(dslAdapter: DslAdapter) {
-                        it.removeDispatchUpdatesListener(this)
-                        //固定选项
-                        itemSelectorHelper.fixedSelectorItemList = fixedItemList
-                    }
-                })
+            onDispatchUpdatesAfterOnce = {
+                itemSelectorHelper.fixedSelectorItemList = fixedItemList
             }
         }
     }
