@@ -38,10 +38,12 @@ renderAdapter{
     加载更多Item()
 }
 
+//普通界面和列表界面 如出一辙, 一点也不用惊讶,后面还有更刺激的.
+
 //and so on
 ```
 
-你没有看错, 就是这么`简单`, 就是这么`高效`. `...爽 爽 爽...`
+你没有看错, 就是这么`简单`, 就是这么`高效`. 一个字`...爽 爽 爽...`
 
 任意界面, 都是由若干个`相同Item`or`不相同Item`组合而成.
 
@@ -69,24 +71,24 @@ renderAdapter{
 # 功能展示
 
 [情感图切换](https://github.com/angcyo/DslAdapter/wiki/%E6%83%85%E6%84%9F%E5%9B%BE%E7%8A%B6%E6%80%81%E5%88%87%E6%8D%A2)|[加载更多](https://github.com/angcyo/DslAdapter/wiki/%E5%8A%A0%E8%BD%BD%E6%9B%B4%E5%A4%9A%E5%8A%9F%E8%83%BD)
---|--
-![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_adapter_status.gif)|![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_load_more.gif)
+:--:|:--:
+![](https://user-gold-cdn.xitu.io/2019/11/21/16e8cd1fa21c154b?w=375&h=605&f=gif&s=254524)|![](https://user-gold-cdn.xitu.io/2019/11/21/16e8cd1fa81069f9?w=375&h=605&f=gif&s=980074)
 
 [折叠展开](https://github.com/angcyo/DslAdapter/wiki/%E6%8A%98%E5%8F%A0%E5%92%8C%E5%B1%95%E5%BC%80) | [群组功能](https://github.com/angcyo/DslAdapter/wiki/%E7%BE%A4%E7%BB%84%E5%8A%9F%E8%83%BD)
---|--
-![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_linear_group.gif)|![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_grid_group.gif)
+:--:|:--:
+![](https://user-gold-cdn.xitu.io/2019/11/21/16e8cd1fa8cf5761?w=375&h=605&f=gif&s=523013)|![](https://user-gold-cdn.xitu.io/2019/11/21/16e8cd1fa8d3cc79?w=375&h=605&f=gif&s=175657)
 
 [单选](https://github.com/angcyo/DslAdapter/wiki/%E5%8D%95%E9%80%89-%E5%A4%9A%E9%80%89-%E6%BB%91%E5%8A%A8%E9%80%89%E6%8B%A9)|[多选](https://github.com/angcyo/DslAdapter/wiki/%E6%8B%96%E6%8B%BD%E6%8E%92%E5%BA%8F%E5%92%8C%E4%BE%A7%E6%BB%91%E5%88%A0%E9%99%A4)
---|--
-![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_single_selector.gif)|![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_multi_selector.gif)
+:--:|:--:
+![](https://user-gold-cdn.xitu.io/2019/11/21/16e8cd1fa9dff236)|![](https://user-gold-cdn.xitu.io/2019/11/21/16e8cd1faa1bcbb3?w=375&h=605&f=gif&s=780053)
 
 [滑动选择](https://github.com/angcyo/DslAdapter/wiki/%E5%8D%95%E9%80%89-%E5%A4%9A%E9%80%89-%E6%BB%91%E5%8A%A8%E9%80%89%E6%8B%A9)|[拖拽排序](https://github.com/angcyo/DslAdapter/wiki/%E6%8B%96%E6%8B%BD%E6%8E%92%E5%BA%8F%E5%92%8C%E4%BE%A7%E6%BB%91%E5%88%A0%E9%99%A4)
---|--
-![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_slide_selector.gif)|![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_drag.gif)
+:--:|:--:
+![](https://user-gold-cdn.xitu.io/2019/11/21/16e8cd1fd4862e36?w=375&h=605&f=gif&s=645392)|![](https://user-gold-cdn.xitu.io/2019/11/21/16e8cd1fe4165493?w=375&h=605&f=gif&s=658164)
 
 [侧滑删除](https://github.com/angcyo/DslAdapter/wiki/%E6%8B%96%E6%8B%BD%E6%8E%92%E5%BA%8F%E5%92%8C%E4%BE%A7%E6%BB%91%E5%88%A0%E9%99%A4)|[树结构](https://github.com/angcyo/DslAdapter/wiki/%E6%A0%91%E7%BB%93%E6%9E%84)
---|--
-![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_slide.gif)|![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_tree.gif)
+:--:|:--:
+![](https://user-gold-cdn.xitu.io/2019/11/21/16e8cd1fe55f0dcb?w=375&h=605&f=gif&s=411894)|![](https://user-gold-cdn.xitu.io/2019/11/21/16e8cd1ff44e2fdd?w=375&h=605&f=gif&s=501214)
 
 # 使用`JitPack`的方式, 引入库.
 
@@ -121,7 +123,7 @@ dependencies {
 
 扫码安装
 
-![](https://gitee.com/angcyo/DslAdapter/raw/master/png/qrcode1.png)
+![](https://user-gold-cdn.xitu.io/2019/11/19/16e8184ff08b707d?w=188&h=187&f=png&s=1990)
 
 ---
 **群内有`各(pian)种(ni)各(jin)样(qun)`的大佬,等你来撩.**
@@ -130,8 +132,4 @@ dependencies {
 
 [点此QQ对话](http://wpa.qq.com/msgrd?v=3&uin=664738095&site=qq&menu=yes)  `该死的空格`    [点此快速加群](https://shang.qq.com/wpa/qunwpa?idkey=cbcf9a42faf2fe730b51004d33ac70863617e6999fce7daf43231f3cf2997460)
 
-![](https://gitee.com/angcyo/res/raw/master/code/all_in1.jpg)
-
-![](https://gitee.com/angcyo/res/raw/master/code/all_in2.jpg)
-
-
+[开源地址](https://github.com/angcyo/DslAdapter)
