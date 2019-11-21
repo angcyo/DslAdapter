@@ -10,7 +10,6 @@ import com.angcyo.dsladapter.DslAdapter
 import com.angcyo.dsladapter.DslItemDecoration
 import com.angcyo.dsladapter.DslViewHolder
 import com.angcyo.dsladapter.HoverItemDecoration
-import com.angcyo.dsladapter.demo.R
 import com.angcyo.dsladapter.dsl.AppAdapterStatusItem
 import kotlinx.android.synthetic.main.base_recycler_layout.*
 

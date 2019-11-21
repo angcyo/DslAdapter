@@ -102,7 +102,13 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
 
     /**过滤[originList]数据源*/
     open fun filterItemList(originList: List<DslAdapterItem>): MutableList<DslAdapterItem> {
-        return filterItemHiddenList(filterItemGroupList(originList))
+        return filterItemHiddenList(//3级过滤
+            filterSubItemList(//2级过滤
+                filterItemGroupList(//1级过滤
+                    originList
+                )
+            )
+        )
     }
 
     /**过滤折叠后后的数据列表*/
@@ -182,6 +188,43 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
         return result
     }
 
+    /**过滤需要追加或者隐藏的子项*/
+    open fun filterSubItemList(originList: List<DslAdapterItem>): MutableList<DslAdapterItem> {
+        val result = mutableListOf<DslAdapterItem>()
+
+        originList.forEach { currentItem ->
+            val parentList = mutableListOf<DslAdapterItem>()
+            val subList = mutableListOf<DslAdapterItem>()
+            loadSubItemList(currentItem, parentList, subList)
+            result.addAll(subList)
+        }
+
+        return result
+    }
+
+    /**枚举加载所有子项*/
+    open fun loadSubItemList(
+        currentItem: DslAdapterItem,
+        parentList: MutableList<DslAdapterItem>,
+        subList: MutableList<DslAdapterItem>
+    ) {
+        if (currentItem.itemHidden) {
+            //被隐藏了
+        } else {
+            currentItem.itemParentList = parentList
+            subList.add(currentItem)
+            if (currentItem.itemGroupExtend) {
+                //需要展开
+                currentItem.onItemLoadSubList()
+                currentItem.itemSubList.forEach {
+                    val pList = ArrayList(parentList)
+                    pList.add(currentItem)
+                    loadSubItemList(it, pList, subList)
+                }
+            }
+        }
+    }
+
     fun addDispatchUpdatesListener(listener: OnDispatchUpdatesListener) {
         _dispatchUpdatesSet.add(listener)
     }
@@ -254,8 +297,15 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
             _params = null
         }
 
+        var _startTime = 0L
         override fun run() {
+            _startTime = nowTime()
+            L.d("开始计算Diff:$_startTime")
             val diffResult = calculateDiff()
+            val nowTime = nowTime()
+            val s = (nowTime - _startTime) / 100
+            val ms = ((nowTime - _startTime) % 100) * 1f / 1000
+            L.i("Diff计算耗时:${s + ms}ms")
             _diffResult = diffResult
 
             //回调到主线程

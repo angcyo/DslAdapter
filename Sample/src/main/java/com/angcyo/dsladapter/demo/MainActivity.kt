@@ -80,6 +80,14 @@ class MainActivity : BaseRecyclerActivity() {
                 itemTopInsert = 4 * dpi
             }
 
+            DslDemoItem()() {
+                itemText = "树结构使用示例"
+                onItemClick = {
+                    start(TreeDemoActivity::class.java)
+                }
+                itemTopInsert = 4 * dpi
+            }
+
             renderEmptyItem()
 
             dslItem(R.layout.item_demo_list) {

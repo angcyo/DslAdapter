@@ -12,6 +12,9 @@
         android:theme="@style/AppTheme"
         tools:ignore="AllowBackup,GoogleAppIndexingWarning">
         <activity
+            android:name=".TreeDemoActivity"
+            android:label="树结构示例" />
+        <activity
             android:name=".StaggeredGridLayoutActivity"
             android:label="StaggeredGridLayout" />
         <activity
