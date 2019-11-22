@@ -1,7 +1,7 @@
 package com.angcyo.dsladapter.demo
 
 import android.graphics.Color
-import android.support.v7.widget.GridLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 import android.widget.Toast
 import com.angcyo.dsladapter.*
 import com.angcyo.dsladapter.dsl.DslDemoItem

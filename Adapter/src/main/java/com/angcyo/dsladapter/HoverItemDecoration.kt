@@ -2,10 +2,10 @@ package com.angcyo.dsladapter
 
 import android.app.Activity
 import android.graphics.*
-import android.support.v7.widget.GridLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.view.*
 import android.widget.FrameLayout
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
 /**
  * 悬停功能实现类

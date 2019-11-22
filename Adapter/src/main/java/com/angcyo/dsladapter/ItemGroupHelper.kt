@@ -1,7 +1,8 @@
 package com.angcyo.dsladapter
 
-import android.support.v7.widget.GridLayoutManager
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+
 
 /**
  * 群组/分组 助手
@@ -194,7 +195,7 @@ data class ItemGroupParams(
     var currentAdapterItem: DslAdapterItem? = null,
     var groupItems: MutableList<DslAdapterItem> = mutableListOf(),
 
-    /**仅在使用了[android.support.v7.widget.GridLayoutManager]时有效*/
+    /**仅在使用了[GridLayoutManager]时有效*/
     var edgeInGrid: Int = EDGE_NONE,
     var edgeInGroup: Int = EDGE_NONE,
     var edgeGridParams: EdgeGridParams = EdgeGridParams()
@@ -272,23 +273,27 @@ fun ItemGroupParams.isLastPosition(): Boolean =
 /**网格布局, 边界扩展方法*/
 //是否在4条边上
 fun ItemGroupParams.isEdgeLeft(): Boolean = edgeInGrid.have(EDGE_LEFT)
+
 fun ItemGroupParams.isEdgeRight(): Boolean = edgeInGrid.have(EDGE_RIGHT)
 fun ItemGroupParams.isEdgeTop(): Boolean = edgeInGrid.have(EDGE_TOP)
 fun ItemGroupParams.isEdgeBottom(): Boolean = edgeInGrid.have(EDGE_BOTTOM)
 
 //全屏占满整个一行
 fun ItemGroupParams.isEdgeHorizontal(): Boolean = isEdgeLeft() && isEdgeRight()
+
 //全屏占满整个一列
 fun ItemGroupParams.isEdgeVertical(): Boolean = isEdgeTop() && isEdgeBottom()
 
 //是否在4个角
 fun ItemGroupParams.isEdgeGroupLeftTop(): Boolean = edgeInGroup.have(EDGE_LEFT_TOP)
+
 fun ItemGroupParams.isEdgeGroupRightTop(): Boolean = edgeInGroup.have(EDGE_RIGHT_TOP)
 fun ItemGroupParams.isEdgeGroupLeftBottom(): Boolean = edgeInGroup.have(EDGE_LEFT_BOTTOM)
 fun ItemGroupParams.isEdgeGroupRightBottom(): Boolean = edgeInGroup.have(EDGE_RIGHT_BOTTOM)
 
 //在一组中的第一行
 fun ItemGroupParams.isEdgeGroupTop(): Boolean = edgeInGroup.have(EDGE_GROUP_TOP)
+
 //在一组中的最后一行
 fun ItemGroupParams.isEdgeGroupBottom(): Boolean = edgeInGroup.have(EDGE_GROUP_BOTTOM)
 

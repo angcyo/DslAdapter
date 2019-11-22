@@ -1,7 +1,7 @@
 package com.angcyo.dsladapter
 
 import android.graphics.Color
-import android.support.annotation.LayoutRes
+import androidx.annotation.LayoutRes
 
 
 /**

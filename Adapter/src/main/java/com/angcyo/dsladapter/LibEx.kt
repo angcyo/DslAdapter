@@ -5,11 +5,11 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.Paint
 import android.graphics.Rect
-import android.support.annotation.LayoutRes
-import android.support.v7.widget.GridLayoutManager
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.StaggeredGridLayoutManager
-import android.support.v7.widget.helper.ItemTouchHelper
+import androidx.annotation.LayoutRes
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import androidx.recyclerview.widget.ItemTouchHelper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -195,7 +195,12 @@ public fun gridLayout(
     orientation: Int = RecyclerView.VERTICAL,
     reverseLayout: Boolean = false
 ): GridLayoutManager {
-    return GridLayoutManager(context, spanCount, orientation, reverseLayout).apply {
+    return GridLayoutManager(
+        context,
+        spanCount,
+        orientation,
+        reverseLayout
+    ).apply {
         dslSpanSizeLookup(dslAdapter)
     }
 }

@@ -1,7 +1,7 @@
 package com.angcyo.dsladapter
 
-import android.support.annotation.IntDef
-import android.support.v7.widget.RecyclerView
+import androidx.annotation.IntDef
+import androidx.recyclerview.widget.RecyclerView
 import kotlin.math.max
 import kotlin.math.min
 

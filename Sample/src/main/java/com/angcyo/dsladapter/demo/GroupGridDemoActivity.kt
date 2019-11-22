@@ -1,6 +1,6 @@
 package com.angcyo.dsladapter.demo
 
-import android.support.v7.widget.GridLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 import com.angcyo.dsladapter.*
 import com.angcyo.dsladapter.dsl.DslDemoItem
 import kotlin.random.Random.Default.nextInt

@@ -2,10 +2,10 @@ package com.angcyo.dsladapter.demo
 
 import android.graphics.Color
 import android.os.SystemClock
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.StaggeredGridLayoutManager
-import android.support.v7.widget.helper.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import android.widget.Toast
+import androidx.recyclerview.widget.ItemTouchHelper
 import com.angcyo.dsladapter.*
 import com.angcyo.dsladapter.dsl.dslImageItem
 import java.util.*
@@ -22,7 +22,11 @@ class StaggeredGridLayoutActivity : BaseRecyclerActivity() {
     override fun onInitBaseLayoutAfter() {
         super.onInitBaseLayoutAfter()
 
-        recyclerView.layoutManager = StaggeredGridLayoutManager(3, RecyclerView.VERTICAL)
+        recyclerView.layoutManager =
+            StaggeredGridLayoutManager(
+                3,
+                RecyclerView.VERTICAL
+            )
 
         DragCallbackHelper().apply {
             attachToRecyclerView(recyclerView)

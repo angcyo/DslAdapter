@@ -1,10 +1,10 @@
 package com.angcyo.dsladapter.demo
 
 import android.os.Bundle
-import android.support.v4.widget.SwipeRefreshLayout
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import android.widget.Toast
 import com.angcyo.dsladapter.DslAdapter
 import com.angcyo.dsladapter.DslItemDecoration
@@ -44,7 +44,7 @@ abstract class BaseRecyclerActivity : AppCompatActivity() {
         onInitBaseLayoutAfter()
     }
 
-    lateinit var refreshLayout: SwipeRefreshLayout
+    lateinit var refreshLayout: androidx.swiperefreshlayout.widget.SwipeRefreshLayout
     lateinit var recyclerView: RecyclerView
 
     open fun initBaseLayout() {
@@ -60,11 +60,15 @@ abstract class BaseRecyclerActivity : AppCompatActivity() {
             //如果设置了true, 并且又想影响RecyclerView 自身的宽高属性. 调用 notifyDataSetChanged(),
             //否则统一 使用notifyItemXXX 变种方法
             setHasFixedSize(true)
-            layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+            layoutManager = LinearLayoutManager(
+                context,
+                LinearLayoutManager.VERTICAL,
+                false
+            )
             adapter = dslAdapter
         }
 
-        dslViewHolder.v<SwipeRefreshLayout>(R.id.base_refresh_layout)?.apply {
+        dslViewHolder.v<androidx.swiperefreshlayout.widget.SwipeRefreshLayout>(R.id.base_refresh_layout)?.apply {
             refreshLayout = this
             setOnRefreshListener {
                 onRefresh()
