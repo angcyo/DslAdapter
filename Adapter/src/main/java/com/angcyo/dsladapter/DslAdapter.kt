@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlin.math.min
 
 /**
- *
+ * https://github.com/angcyo/DslAdapter
  * Email:angcyo@126.com
  * @author angcyo
  * @date 2019/08/09
