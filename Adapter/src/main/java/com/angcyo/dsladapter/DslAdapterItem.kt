@@ -284,7 +284,7 @@ open class DslAdapterItem {
                     drawRect.set(
                         itemView.left,
                         itemView.top - offsetRect.top,
-                        itemLeftOffset,
+                        itemView.left + itemLeftOffset,
                         itemView.top
                     )
                     canvas.drawRect(drawRect, paint)
@@ -322,7 +322,7 @@ open class DslAdapterItem {
                     drawRect.set(
                         itemView.left,
                         itemView.bottom,
-                        itemLeftOffset,
+                        itemView.left + itemLeftOffset,
                         itemView.bottom + offsetRect.bottom
                     )
                     canvas.drawRect(drawRect, paint)
