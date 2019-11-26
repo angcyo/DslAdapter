@@ -159,6 +159,14 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
 
             originList.forEachIndexed { index, subEachItem ->
                 if (currentItem.isItemInHiddenList(subEachItem, index)) {
+
+                    diffRunnable._params?.let {
+                        //包含需要隐藏的item, 也算updateDependItem
+                        if (it.formDslAdapterItem == currentItem) {
+                            it.updateDependItemWithEmpty = true
+                        }
+                    }
+
                     hideChildFormItemList.add(subEachItem)
                 }
             }
