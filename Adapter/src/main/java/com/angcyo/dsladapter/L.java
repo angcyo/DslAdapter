@@ -19,8 +19,6 @@ package com.angcyo.dsladapter;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.angcyo.dsladapter.BuildConfig;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,7 +37,7 @@ import javax.xml.transform.stream.StreamSource;
  * Created by Gh0st on 2016/6/7 007.
  * https://github.com/ZhaoKaiQiang/KLog
  */
-public class L {
+class L {
     private static final String LINE_SEPARATOR = System.getProperty("line.separator");
     private static final int VERBOSE = 2;
     private static final int DEBUG = 3;
