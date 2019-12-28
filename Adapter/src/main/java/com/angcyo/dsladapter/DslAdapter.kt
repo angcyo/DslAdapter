@@ -113,8 +113,8 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>, OnDispatchUpdatesLi
 
     override fun onBindViewHolder(viewHolder: DslViewHolder, position: Int) {
         val dslItem = getAdapterItem(position)
-        dslItem.itemDslAdapter = this
-        dslItem.itemBind.invoke(viewHolder, position, dslItem)
+        dslItem?.itemDslAdapter = this
+        dslItem?.itemBind?.invoke(viewHolder, position, dslItem)
     }
 
     override fun onViewAttachedToWindow(holder: DslViewHolder) {
@@ -174,11 +174,11 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>, OnDispatchUpdatesLi
         return dslAdapterStatusItem.isInAdapterStatus()
     }
 
-    fun getAdapterItem(position: Int): DslAdapterItem {
+    fun getAdapterItem(position: Int): DslAdapterItem? {
         return if (isAdapterStatus()) {
             dslAdapterStatusItem
         } else {
-            getItemData(position)!!
+            getItemData(position)
         }
     }
 
