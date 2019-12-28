@@ -11,6 +11,28 @@ import androidx.annotation.LayoutRes
  * @date 2019/08/09
  * Copyright (c) 2019 ShenZhen O&M Cloud Co., Ltd. All rights reserved.
  */
+
+/**
+ * 通过条件, 查找[DslAdapterItem].
+ *
+ * @param useFilterList 是否使用过滤后的数据源. 通常界面上显示的是过滤后的数据, 所有add的数据源在非过滤列表中
+ * */
+public fun DslAdapter.findItem(
+    useFilterList: Boolean = true,
+    predicate: (DslAdapterItem) -> Boolean
+): DslAdapterItem? {
+    return getDataList(true).find(predicate)
+}
+
+public fun DslAdapter.findItemByTag(
+    tag: String,
+    useFilterList: Boolean = true
+): DslAdapterItem? {
+    return findItem(useFilterList) {
+        it.itemTag == tag
+    }
+}
+
 public fun DslAdapter.dslItem(@LayoutRes layoutId: Int, config: DslAdapterItem.() -> Unit = {}) {
     val item = DslAdapterItem()
     item.itemLayoutId = layoutId
@@ -41,5 +63,20 @@ public fun DslAdapter.renderEmptyItem(height: Int = 120 * dpi, color: Int = Colo
         itemHolder.itemView.setBackgroundColor(color)
         itemHolder.itemView.setHeight(height)
     }
+    addLastItem(adapterItem)
+}
+
+public fun DslAdapter.renderItem(count: Int = 1, init: DslAdapterItem.(index: Int) -> Unit) {
+    for (i in 0 until count) {
+        val adapterItem = DslAdapterItem()
+        adapterItem.init(i)
+        addLastItem(adapterItem)
+    }
+}
+
+public fun <T> DslAdapter.renderItem(data: T, init: DslAdapterItem.() -> Unit) {
+    val adapterItem = DslAdapterItem()
+    adapterItem.itemData = data
+    adapterItem.init()
     addLastItem(adapterItem)
 }
