@@ -111,7 +111,7 @@ dependencies {
     //稳定版请使用
     implementation 'com.github.angcyo:DslAdapter:1.2.0'
     //androidx
-    implementation 'com.github.angcyo:DslAdapter:1.3.0'
+    implementation 'com.github.angcyo:DslAdapter:1.4.1'
     //跟随作者最新版请使用
     implementation 'com.github.angcyo:DslAdapter:master-SNAPSHOT'
 }
