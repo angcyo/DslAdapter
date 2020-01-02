@@ -162,7 +162,7 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
 
                     diffRunnable._params?.let {
                         //包含需要隐藏的item, 也算updateDependItem
-                        if (it.formDslAdapterItem == currentItem) {
+                        if (it.fromDslAdapterItem == currentItem) {
                             it.updateDependItemWithEmpty = true
                         }
                     }
@@ -283,7 +283,7 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
                     oldSize == newSize
                 ) {
                     //跳过[dispatchUpdatesTo]刷新界面, 但是要更新自己
-                    dslAdapter.notifyItemChanged(_params?.formDslAdapterItem)
+                    dslAdapter.notifyItemChanged(_params?.fromDslAdapterItem)
                 } else {
                     _diffResult?.dispatchUpdatesTo(dslAdapter)
                     isDispatchUpdatesTo = true
@@ -347,7 +347,7 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
                             newData: DslAdapterItem
                         ): Boolean {
                             return oldData.thisAreItemsTheSame(
-                                _params?.formDslAdapterItem,
+                                _params?.fromDslAdapterItem,
                                 newData
                             )
                         }
@@ -357,7 +357,7 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
                             newData: DslAdapterItem
                         ): Boolean {
                             return oldData.thisAreContentsTheSame(
-                                _params?.formDslAdapterItem,
+                                _params?.fromDslAdapterItem,
                                 newData
                             )
                         }
@@ -372,7 +372,7 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
             //需要通知更新的子项
             val notifyChildFormItemList = mutableListOf<DslAdapterItem>()
 
-            _params?.formDslAdapterItem?.let { fromItem ->
+            _params?.fromDslAdapterItem?.let { fromItem ->
                 dslAdapter.getValidFilterDataList().forEachIndexed { index, dslAdapterItem ->
                     if (fromItem.isItemInUpdateList(dslAdapterItem, index)) {
                         notifyChildFormItemList.add(dslAdapterItem)
@@ -384,13 +384,13 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
         }
 
         fun notifyUpdateDependItem(itemList: List<DslAdapterItem>) {
-            if (_params?.formDslAdapterItem == null) {
+            if (_params?.fromDslAdapterItem == null) {
                 return
             }
 
             itemList.forEachIndexed { index, dslAdapterItem ->
                 dslAdapterItem.apply {
-                    onItemUpdateFromInner(_params!!.formDslAdapterItem!!)
+                    onItemUpdateFromInner(_params!!.fromDslAdapterItem!!)
                     dslAdapterItem.updateAdapterItem(true)
                 }
 
@@ -429,7 +429,7 @@ data class FilterParams(
     /**
      * 触发更新的来源, 定向更新其子项.
      * */
-    val formDslAdapterItem: DslAdapterItem? = null,
+    val fromDslAdapterItem: DslAdapterItem? = null,
     /**
      * 异步计算Diff
      * */
