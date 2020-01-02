@@ -1,6 +1,6 @@
 # DslAdapter
 
-[![](https://img.shields.io/badge/License-MIT-3A77AC)](https://github.com/angcyo/DslAdapter/blob/master/LICENSE) [![API](https://img.shields.io/badge/API-8%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=8) [![](https://img.shields.io/badge/JitPack-1.3.0-6590B7)](https://jitpack.io/#angcyo/DslAdapter) [![](https://img.shields.io/badge/androidx-yes-80B44D)](https://developer.android.google.cn/jetpack/androidx) [![](https://img.shields.io/badge/kotlin-yes-F48729)](https://www.kotlincn.net/docs/reference/android-overview.html)
+[![](https://img.shields.io/badge/License-MIT-3A77AC)](https://github.com/angcyo/DslAdapter/blob/master/LICENSE) [![API](https://img.shields.io/badge/API-12%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=12) [![](https://img.shields.io/badge/JitPack-1.3.0-6590B7)](https://jitpack.io/#angcyo/DslAdapter) [![](https://img.shields.io/badge/androidx-yes-80B44D)](https://developer.android.google.cn/jetpack/androidx) [![](https://img.shields.io/badge/kotlin-yes-F48729)](https://www.kotlincn.net/docs/reference/android-overview.html)
 
 `Kotlin`时代的`Adapter`.
 
@@ -123,6 +123,10 @@ dependencies {
 # 功能使用
 
 请访问 [**WIKI文档**](https://github.com/angcyo/DslAdapter/wiki) 查看详情说明.
+
+# DslItem
+
+正在整理的[DslItem](https://github.com/angcyo/DslItem)库, 囊括项目开发中能够见到的`Item`, 皆旨让开发更高效. 欢迎PR.
 
 # 下载体验
 
