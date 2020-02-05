@@ -4,9 +4,13 @@ import android.graphics.Canvas
 import android.text.TextUtils
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.angcyo.dsladapter.internal.DrawText
 import java.util.*
 
 /**
+ * 拖拽排序和侧滑删除
+ *
+ * https://github.com/angcyo/DslAdapter/wiki/%E6%8B%96%E6%8B%BD%E6%8E%92%E5%BA%8F%E5%92%8C%E4%BE%A7%E6%BB%91%E5%88%A0%E9%99%A4
  *
  * Email:angcyo@126.com
  * @author angcyo
@@ -14,6 +18,14 @@ import java.util.*
  * Copyright (c) 2019 ShenZhen O&M Cloud Co., Ltd. All rights reserved.
  */
 class DragCallbackHelper : ItemTouchHelper.Callback() {
+
+    companion object {
+
+        /**安装*/
+        fun install(recyclerView: RecyclerView) {
+            DragCallbackHelper().attachToRecyclerView(recyclerView)
+        }
+    }
 
     /**支持拖拽的方向, 0表示不开启拖拽*/
     var itemDragFlag = FLAG_ALL
@@ -176,8 +188,6 @@ class DragCallbackHelper : ItemTouchHelper.Callback() {
             _drawText.drawText = swipeTipText
             _drawText.onDraw(canvas)
             canvas.restore()
-
-
         }
     }
 
@@ -216,6 +226,8 @@ class DragCallbackHelper : ItemTouchHelper.Callback() {
     val _dslAdapter: DslAdapter?
         get() = _recyclerView?.adapter as? DslAdapter
 
+    //<editor-fold desc="操作方法">
+
     /**安装到[RecyclerView]*/
     fun attachToRecyclerView(recyclerView: RecyclerView) {
         _recyclerView = recyclerView
@@ -236,4 +248,6 @@ class DragCallbackHelper : ItemTouchHelper.Callback() {
     fun startSwipe(viewHolder: RecyclerView.ViewHolder) {
         _itemTouchHelper?.startSwipe(viewHolder)
     }
+
+    //</editor-fold desc="操作方法">
 }

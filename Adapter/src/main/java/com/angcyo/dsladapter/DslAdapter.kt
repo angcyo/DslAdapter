@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import kotlin.math.max
 import kotlin.math.min
 
 /**
@@ -55,6 +56,11 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>, OnDispatchUpdatesLi
             return onceFilterParams ?: (field ?: _defaultFilterParams())
         }
 
+    /**
+     * [Diff]更新数据后回调, 只会执行一次
+     * */
+    var onDispatchUpdatesAfterOnce: ((dslAdapter: DslAdapter) -> Unit)? = null
+
     constructor() : super()
 
     constructor(dataItems: List<DslAdapterItem>?) {
@@ -74,18 +80,6 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>, OnDispatchUpdatesLi
     }
 
     //<editor-fold desc="生命周期方法">
-
-    var _recyclerView: RecyclerView? = null
-
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
-        super.onAttachedToRecyclerView(recyclerView)
-        _recyclerView = recyclerView
-    }
-
-    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
-        super.onDetachedFromRecyclerView(recyclerView)
-        _recyclerView = null
-    }
 
     override fun getItemViewType(position: Int): Int {
         return if (isAdapterStatus()) {
@@ -111,22 +105,37 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>, OnDispatchUpdatesLi
         }
     }
 
-    override fun onBindViewHolder(viewHolder: DslViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: DslViewHolder,
+        position: Int,
+        payloads: List<Any>
+    ) {
+        super.onBindViewHolder(holder, position, payloads)
+
         val dslItem = getAdapterItem(position)
         dslItem?.itemDslAdapter = this
-        dslItem?.itemBind?.invoke(viewHolder, position, dslItem)
+        dslItem?.itemBind?.invoke(holder, position, dslItem, payloads)
+    }
+
+    override fun onBindViewHolder(holder: DslViewHolder, position: Int) {
+        //no op
+    }
+
+    var _recyclerView: RecyclerView? = null
+
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        super.onAttachedToRecyclerView(recyclerView)
+        _recyclerView = recyclerView
+    }
+
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView)
+        _recyclerView = null
     }
 
     override fun onViewAttachedToWindow(holder: DslViewHolder) {
         super.onViewAttachedToWindow(holder)
-
-        val dslAdapterItem = when {
-            isAdapterStatus() -> dslAdapterStatusItem
-            holder.adapterPosition in getValidFilterDataList().indices -> getAdapterItem(holder.adapterPosition)
-            else -> null
-        }
-
-        dslAdapterItem?.apply {
+        holder.getDslAdapterItem()?.apply {
             holder.itemView.fullSpan(itemSpanCount == -1)
             onItemViewAttachedToWindow.invoke(holder)
         }
@@ -134,26 +143,34 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>, OnDispatchUpdatesLi
 
     override fun onViewDetachedFromWindow(holder: DslViewHolder) {
         super.onViewDetachedFromWindow(holder)
-
-        val dslAdapterItem = when {
-            isAdapterStatus() -> dslAdapterStatusItem
-            holder.adapterPosition in getValidFilterDataList().indices -> getAdapterItem(holder.adapterPosition)
-            else -> null
-        }
-
-        dslAdapterItem?.apply {
+        holder.getDslAdapterItem()?.apply {
             onItemViewDetachedToWindow.invoke(holder)
+        }
+    }
+
+    override fun onViewRecycled(holder: DslViewHolder) {
+        super.onViewRecycled(holder)
+        holder.getDslAdapterItem()?.apply {
+            onItemViewRecycled.invoke(holder)
+        }
+    }
+
+    override fun onFailedToRecycleView(holder: DslViewHolder): Boolean {
+        return super.onFailedToRecycleView(holder)
+    }
+
+    /**返回[DslViewHolder]对应的[DslAdapterItem]*/
+    fun DslViewHolder.getDslAdapterItem(): DslAdapterItem? {
+        return when {
+            isAdapterStatus() -> dslAdapterStatusItem
+            adapterPosition in getValidFilterDataList().indices -> getAdapterItem(adapterPosition)
+            else -> null
         }
     }
 
     //</editor-fold desc="生命周期方法">
 
     //<editor-fold desc="其他方法">
-
-    /**
-     * 只会执行一次
-     * */
-    var onDispatchUpdatesAfterOnce: ((dslAdapter: DslAdapter) -> Unit)? = null
 
     /**
      * [Diff]操作结束之后的通知事件
@@ -212,6 +229,20 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>, OnDispatchUpdatesLi
         }
     }
 
+    /**自动设置状态*/
+    fun autoAdapterStatus() {
+        if (isAdapterStatus()) {
+            //no op
+        } else {
+            val emptyCount = if (dslLoadMoreItem.itemEnableLoadMore) 1 else 0
+            if (adapterItems.size <= emptyCount) {
+                setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY)
+            } else {
+                setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
+            }
+        }
+    }
+
     fun setLoadMoreEnable(enable: Boolean = true) {
         if (dslLoadMoreItem.itemEnableLoadMore == enable) {
             return
@@ -241,6 +272,8 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>, OnDispatchUpdatesLi
             notifyItemChanged(dslLoadMoreItem)
         }
     }
+
+    //<editor-fold desc="Item操作">
 
     /**
      * 在最后的位置插入数据
@@ -352,23 +385,75 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>, OnDispatchUpdatesLi
         }
     }
 
-    /**
-     * 刷新某一个item
-     */
-    fun notifyItemChanged(item: DslAdapterItem?) {
-        notifyItemChanged(item, true)
+    /**用于[Adapter]中单一数据类型的列表*/
+    fun loadSingleData(
+        list: List<Any>,
+        page: Int = 1,
+        pageSize: Int = 20,
+        filterParams: FilterParams = defaultFilterParams ?: _defaultFilterParams(),
+        initOrCreateDslItem: (oldItem: DslAdapterItem?, data: Any) -> DslAdapterItem
+    ) {
+        changeDataItems(filterParams) {
+            //第一页数据检查
+            if (page <= 1) {
+                if (it.size > list.size) {
+                    for (i in max(it.lastIndex, 0) downTo max(list.size, 0)) {
+                        it.removeAt(i)
+                    }
+                }
+                //重新旧数据
+                it.forEachIndexed { index, dslAdapterItem ->
+                    val data = list[index]
+                    dslAdapterItem.itemChanging = dslAdapterItem.itemData != data
+                    dslAdapterItem.itemData = data
+                    initOrCreateDslItem(dslAdapterItem, data)
+                }
+                if (list.size > it.size) {
+                    //需要补充新的DslAdapterItem
+                    for (i in it.size until list.size) {
+                        val data = list[i]
+                        val dslItem = initOrCreateDslItem(null, data)
+                        dslItem.itemData = data
+                        it.add(dslItem)
+                    }
+                }
+                if (it.isEmpty()) {
+                    //空数据
+                    setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY)
+                } else {
+                    setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
+                    if (dslLoadMoreItem.itemEnableLoadMore) {
+                        if (it.size < pageSize) {
+                            setLoadMore(DslLoadMoreItem.ADAPTER_LOAD_NO_MORE)
+                        } else {
+                            setLoadMore(DslLoadMoreItem.ADAPTER_LOAD_NORMAL)
+                        }
+                    }
+                }
+            } else {
+                //追加数据检查
+                for (data in list) {
+                    val dslItem = initOrCreateDslItem(null, data)
+                    dslItem.itemData = data
+                    it.add(dslItem)
+                }
+                setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
+                if (dslLoadMoreItem.itemEnableLoadMore) {
+                    if (list.size < pageSize) {
+                        setLoadMore(DslLoadMoreItem.ADAPTER_LOAD_NO_MORE)
+                    } else {
+                        setLoadMore(DslLoadMoreItem.ADAPTER_LOAD_NORMAL)
+                    }
+                }
+            }
+        }
     }
 
-    /**支持过滤数据源*/
-    fun notifyItemChanged(item: DslAdapterItem?, useFilterList: Boolean = true) {
-        if (item == null) {
-            return
-        }
-        val indexOf = getDataList(useFilterList).indexOf(item)
+    //</editor-fold desc="Item操作">
 
-        if (indexOf > -1) {
-            notifyItemChanged(indexOf)
-        }
+    /**获取有效过滤后的数据集合*/
+    fun getValidFilterDataList(): List<DslAdapterItem> {
+        return dslDataFilter?.filterDataList ?: adapterItems
     }
 
     fun getItemData(position: Int): DslAdapterItem? {
@@ -417,14 +502,55 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>, OnDispatchUpdatesLi
         }
     }
 
-    /**获取有效过滤后的数据集合*/
-    fun getValidFilterDataList(): List<DslAdapterItem> {
-        return dslDataFilter?.filterDataList ?: adapterItems
+    /**刷新某一个item, 支持过滤数据源*/
+    fun notifyItemChanged(
+        item: DslAdapterItem?,
+        payload: Any? = null,
+        useFilterList: Boolean = true
+    ) {
+        if (item == null) {
+            return
+        }
+        val list = getDataList(useFilterList)
+        val indexOf = list.indexOf(item)
+
+        if (indexOf in list.indices) {
+            notifyItemChangedPayload(indexOf, payload)
+        }
     }
 
     /**更新界面上所有[DslAdapterItem]*/
-    fun updateAllItem() {
-        notifyItemRangeChanged(0, itemCount)
+    fun updateAllItem(payload: Any? = null) {
+        notifyItemRangeChanged(0, itemCount, payload)
+    }
+
+    /**更新一批[DslAdapterItem]*/
+    fun updateItems(
+        list: Iterable<DslAdapterItem>,
+        payload: Any? = null,
+        useFilterList: Boolean = true
+    ) {
+        getDataList(useFilterList).apply {
+            for (item in list) {
+                val indexOf = indexOf(item)
+
+                if (indexOf in this.indices) {
+                    notifyItemChangedPayload(indexOf, payload)
+                }
+            }
+        }
+    }
+
+    fun notifyItemChangedPayload(position: Int, payloads: Any? = null) {
+//        if (payloads is Iterable<*>) {
+//            for (payload in payloads) {
+//                //为了避免多次触发[onChanged]事件, 取消此方式
+//                notifyItemChanged(position, payload)
+//            }
+//        } else {
+//            notifyItemChanged(position, payloads)
+//        }
+        notifyItemChanged(position, payloads)
     }
 
     //</editor-fold desc="操作方法">
@@ -436,7 +562,7 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>, OnDispatchUpdatesLi
      *  DslDemoItem()(){}
      * </pre>
      * */
-    operator fun <T : DslAdapterItem> T.invoke(config: T.() -> Unit) {
+    operator fun <T : DslAdapterItem> T.invoke(config: T.() -> Unit = {}) {
         this.config()
         addLastItem(this)
     }
@@ -469,6 +595,38 @@ open class DslAdapter : RecyclerView.Adapter<DslViewHolder>, OnDispatchUpdatesLi
     operator fun <T : DslAdapterItem> minus(list: List<T>): DslAdapter {
         removeItem(list)
         return this
+    }
+
+    /**
+     * ```
+     * this[1]
+     * this[index]
+     * this[index, false]
+     *
+     * 负数表示倒数
+     * ```
+     * */
+    operator fun get(
+        index: Int,
+        useFilterList: Boolean = true,
+        reverse: Boolean = true //是否开启反序, 倒数
+    ): DslAdapterItem? {
+        return getDataList(useFilterList).run {
+            if (index >= 0 || !reverse)
+                getOrNull(index)
+            else
+                getOrNull(size + index)
+        }
+    }
+
+    /**
+     * ```
+     * this["tag"]
+     * this["tag", false]
+     * ```
+     * */
+    operator fun get(tag: String?, useFilterList: Boolean = true): DslAdapterItem? {
+        return tag?.run { findItemByTag(tag, useFilterList) }
     }
 
     //</editor-fold desc="操作符重载">

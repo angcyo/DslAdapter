@@ -12,19 +12,21 @@ import androidx.annotation.LayoutRes
  * Copyright (c) 2019 ShenZhen O&M Cloud Co., Ltd. All rights reserved.
  */
 
+//<editor-fold desc="Item操作">
+
 /**
  * 通过条件, 查找[DslAdapterItem].
  *
  * @param useFilterList 是否使用过滤后的数据源. 通常界面上显示的是过滤后的数据, 所有add的数据源在非过滤列表中
  * */
-public fun DslAdapter.findItem(
+fun DslAdapter.findItem(
     useFilterList: Boolean = true,
     predicate: (DslAdapterItem) -> Boolean
 ): DslAdapterItem? {
-    return getDataList(true).find(predicate)
+    return getDataList(useFilterList).find(predicate)
 }
 
-public fun DslAdapter.findItemByTag(
+fun DslAdapter.findItemByTag(
     tag: String,
     useFilterList: Boolean = true
 ): DslAdapterItem? {
@@ -33,21 +35,21 @@ public fun DslAdapter.findItemByTag(
     }
 }
 
-public fun DslAdapter.dslItem(@LayoutRes layoutId: Int, config: DslAdapterItem.() -> Unit = {}) {
+fun DslAdapter.dslItem(@LayoutRes layoutId: Int, config: DslAdapterItem.() -> Unit = {}) {
     val item = DslAdapterItem()
     item.itemLayoutId = layoutId
     addLastItem(item)
     item.config()
 }
 
-public fun <T : DslAdapterItem> DslAdapter.dslItem(
+fun <T : DslAdapterItem> DslAdapter.dslItem(
     dslItem: T,
     config: T.() -> Unit = {}
 ) {
     dslCustomItem(dslItem, config)
 }
 
-public fun <T : DslAdapterItem> DslAdapter.dslCustomItem(
+fun <T : DslAdapterItem> DslAdapter.dslCustomItem(
     dslItem: T,
     config: T.() -> Unit = {}
 ) {
@@ -56,17 +58,17 @@ public fun <T : DslAdapterItem> DslAdapter.dslCustomItem(
 }
 
 /**空的占位item*/
-public fun DslAdapter.renderEmptyItem(height: Int = 120 * dpi, color: Int = Color.TRANSPARENT) {
+fun DslAdapter.renderEmptyItem(height: Int = 120 * dpi, color: Int = Color.TRANSPARENT) {
     val adapterItem = DslAdapterItem()
     adapterItem.itemLayoutId = R.layout.base_empty_item
-    adapterItem.onItemBindOverride = { itemHolder, _, _ ->
+    adapterItem.onItemBindOverride = { itemHolder, _, _, _ ->
         itemHolder.itemView.setBackgroundColor(color)
         itemHolder.itemView.setHeight(height)
     }
     addLastItem(adapterItem)
 }
 
-public fun DslAdapter.renderItem(count: Int = 1, init: DslAdapterItem.(index: Int) -> Unit) {
+fun DslAdapter.renderItem(count: Int = 1, init: DslAdapterItem.(index: Int) -> Unit) {
     for (i in 0 until count) {
         val adapterItem = DslAdapterItem()
         adapterItem.init(i)
@@ -74,9 +76,29 @@ public fun DslAdapter.renderItem(count: Int = 1, init: DslAdapterItem.(index: In
     }
 }
 
-public fun <T> DslAdapter.renderItem(data: T, init: DslAdapterItem.() -> Unit) {
+fun <T> DslAdapter.renderItem(data: T, init: DslAdapterItem.() -> Unit) {
     val adapterItem = DslAdapterItem()
     adapterItem.itemData = data
     adapterItem.init()
     addLastItem(adapterItem)
 }
+
+//</editor-fold desc="Item操作">
+
+//<editor-fold desc="payload">
+fun Iterable<*>.containsPayload(any: Any): Boolean {
+    var result = false
+    for (payload in this) {
+        result = if (payload is Iterable<*>) {
+            payload.containsPayload(any)
+        } else {
+            payload == any
+        }
+        if (result) {
+            break
+        }
+    }
+    return result
+}
+//</editor-fold desc="payload">
+

@@ -1,4 +1,4 @@
-package com.angcyo.dsladapter
+package com.angcyo.dsladapter.internal
 
 import android.graphics.Canvas
 import android.graphics.Color
@@ -6,6 +6,7 @@ import android.graphics.Paint
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
+import com.angcyo.dsladapter.dp
 
 /**
  *

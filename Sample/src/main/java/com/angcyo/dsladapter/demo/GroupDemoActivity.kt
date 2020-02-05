@@ -1,7 +1,6 @@
 package com.angcyo.dsladapter.demo
 
 import com.angcyo.dsladapter.*
-import com.angcyo.dsladapter.demo.R
 import com.angcyo.dsladapter.dsl.DslDemoItem
 import kotlin.random.Random
 
@@ -33,7 +32,7 @@ class GroupDemoActivity : BaseRecyclerActivity() {
                         itemGroups = mutableListOf("group${i + 1}")
                         itemTopInsert = 10 * dpi
 
-                        onItemBindOverride = { itemHolder, itemPosition, adapterItem ->
+                        onItemBindOverride = { itemHolder, itemPosition, adapterItem, _ ->
                             itemHolder.tv(R.id.fold_button).text =
                                 if (itemGroupExtend) "折叠 $itemPosition" else "展开 $itemPosition"
 
@@ -63,7 +62,7 @@ class GroupDemoActivity : BaseRecyclerActivity() {
                             itemGroups = mutableListOf("group${i + 1}")
                             itemText = "我是第${i + 1}组的第 $j 条数据"
 
-                            onItemBindOverride = { itemHolder, _, _ ->
+                            onItemBindOverride = { itemHolder, _, _, _ ->
                                 itemGroupParams.apply {
                                     if (isLastPosition()) {
                                         itemHolder.itemView

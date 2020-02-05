@@ -52,7 +52,7 @@ class GroupGridDemoActivity : BaseRecyclerActivity() {
                             }
                         }
 
-                        onItemBindOverride = { itemHolder, itemPosition, adapterItem ->
+                        onItemBindOverride = { itemHolder, itemPosition, adapterItem, _ ->
                             itemHolder.tv(R.id.fold_button).text =
                                 if (itemGroupExtend) "折叠 $itemPosition" else "展开 $itemPosition"
 
@@ -105,7 +105,7 @@ class GroupGridDemoActivity : BaseRecyclerActivity() {
                                 }
                             }
 
-                            onItemBindOverride = { itemHolder, itemPosition, _ ->
+                            onItemBindOverride = { itemHolder, itemPosition, _, _ ->
                                 itemGroupParams.apply {
 
                                     when {

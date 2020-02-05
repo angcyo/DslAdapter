@@ -7,6 +7,9 @@ import kotlin.math.min
 
 /**
  * 单选/多选 实现类
+ *
+ * https://github.com/angcyo/DslAdapter/wiki/%E5%8D%95%E9%80%89-%E5%A4%9A%E9%80%89-%E6%BB%91%E5%8A%A8%E9%80%89%E6%8B%A9
+ *
  * Email:angcyo@126.com
  * @author angcyo
  * @date 2019/10/16
@@ -26,7 +29,7 @@ class ItemSelectorHelper(val dslAdapter: DslAdapter) {
                         it.lastOrNull(),
                         selector = OPTION_SELECT,
                         notify = true,
-                        notifyItemChange = true,
+                        notifyItemSelectorChange = true,
                         updateItemDepend = true
                     )
                 )
@@ -57,7 +60,7 @@ class ItemSelectorHelper(val dslAdapter: DslAdapter) {
         if (selectorParams.item == null) {
             return
         }
-        _check {
+        _checkModel {
             val item = selectorParams.item!!
             val isSelectorItem = _isSelectItem(selectorParams)
             when {
@@ -222,13 +225,20 @@ class ItemSelectorHelper(val dslAdapter: DslAdapter) {
 
         val item = selectorParams.item!!
         item.itemIsSelected = isSelectorItem
-        if (selectorParams.notifyItemChange) {
+        if (selectorParams.notifyItemSelectorChange) {
             item._itemSelectorChange(selectorParams)
         }
-        dslAdapter.notifyItemChanged(item)
+
+        if (selectorParams.notifyItemChanged) {
+            dslAdapter.notifyItemChanged(
+                item,
+                selectorParams.payload,
+                selectorParams._useFilterList
+            )
+        }
     }
 
-    fun _check(doIt: () -> Unit) {
+    fun _checkModel(doIt: () -> Unit) {
         if (selectorModel != MODEL_NORMAL) {
             doIt()
         } else {
@@ -320,7 +330,7 @@ data class SelectorParams(
      * 是否需要回调[_itemSelectorChange]
      * [com.angcyo.dsladapter.ItemSelectorHelper._selectorInner]
      * */
-    var notifyItemChange: Boolean = true,
+    var notifyItemSelectorChange: Boolean = true,
 
     /**
      * 传递给
@@ -328,7 +338,7 @@ data class SelectorParams(
      * */
     var updateItemDepend: Boolean = false,
 
-    //额外自定义的扩展数据
+    //额外自定义的扩展数据, 自定义传递使用
     var extend: Any? = null,
 
     //使用过滤后的数据源
@@ -343,10 +353,16 @@ data class SelectorParams(
      *
      * 需要优先开启[notify]
      * */
-    var notifyWithListEmpty: Boolean = false
+    var notifyWithListEmpty: Boolean = false,
+
+    /**是否要调用[androidx.recyclerview.widget.RecyclerView.Adapter.notifyItemChanged(int, java.lang.Object)]*/
+    var notifyItemChanged: Boolean = true,
+
+    /**参考[androidx.recyclerview.widget.RecyclerView.Adapter.onBindViewHolder(VH, int, java.util.List<java.lang.Object>)]*/
+    var payload: Any? = DslAdapterItem.PAYLOAD_UPDATE_PART
 )
 
-public fun Boolean.toSelectOption(): Int = if (this) OPTION_SELECT else OPTION_DESELECT
+fun Boolean.toSelectOption(): Int = if (this) OPTION_SELECT else OPTION_DESELECT
 
 private fun Int._modelToString(): String {
     return when (this) {
@@ -378,27 +394,31 @@ interface OnItemSelectorListener {
     }
 }
 
-public fun DslAdapter?.normalModel() {
+fun DslAdapter?.normalModel() {
     this?.itemSelectorHelper?.selectorModel = MODEL_NORMAL
 }
 
-public fun DslAdapter?.singleModel() {
+fun DslAdapter?.singleModel() {
     this?.itemSelectorHelper?.selectorModel = MODEL_SINGLE
 }
 
-public fun DslAdapter?.multiModel() {
+fun DslAdapter?.multiModel() {
     this?.itemSelectorHelper?.selectorModel = MODEL_MULTI
 }
 
-public fun RecyclerView?.normalModel() {
+fun RecyclerView?.normalModel() {
     (this?.adapter as? DslAdapter)?.normalModel()
 }
 
-public fun RecyclerView?.singleModel() {
+fun RecyclerView?.singleModel() {
     (this?.adapter as? DslAdapter)?.singleModel()
 }
 
-public fun RecyclerView?.multiModel() {
+fun RecyclerView?.multiModel() {
     (this?.adapter as? DslAdapter)?.multiModel()
 }
 
+/**快速获取[ItemSelectorHelper]*/
+fun DslAdapter.selector(): ItemSelectorHelper {
+    return this.itemSelectorHelper
+}

@@ -6,6 +6,9 @@ import androidx.recyclerview.widget.RecyclerView
 
 /**
  * 群组/分组 助手
+ *
+ * https://github.com/angcyo/DslAdapter/wiki/%E7%BE%A4%E7%BB%84%E5%8A%9F%E8%83%BD
+ *
  * Email:angcyo@126.com
  * @author angcyo
  * @date 2019/10/16

@@ -1,4 +1,4 @@
-package com.angcyo.dsladapter
+package com.angcyo.dsladapter.internal
 
 import android.os.Handler
 import android.os.Looper

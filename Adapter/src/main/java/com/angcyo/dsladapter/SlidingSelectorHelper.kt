@@ -10,6 +10,9 @@ import kotlin.math.max
 
 /**
  * 滑动选择, 实现类
+ *
+ * https://github.com/angcyo/DslAdapter/wiki/%E5%8D%95%E9%80%89-%E5%A4%9A%E9%80%89-%E6%BB%91%E5%8A%A8%E9%80%89%E6%8B%A9
+ *
  * Email:angcyo@126.com
  * @author angcyo
  * @date 2019/10/19

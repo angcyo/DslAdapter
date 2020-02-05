@@ -8,6 +8,10 @@ import androidx.recyclerview.widget.RecyclerView
 
 /**
  *
+ * 基础分割线支持
+ *
+ * https://github.com/angcyo/DslAdapter/wiki/%E5%88%86%E5%89%B2%E7%BA%BF
+ *
  * Email:angcyo@126.com
  * @author angcyo
  * @date 2019/05/10
@@ -131,4 +135,19 @@ open class DslItemDecoration(
             )
         }
     }
+
+    //<editor-fold desc="操作方法">
+
+    /** 调用此方法, 安装分割线 */
+    fun attachToRecyclerView(recyclerView: RecyclerView?) {
+        recyclerView?.addItemDecoration(this)
+    }
+
+    /**卸载分割线*/
+    fun detachedFromRecyclerView(recyclerView: RecyclerView?) {
+        recyclerView?.removeItemDecoration(this)
+    }
+
+    //</editor-fold desc="操作方法">
+
 }

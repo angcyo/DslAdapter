@@ -20,15 +20,21 @@ import kotlin.reflect.KProperty
  */
 open class DslAdapterItem {
 
+    companion object {
+
+        /**负载部分刷新界面*/
+        const val PAYLOAD_UPDATE_PART = 0x1
+    }
+
     /**适配器*/
     var itemDslAdapter: DslAdapter? = null
 
     /**[notifyItemChanged]*/
-    open fun updateAdapterItem(useFilterList: Boolean = true) {
+    open fun updateAdapterItem(payload: Any? = null, useFilterList: Boolean = true) {
         if (itemDslAdapter == null) {
             L.e("updateAdapterItem需要[itemDslAdapter], 请赋值.")
         }
-        itemDslAdapter?.notifyItemChanged(this, useFilterList)
+        itemDslAdapter?.notifyItemChanged(this, payload, useFilterList)
     }
 
     //<editor-fold desc="Grid相关属性">
@@ -54,12 +60,12 @@ open class DslAdapterItem {
 
     /**
      * 界面绑定入口
-     * [DslAdapter.onBindView]
+     * [DslAdapter.onBindViewHolder(com.angcyo.widget.DslViewHolder, int, java.util.List<? extends java.lang.Object>)]
      * */
-    var itemBind: (itemHolder: DslViewHolder, itemPosition: Int, adapterItem: DslAdapterItem) -> Unit =
-        { itemHolder, itemPosition, adapterItem ->
-            onItemBind(itemHolder, itemPosition, adapterItem)
-            onItemBindOverride(itemHolder, itemPosition, adapterItem)
+    var itemBind: (itemHolder: DslViewHolder, itemPosition: Int, adapterItem: DslAdapterItem, payloads: List<Any>) -> Unit =
+        { itemHolder, itemPosition, adapterItem, payloads ->
+            onItemBind(itemHolder, itemPosition, adapterItem, payloads)
+            onItemBindOverride(itemHolder, itemPosition, adapterItem, payloads)
         }
 
     /**
@@ -68,11 +74,9 @@ open class DslAdapterItem {
     var onItemClick: ((View) -> Unit)? = null
     var onItemLongClick: ((View) -> Boolean)? = null
 
-    var _clickListener: View.OnClickListener? = object : View.OnClickListener {
-        override fun onClick(view: View?) {
-            notNull(onItemClick, view) {
-                onItemClick?.invoke(view!!)
-            }
+    var _clickListener: View.OnClickListener? = View.OnClickListener { view ->
+        notNull(onItemClick, view) {
+            onItemClick?.invoke(view!!)
         }
     }
 
@@ -82,7 +86,8 @@ open class DslAdapterItem {
     open fun onItemBind(
         itemHolder: DslViewHolder,
         itemPosition: Int,
-        adapterItem: DslAdapterItem
+        adapterItem: DslAdapterItem,
+        payloads: List<Any>
     ) {
         if (onItemClick == null || _clickListener == null) {
             itemHolder.itemView.isClickable = false
@@ -95,11 +100,22 @@ open class DslAdapterItem {
         } else {
             itemHolder.itemView.setOnLongClickListener(_longClickListener)
         }
+
+        onItemBind(itemHolder, itemPosition, adapterItem)
+    }
+
+    @Deprecated("不支持[payloads]")
+    open fun onItemBind(
+        itemHolder: DslViewHolder,
+        itemPosition: Int,
+        adapterItem: DslAdapterItem
+    ) {
+
     }
 
     /**用于覆盖默认操作*/
-    var onItemBindOverride: (itemHolder: DslViewHolder, itemPosition: Int, adapterItem: DslAdapterItem) -> Unit =
-        { _, _, _ ->
+    var onItemBindOverride: (itemHolder: DslViewHolder, itemPosition: Int, adapterItem: DslAdapterItem, payloads: List<Any>) -> Unit =
+        { _, _, _, _ ->
 
         }
 
@@ -114,6 +130,13 @@ open class DslAdapterItem {
      * [DslAdapter.onViewDetachedFromWindow]
      * */
     var onItemViewDetachedToWindow: (itemHolder: DslViewHolder) -> Unit = {
+
+    }
+
+    /**
+     * [DslAdapter.onViewRecycled]
+     * */
+    var onItemViewRecycled: (itemHolder: DslViewHolder) -> Unit = {
 
     }
 
@@ -188,52 +211,10 @@ open class DslAdapterItem {
     /**可以覆盖设置分割线的边距*/
     var onSetItemOffset: (rect: Rect) -> Unit = {}
 
+    /**分割线入口 [DslItemDecoration]*/
     fun setItemOffsets(rect: Rect) {
         rect.set(itemLeftInsert, itemTopInsert, itemRightInsert, itemBottomInsert)
         onSetItemOffset(rect)
-    }
-
-    fun setTopInsert(insert: Int, leftOffset: Int = 0, rightOffset: Int = 0) {
-        itemTopInsert = insert
-        itemRightOffset = rightOffset
-        itemLeftOffset = leftOffset
-    }
-
-    fun setBottomInsert(insert: Int, leftOffset: Int = 0, rightOffset: Int = 0) {
-        itemBottomInsert = insert
-        itemRightOffset = rightOffset
-        itemLeftOffset = leftOffset
-    }
-
-    fun setLeftInsert(insert: Int, topOffset: Int = 0, bottomOffset: Int = 0) {
-        itemLeftInsert = insert
-        itemBottomOffset = bottomOffset
-        itemTopOffset = topOffset
-    }
-
-    fun setRightInsert(insert: Int, topOffset: Int = 0, bottomOffset: Int = 0) {
-        itemRightInsert = insert
-        itemBottomOffset = bottomOffset
-        itemTopOffset = topOffset
-    }
-
-    fun marginVertical(top: Int, bottom: Int = 0, color: Int = Color.TRANSPARENT) {
-        itemLeftOffset = 0
-        itemRightOffset = 0
-        itemTopInsert = top
-        itemBottomInsert = bottom
-        onlyDrawOffsetArea = false
-        itemDecorationColor = color
-    }
-
-    fun marginHorizontal(left: Int, right: Int = 0, color: Int = Color.TRANSPARENT) {
-        itemTopOffset = 0
-        itemBottomOffset = 0
-
-        itemLeftInsert = left
-        itemRightInsert = right
-        onlyDrawOffsetArea = false
-        itemDecorationColor = color
     }
 
     /**
@@ -472,6 +453,11 @@ open class DslAdapterItem {
             }
         }
 
+    var thisGetChangePayload: (fromItem: DslAdapterItem?, newItem: DslAdapterItem) -> Any? =
+        { _, _ ->
+            null
+        }
+
     /**
      * [checkItem] 是否需要关联到处理列表
      * [itemIndex] 分组折叠之后数据列表中的index
@@ -514,7 +500,7 @@ open class DslAdapterItem {
                 this,
                 select.toSelectOption(),
                 notify = true,
-                notifyItemChange = true,
+                notifyItemSelectorChange = true,
                 updateItemDepend = notifyUpdate
             )
         )
@@ -547,9 +533,6 @@ open class DslAdapterItem {
     open fun _itemSelectorChange(selectorParams: SelectorParams) {
         onItemSelectorChange(selectorParams)
     }
-
-    val itemIndexPosition
-        get() = itemDslAdapter?.getValidFilterDataList()?.indexOf(this) ?: RecyclerView.NO_POSITION
 
     //</editor-fold desc="单选, 多选相关">
 
@@ -634,57 +617,4 @@ class UpdateDependProperty<T>(var value: T) : ReadWriteProperty<DslAdapterItem, 
             thisRef.updateItemDepend(FilterParams(thisRef, updateDependItemWithEmpty = true))
         }
     }
-}
-
-/**
- * 将list结构体, 打包成dslItem
- * */
-public fun List<Any>.toDslItemList(
-    @LayoutRes layoutId: Int = -1,
-    config: DslAdapterItem.() -> Unit = {}
-): MutableList<DslAdapterItem> {
-    return toDslItemList(DslAdapterItem::class.java, layoutId, config)
-}
-
-public fun List<Any>.toDslItemList(
-    dslItem: Class<out DslAdapterItem>,
-    @LayoutRes layoutId: Int = -1,
-    config: DslAdapterItem.() -> Unit = {}
-): MutableList<DslAdapterItem> {
-    return toDslItemList(itemFactory = { _, item ->
-        dslItem.newInstance().apply {
-            if (layoutId != -1) {
-                itemLayoutId = layoutId
-            }
-            config()
-        }
-    })
-}
-
-public fun List<Any>.toDslItemList(
-    itemBefore: (itemList: MutableList<DslAdapterItem>, index: Int, item: Any) -> Unit = { _, _, _ -> },
-    itemFactory: (index: Int, item: Any) -> DslAdapterItem,
-    itemAfter: (itemList: MutableList<DslAdapterItem>, index: Int, item: Any) -> Unit = { _, _, _ -> }
-): MutableList<DslAdapterItem> {
-    return toAnyList(itemBefore, { index, any ->
-        val item = itemFactory(index, any)
-        item.itemData = any
-        item
-    }, itemAfter)
-}
-
-public fun <T> List<Any>.toAnyList(
-    itemBefore: (itemList: MutableList<T>, index: Int, item: Any) -> Unit = { _, _, _ -> },
-    itemFactory: (index: Int, item: Any) -> T,
-    itemAfter: (itemList: MutableList<T>, index: Int, item: Any) -> Unit = { _, _, _ -> }
-): MutableList<T> {
-    val result = mutableListOf<T>()
-
-    forEachIndexed { index, any ->
-        itemBefore(result, index, any)
-        val item = itemFactory(index, any)
-        result.add(item)
-        itemAfter(result, index, any)
-    }
-    return result
 }
