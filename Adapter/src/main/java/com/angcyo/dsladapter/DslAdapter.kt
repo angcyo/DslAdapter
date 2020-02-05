@@ -215,13 +215,24 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
      * [DslAdapterStatusItem.ADAPTER_STATUS_LOADING]
      * [DslAdapterStatusItem.ADAPTER_STATUS_ERROR]
      * */
-    fun setAdapterStatus(status: Int, filterParams: FilterParams = defaultFilterParams!!) {
+    fun setAdapterStatus(status: Int, filterParams: FilterParams? = null) {
         if (dslAdapterStatusItem.itemState == status) {
             return
         }
+        val fromNone = dslAdapterStatusItem.itemState == DslAdapterStatusItem.ADAPTER_STATUS_NONE
         dslAdapterStatusItem.itemChanging = true
         dslAdapterStatusItem.itemState = status
-        updateItemDepend(filterParams)
+
+        val params = filterParams ?: defaultFilterParams!!.apply {
+            //第一次切换布局状态, 优先加载
+            just = just || fromNone
+            async = if (!async || fromNone) {
+                false
+            } else {
+                async
+            }
+        }
+        updateItemDepend(params)
     }
 
     /**自动设置状态*/
