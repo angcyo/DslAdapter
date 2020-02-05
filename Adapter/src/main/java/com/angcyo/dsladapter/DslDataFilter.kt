@@ -154,9 +154,7 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
                 //仅过滤数据源,不更新界面
             } else {
                 //根据diff, 更新adapter
-                if (dslAdapter.isAdapterStatus()) {
-                    //情感图状态模式, 不刷新界面
-                } else if (updateDependItemList.isEmpty() &&
+                if (updateDependItemList.isEmpty() &&
                     _params?.updateDependItemWithEmpty == false &&
                     oldSize == newSize
                 ) {

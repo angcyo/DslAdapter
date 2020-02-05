@@ -72,9 +72,9 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     var onceFilterParams: FilterParams? = null
 
     /**默认的[FilterParams]*/
-    var defaultFilterParams: FilterParams = _defaultFilterParams()
+    var defaultFilterParams: FilterParams? = null
         get() {
-            return onceFilterParams ?: field
+            return onceFilterParams ?: (field ?: _defaultFilterParams())
         }
 
     /**
@@ -215,10 +215,11 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
      * [DslAdapterStatusItem.ADAPTER_STATUS_LOADING]
      * [DslAdapterStatusItem.ADAPTER_STATUS_ERROR]
      * */
-    fun setAdapterStatus(status: Int, filterParams: FilterParams = defaultFilterParams) {
+    fun setAdapterStatus(status: Int, filterParams: FilterParams = defaultFilterParams!!) {
         if (dslAdapterStatusItem.itemState == status) {
             return
         }
+        dslAdapterStatusItem.itemChanging = true
         dslAdapterStatusItem.itemState = status
         updateItemDepend(filterParams)
     }
@@ -239,7 +240,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
 
     fun setLoadMoreEnable(
         enable: Boolean = true,
-        filterParams: FilterParams = defaultFilterParams
+        filterParams: FilterParams = defaultFilterParams!!
     ) {
         if (dslLoadMoreItem.itemStateEnable == enable) {
             return
@@ -258,6 +259,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         if (dslLoadMoreItem.itemStateEnable && dslLoadMoreItem.itemState == status) {
             return
         }
+        dslLoadMoreItem.itemChanging = true
         dslLoadMoreItem.itemState = status
         if (notify) {
             notifyItemChanged(dslLoadMoreItem, payload)
@@ -340,14 +342,14 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     /**可以在回调中改变数据, 并且会自动刷新界面*/
-    fun changeItems(filterParams: FilterParams = defaultFilterParams, change: () -> Unit) {
+    fun changeItems(filterParams: FilterParams = defaultFilterParams!!, change: () -> Unit) {
         change()
         _updateAdapterItems()
         updateItemDepend(filterParams)
     }
 
     fun changeDataItems(
-        filterParams: FilterParams = defaultFilterParams,
+        filterParams: FilterParams = defaultFilterParams!!,
         change: (dataItems: MutableList<DslAdapterItem>) -> Unit
     ) {
         changeItems(filterParams) {
@@ -356,7 +358,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     fun changeHeaderItems(
-        filterParams: FilterParams = defaultFilterParams,
+        filterParams: FilterParams = defaultFilterParams!!,
         change: (headerItems: MutableList<DslAdapterItem>) -> Unit
     ) {
         changeItems(filterParams) {
@@ -365,7 +367,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     fun changeFooterItems(
-        filterParams: FilterParams = defaultFilterParams,
+        filterParams: FilterParams = defaultFilterParams!!,
         change: (footerItems: MutableList<DslAdapterItem>) -> Unit
     ) {
         changeItems(filterParams) {
@@ -378,7 +380,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         list: List<Any>,
         page: Int = 1,
         pageSize: Int = 20,
-        filterParams: FilterParams = defaultFilterParams,
+        filterParams: FilterParams = defaultFilterParams!!,
         initOrCreateDslItem: (oldItem: DslAdapterItem?, data: Any) -> DslAdapterItem
     ) {
         changeDataItems(filterParams) {
@@ -460,15 +462,11 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
 
     /**创建默认的[FilterParams]*/
     fun _defaultFilterParams(): FilterParams {
-        return FilterParams(
-            just = dataItems.isEmpty(),
-            async = getDataList().isNotEmpty(),
-            justFilter = isAdapterStatus()
-        )
+        return FilterParams()
     }
 
     /**调用[DiffUtil]更新界面*/
-    fun updateItemDepend(filterParams: FilterParams = defaultFilterParams) {
+    fun updateItemDepend(filterParams: FilterParams = defaultFilterParams!!) {
         dslDataFilter?.let {
             it.updateFilterItemDepend(filterParams)
 

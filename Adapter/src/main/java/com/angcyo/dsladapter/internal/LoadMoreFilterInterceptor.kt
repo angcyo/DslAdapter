@@ -12,7 +12,7 @@ import com.angcyo.dsladapter.DslAdapterItem
  */
 class LoadMoreFilterInterceptor : FilterInterceptor {
     override fun intercept(chain: FilterChain): List<DslAdapterItem> {
-        return if (chain.dslAdapter.isAdapterStatus() &&
+        return if (chain.dslAdapter.isAdapterStatus() ||
             !chain.dslAdapter.dslLoadMoreItem.itemStateEnable
         ) {
             chain.requestList

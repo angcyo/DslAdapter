@@ -65,9 +65,6 @@ open class DslAdapterStatusItem : BaseDslStateItem() {
         }
     }
 
-    /**返回[true] 表示不需要显示情感图, 即显示[Adapter]原本的内容*/
-    open fun isInAdapterStatus() = itemStateEnable && itemState != ADAPTER_STATUS_NONE
-
     open fun _notifyRefresh(itemHolder: DslViewHolder) {
         if (!_isRefresh) {
             _isRefresh = true
