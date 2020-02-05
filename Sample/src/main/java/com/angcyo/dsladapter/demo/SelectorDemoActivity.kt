@@ -48,7 +48,7 @@ class SelectorDemoActivity : BaseRecyclerActivity() {
 
                 this@SelectorDemoActivity.isSelectorAll = isSelectorAll
 
-                dslViewHolder.tv(R.id.tip_view).text = when {
+                dslViewHolder.tv(R.id.tip_view)?.text = when {
                     isSelectorAll -> "全部选中, 共 ${selectorItems.size} 项"
                     selectorItems.isEmpty() -> "未选中"
                     else -> "选中: ${selectorItems.size} 项"
@@ -133,7 +133,7 @@ class SelectorDemoActivity : BaseRecyclerActivity() {
                                 }
                             )
                         }
-                        itemHolder.tv(R.id.text_view).apply {
+                        itemHolder.tv(R.id.text_view)?.apply {
                             height = 100 * dpi
                             text =
                                 "选我 $itemPosition \n${if (itemIsSelected) "true" else "false"}"

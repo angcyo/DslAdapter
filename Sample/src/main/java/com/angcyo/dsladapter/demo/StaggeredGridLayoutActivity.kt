@@ -133,7 +133,7 @@ class ColorItem : DslAdapterItem() {
             }
             setHeight(itemData as Int)
         }
-        itemHolder.tv(R.id.text_view).text =
+        itemHolder.tv(R.id.text_view)?.text =
             "${itemText}\nPosition:$itemPosition\nHeight:${itemData}"
     }
 }

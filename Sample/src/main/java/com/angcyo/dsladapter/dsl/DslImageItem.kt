@@ -23,7 +23,7 @@ class DslImageItem : DslAdapterItem() {
         adapterItem: DslAdapterItem
     ) {
         super.onItemBind(itemHolder, itemPosition, adapterItem)
-        itemHolder.v<TextView>(R.id.text_view).text = "文本位置:$itemPosition"
+        itemHolder.v<TextView>(R.id.text_view)?.text = "文本位置:$itemPosition"
     }
 
 }

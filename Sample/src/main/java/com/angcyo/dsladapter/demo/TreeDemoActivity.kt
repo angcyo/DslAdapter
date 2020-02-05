@@ -97,10 +97,10 @@ class DslTreeItem : DslAdapterItem() {
     ) {
         super.onItemBind(itemHolder, itemPosition, adapterItem)
 
-        itemHolder.tv(R.id.text_view).text = itemText
+        itemHolder.tv(R.id.text_view)?.text = itemText
 
         //箭头角度控制
-        itemHolder.v<View>(R.id.icon_view).apply {
+        itemHolder.v<View>(R.id.icon_view)?.apply {
             rotation = if (itemGroupExtend) {
                 90f
             } else {
@@ -116,17 +116,17 @@ class DslTreeItem : DslAdapterItem() {
 
         //展开or关闭动画控制
         itemHolder.clickItem {
-            itemHolder.v<View>(R.id.icon_view)
-                .animate()
-                .setDuration(300)
-                .rotation(if (itemGroupExtend) -90f else 90f)
-                .start()
-
+            itemHolder.v<View>(R.id.icon_view)?.run {
+                animate()
+                    .setDuration(300)
+                    .rotation(if (itemGroupExtend) -90f else 90f)
+                    .start()
+            }
             itemGroupExtend = !itemGroupExtend
         }
 
         //缩进控制
-        itemHolder.v<View>(R.id.icon_view).apply {
+        itemHolder.v<View>(R.id.icon_view)?.apply {
             (layoutParams as? ViewGroup.MarginLayoutParams)?.run {
                 leftMargin = itemParentList.size * 20 * dpi
                 layoutParams = this
@@ -146,7 +146,7 @@ class DslTreeItem : DslAdapterItem() {
                         append(item.itemText)
                     }
                 }
-                itemHolder.tv(R.id.dark_view).text = this
+                itemHolder.tv(R.id.dark_view)?.text = this
             }
         }
     }

@@ -33,10 +33,10 @@ class GroupDemoActivity : BaseRecyclerActivity() {
                         itemTopInsert = 10 * dpi
 
                         onItemBindOverride = { itemHolder, itemPosition, adapterItem, _ ->
-                            itemHolder.tv(R.id.fold_button).text =
+                            itemHolder.tv(R.id.fold_button)?.text =
                                 if (itemGroupExtend) "折叠 $itemPosition" else "展开 $itemPosition"
 
-                            itemHolder.tv(R.id.text_view).text = "分组${i + 1}"
+                            itemHolder.tv(R.id.text_view)?.text = "分组${i + 1}"
 
                             itemHolder.click(R.id.fold_button) {
                                 itemGroupExtend = !itemGroupExtend

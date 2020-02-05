@@ -24,6 +24,6 @@ class DslDemoItem : DslAdapterItem() {
         adapterItem: DslAdapterItem
     ) {
         super.onItemBind(itemHolder, itemPosition, adapterItem)
-        itemHolder.tv(R.id.text_view).text = itemText
+        itemHolder.tv(R.id.text_view)?.text = itemText
     }
 }

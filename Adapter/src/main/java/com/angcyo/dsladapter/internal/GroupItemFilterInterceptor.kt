@@ -2,7 +2,6 @@ package com.angcyo.dsladapter.internal
 
 import com.angcyo.dsladapter.DslAdapter
 import com.angcyo.dsladapter.DslAdapterItem
-import com.angcyo.dsladapter.FilterParams
 
 /**
  *
@@ -13,11 +12,10 @@ import com.angcyo.dsladapter.FilterParams
 class GroupItemFilterInterceptor : FilterInterceptor {
 
     /**过滤折叠后后的数据列表*/
-    override fun intercept(
-        dslAdapter: DslAdapter,
-        filterParams: FilterParams,
-        requestList: List<DslAdapterItem>
-    ): MutableList<DslAdapterItem> {
+    override fun intercept(chain: FilterChain): List<DslAdapterItem> {
+        val dslAdapter = chain.dslAdapter
+        val requestList = chain.requestList
+
         val list = mutableListOf<DslAdapterItem>()
 
         var index = 0

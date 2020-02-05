@@ -1,8 +1,12 @@
 # 2020-02-05
 
-`1.5.0`
+`2.0.0`
+
+注意:本次更新内容有点多, `API`调整过大, 有问题欢迎联系我!
 
 - 支持`payloads`更新方式
+- 100% `kotlin` 代码(`DslViewHolder` `L`)
+- 调整`DslAdapterStatusItem` `DslLoadMoreItem`实现方式 
 - 调整`DslDataFilter`逻辑
 - 调整其他代码结构
 

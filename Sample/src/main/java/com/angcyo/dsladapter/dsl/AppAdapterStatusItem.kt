@@ -17,7 +17,7 @@ class AppAdapterStatusItem : DslAdapterStatusItem() {
         super._onBindStateLayout(itemHolder, state)
 
         if (state == ADAPTER_STATUS_LOADING) {
-            itemHolder.v<TextView>(R.id.text_view).text = "精彩即将呈现..."
+            itemHolder.v<TextView>(R.id.text_view)?.text = "精彩即将呈现..."
         }
     }
 }

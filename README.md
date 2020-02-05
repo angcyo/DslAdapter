@@ -1,6 +1,6 @@
 # DslAdapter
 
-[![](https://img.shields.io/badge/License-MIT-3A77AC)](https://github.com/angcyo/DslAdapter/blob/master/LICENSE) [![API](https://img.shields.io/badge/API-12%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=12) [![](https://img.shields.io/badge/JitPack-1.5.0-6590B7)](https://jitpack.io/#angcyo/DslAdapter) [![](https://img.shields.io/badge/androidx-yes-80B44D)](https://developer.android.google.cn/jetpack/androidx) [![](https://img.shields.io/badge/kotlin-yes-F48729)](https://www.kotlincn.net/docs/reference/android-overview.html)
+[![](https://img.shields.io/badge/License-MIT-3A77AC)](https://github.com/angcyo/DslAdapter/blob/master/LICENSE) [![API](https://img.shields.io/badge/API-12%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=12) [![](https://img.shields.io/badge/JitPack-2.0.0-6590B7)](https://jitpack.io/#angcyo/DslAdapter) [![](https://img.shields.io/badge/androidx-yes-80B44D)](https://developer.android.google.cn/jetpack/androidx) [![](https://img.shields.io/badge/kotlin-yes-F48729)](https://www.kotlincn.net/docs/reference/android-overview.html)
 
 `Kotlin`时代的`Adapter`.
 
@@ -111,7 +111,7 @@ dependencies {
     //稳定版请使用
     implementation 'com.github.angcyo:DslAdapter:1.2.0'
     //androidx
-    implementation 'com.github.angcyo:DslAdapter:1.5.0'
+    implementation 'com.github.angcyo:DslAdapter:2.0.0'
     //跟随作者最新版请使用
     implementation 'com.github.angcyo:DslAdapter:master-SNAPSHOT'
 }
@@ -128,7 +128,7 @@ dependencies {
 
 [点击查看](https://github.com/angcyo/DslAdapter/blob/androidx/CHANGELOG.md)
 
-- 2020-02-05 `1.5.0` 
+- 2020-02-05 `2.0.0` 
 - 2020-01-02 `1.4.1`
 
 # DslItem

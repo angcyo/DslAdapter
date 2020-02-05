@@ -2,6 +2,7 @@ package com.angcyo.dsladapter.internal
 
 import com.angcyo.dsladapter.DslAdapter
 import com.angcyo.dsladapter.DslAdapterItem
+import com.angcyo.dsladapter.DslDataFilter
 import com.angcyo.dsladapter.FilterParams
 
 /**
@@ -13,9 +14,18 @@ import com.angcyo.dsladapter.FilterParams
 interface FilterInterceptor {
 
     /**数据源过滤拦截*/
-    fun intercept(
-        dslAdapter: DslAdapter,
-        filterParams: FilterParams,
-        requestList: List<DslAdapterItem>
-    ): MutableList<DslAdapterItem>
+    fun intercept(chain: FilterChain): List<DslAdapterItem>
 }
+
+data class FilterChain(
+    val dslAdapter: DslAdapter,
+    val dslDataFilter: DslDataFilter,
+    /**过滤参数*/
+    val filterParams: FilterParams,
+    /**最原始的数据源*/
+    val originList: List<DslAdapterItem>,
+    /**上一个过滤链过滤后的数据源*/
+    var requestList: List<DslAdapterItem>,
+    /**是否中断后续链的调用*/
+    var interruptChain: Boolean = false
+)

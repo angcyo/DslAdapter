@@ -1,8 +1,6 @@
 package com.angcyo.dsladapter.internal
 
-import com.angcyo.dsladapter.DslAdapter
 import com.angcyo.dsladapter.DslAdapterItem
-import com.angcyo.dsladapter.FilterParams
 import com.angcyo.dsladapter.L
 
 /**
@@ -15,11 +13,8 @@ import com.angcyo.dsladapter.L
 class HideItemFilterInterceptor : FilterInterceptor {
 
     /**过滤需要被隐藏后的数据列表*/
-    override fun intercept(
-        dslAdapter: DslAdapter,
-        filterParams: FilterParams,
-        requestList: List<DslAdapterItem>
-    ): MutableList<DslAdapterItem> {
+    override fun intercept(chain: FilterChain): List<DslAdapterItem> {
+        val requestList = chain.requestList
         val result = mutableListOf<DslAdapterItem>()
 
         //遍历所有数据, 找出需要隐藏的项
@@ -30,7 +25,7 @@ class HideItemFilterInterceptor : FilterInterceptor {
             requestList.forEachIndexed { index, subEachItem ->
                 if (currentItem.isItemInHiddenList(subEachItem, index)) {
 
-                    filterParams.let {
+                    chain.filterParams.let {
                         //包含需要隐藏的item, 也算updateDependItem
                         if (it.fromDslAdapterItem == currentItem) {
                             it.updateDependItemWithEmpty = true

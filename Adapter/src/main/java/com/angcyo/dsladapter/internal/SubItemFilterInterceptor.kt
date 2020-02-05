@@ -1,8 +1,6 @@
 package com.angcyo.dsladapter.internal
 
-import com.angcyo.dsladapter.DslAdapter
 import com.angcyo.dsladapter.DslAdapterItem
-import com.angcyo.dsladapter.FilterParams
 
 /**
  *
@@ -14,14 +12,10 @@ import com.angcyo.dsladapter.FilterParams
 class SubItemFilterInterceptor : FilterInterceptor {
 
     /**过滤需要追加或者隐藏的子项*/
-    override fun intercept(
-        dslAdapter: DslAdapter,
-        filterParams: FilterParams,
-        requestList: List<DslAdapterItem>
-    ): MutableList<DslAdapterItem> {
+    override fun intercept(chain: FilterChain): List<DslAdapterItem> {
         val result = mutableListOf<DslAdapterItem>()
 
-        requestList.forEach { currentItem ->
+        chain.requestList.forEach { currentItem ->
             val parentList = mutableListOf<DslAdapterItem>()
             val subList = mutableListOf<DslAdapterItem>()
             loadSubItemList(currentItem, parentList, subList)

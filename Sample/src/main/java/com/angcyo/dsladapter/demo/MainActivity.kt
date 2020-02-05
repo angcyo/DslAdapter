@@ -93,7 +93,7 @@ class MainActivity : BaseRecyclerActivity() {
             dslItem(R.layout.item_demo_list) {
                 onItemBindOverride = { itemHolder, _, _, _ ->
                     itemHolder.itemView.setBackgroundColor(Color.TRANSPARENT)
-                    itemHolder.tv(R.id.text_view).apply {
+                    itemHolder.tv(R.id.text_view)?.apply {
                         gravity = Gravity.CENTER
                         text = "以下是分割线展示"
                     }
@@ -152,7 +152,7 @@ fun DslAdapter.来点数据() {
         dslAdapter.dslItem(R.layout.item_group_head) {
             itemIsGroupHead = true
             onItemBindOverride = { itemHolder, itemPosition, adapterItem, _ ->
-                itemHolder.tv(R.id.fold_button).text =
+                itemHolder.tv(R.id.fold_button)?.text =
                     if (itemGroupExtend) "折叠 $itemPosition" else "展开 $itemPosition"
 
                 itemHolder.click(R.id.fold_button) {
@@ -165,7 +165,7 @@ fun DslAdapter.来点数据() {
         dslAdapter.dslTextItem()
         dslAdapter.dslItem(R.layout.item_text_layout) {
             onItemBindOverride = { itemHolder, itemPosition, _, _ ->
-                itemHolder.v<TextView>(R.id.text_view).text = "文本位置:$itemPosition"
+                itemHolder.v<TextView>(R.id.text_view)?.text = "文本位置:$itemPosition"
             }
         }
 
@@ -174,7 +174,7 @@ fun DslAdapter.来点数据() {
             dslAdapter.dslImageItem()
             dslAdapter.dslItem(R.layout.item_image_layout) {
                 onItemBindOverride = { itemHolder, itemPosition, _, _ ->
-                    itemHolder.v<TextView>(R.id.text_view).text = "文本位置:$itemPosition"
+                    itemHolder.v<TextView>(R.id.text_view)?.text = "文本位置:$itemPosition"
                 }
             }
         }

@@ -10,10 +10,6 @@ import android.view.View
  * Copyright (c) 2019 ShenZhen O&M Cloud Co., Ltd. All rights reserved.
  */
 abstract class BaseDslStateItem : DslAdapterItem() {
-    init {
-        itemLayoutId = R.layout.item_base_state
-        itemSpanCount = -1
-    }
 
     /**
      * [key] 是状态
@@ -29,9 +25,17 @@ abstract class BaseDslStateItem : DslAdapterItem() {
             _onItemStateChange(old, value)
         }
 
+    /**是否将激活状态item*/
+    open var itemStateEnable: Boolean = true
+
     var onItemStateChange: (from: Int, to: Int) -> Unit = { _, _ -> }
 
     var onBindStateLayout: (itemHolder: DslViewHolder, state: Int) -> Unit = { _, _ -> }
+
+    init {
+        itemLayoutId = R.layout.item_base_state
+        itemSpanCount = -1
+    }
 
     override fun onItemBind(
         itemHolder: DslViewHolder,
@@ -43,7 +47,7 @@ abstract class BaseDslStateItem : DslAdapterItem() {
         itemHolder.clear()
 
         val stateLayout = itemStateLayoutMap[itemState]
-        itemHolder.group(R.id.item_wrap_layout).apply {
+        itemHolder.group(R.id.item_wrap_layout)?.apply {
             if (stateLayout == null) {
                 //没有状态对应的布局文件
                 removeAllViews()
@@ -81,4 +85,7 @@ abstract class BaseDslStateItem : DslAdapterItem() {
             onItemStateChange(old, value)
         }
     }
+
+    /**是否处于状态显示模式*/
+    open fun isInStateLayout() = itemStateEnable && itemState > 0
 }
