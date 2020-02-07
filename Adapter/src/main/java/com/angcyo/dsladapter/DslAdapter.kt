@@ -407,7 +407,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
                         it.add(dslItem)
                     }
                 }
-                if (it.isEmpty()) {
+                if (it.isEmpty() && headerItems.isEmpty() && footerItems.isEmpty()) {
                     //空数据
                     setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY)
                 } else {
