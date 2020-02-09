@@ -28,8 +28,10 @@ abstract class BaseDslStateItem : DslAdapterItem() {
     /**是否将激活状态item*/
     open var itemStateEnable: Boolean = true
 
+    /**当状态改变时回调*/
     var onItemStateChange: (from: Int, to: Int) -> Unit = { _, _ -> }
 
+    /**绑定不同状态的布局*/
     var onBindStateLayout: (itemHolder: DslViewHolder, state: Int) -> Unit = { _, _ -> }
 
     init {
