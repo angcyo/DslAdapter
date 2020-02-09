@@ -36,12 +36,18 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
     var onFilterDataList: (oldDataList: List<DslAdapterItem>, newDataList: List<DslAdapterItem>) -> List<DslAdapterItem> =
         { _, newDataList -> newDataList }
 
-    /**过滤拦截器*/
+    /**前置过滤器*/
+    val beforeFilterInterceptorList = mutableListOf<FilterInterceptor>()
+
+    /**中置过滤拦截器*/
     val filterInterceptorList = mutableListOf(
         GroupItemFilterInterceptor(),
         SubItemFilterInterceptor(),
         HideItemFilterInterceptor()
     )
+
+    /**后置过滤器*/
+    val afterFilterInterceptorList = mutableListOf<FilterInterceptor>()
 
     //节流控制
     private val updateDependRunnable = UpdateDependRunnable()
@@ -100,14 +106,25 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
             false
         )
 
-        for (filer in filterInterceptorList) {
-            result = filer.intercept(chain)
-            chain.requestList = result
+        var interruptChain = false
 
-            if (chain.interruptChain) {
-                break
+        fun proceed(interceptorList: List<FilterInterceptor>) {
+            if (!interruptChain) {
+                for (filer in interceptorList) {
+                    result = filer.intercept(chain)
+                    chain.requestList = result
+                    if (chain.interruptChain) {
+                        interruptChain = true
+                        break
+                    }
+                }
             }
         }
+
+        proceed(beforeFilterInterceptorList)
+        proceed(filterInterceptorList)
+        proceed(afterFilterInterceptorList)
+
         return result
     }
 

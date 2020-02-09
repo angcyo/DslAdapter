@@ -6,7 +6,6 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.view.View
-import androidx.annotation.LayoutRes
 import androidx.recyclerview.widget.RecyclerView
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -448,6 +447,7 @@ open class DslAdapterItem {
         { fromItem, newItem ->
             when {
                 itemChanging -> false
+                (newItem.itemData != null && this.itemData != null && newItem.itemData == this.itemData) -> true
                 fromItem == null -> this == newItem
                 else -> this != fromItem && this == newItem
             }
