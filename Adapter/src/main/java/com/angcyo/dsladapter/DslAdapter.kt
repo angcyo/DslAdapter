@@ -20,6 +20,10 @@ import kotlin.math.min
 open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     RecyclerView.Adapter<DslViewHolder>(), OnDispatchUpdatesListener {
 
+    companion object {
+        var DEFALUT_PAGE_SIZE = 20
+    }
+
     /**
      * 为了简单起见, 这里写死套路, 理论上应该用状态器管理的.
      * 2.0.0 版本更新之后, [dslAdapterStatusItem] [dslLoadMoreItem] 将在过滤数据源后加载追加,
@@ -377,13 +381,14 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
 
     /**用于[Adapter]中单一数据类型的列表*/
     fun loadSingleData(
-        list: List<Any>,
+        dataList: List<Any>?,
         page: Int = 1,
-        pageSize: Int = 20,
+        pageSize: Int = DEFALUT_PAGE_SIZE,
         filterParams: FilterParams = defaultFilterParams!!,
         initOrCreateDslItem: (oldItem: DslAdapterItem?, data: Any) -> DslAdapterItem
     ) {
         changeDataItems(filterParams) {
+            val list = dataList ?: emptyList()
             //第一页数据检查
             if (page <= 1) {
                 if (it.size > list.size) {
