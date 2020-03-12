@@ -128,9 +128,6 @@ dependencies {
 
 [点击查看](https://github.com/angcyo/DslAdapter/blob/androidx/CHANGELOG.md)
 
-- 2020-02-05 `2.0.0` 
-- 2020-01-02 `1.4.1`
-
 # DslItem
 
 正在整理的[DslItem](https://github.com/angcyo/DslItem)库, 囊括项目开发中能够见到的`Item`, 皆旨让开发更高效. 欢迎PR.
