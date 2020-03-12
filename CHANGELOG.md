@@ -1,6 +1,15 @@
-# 2020-02-09
+# 2020-3-12
 
-- `DslDataFilter` 拆分`前置` `中置` `后置` 过滤拦截器
+`2.1.0`
+
+- `DslAdapterItem` 支持 `LifecycleOwner`, 提供`STARTED` `RESUMED` `DESTROYED` 3种状态
+- `dispatchUpdates`支持`list`
+- 调整了一些命名规则
+- 全面支持了`payload`的更新方式
+- 加入了一些更实用的扩展函数
+- `DslDataFilter`重构了`抖动``节流`的处理方法
+- `DslDataFilter` 拆分`前置` `中置` `后置` `过滤`拦截器
+- `DslDataFilter` 加入了`过滤后`拦截器
 
 # 2020-02-05
 

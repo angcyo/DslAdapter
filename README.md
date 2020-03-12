@@ -108,10 +108,10 @@ allprojects {
 
 ```kotlin
 dependencies {
-    //稳定版请使用
+    //androidx(推荐)
+    implementation 'com.github.angcyo:DslAdapter:2.1.0'
+    //support版请使用(不保证及时更新)
     implementation 'com.github.angcyo:DslAdapter:1.2.0'
-    //androidx
-    implementation 'com.github.angcyo:DslAdapter:2.0.0'
     //跟随作者最新版请使用
     implementation 'com.github.angcyo:DslAdapter:master-SNAPSHOT'
 }
