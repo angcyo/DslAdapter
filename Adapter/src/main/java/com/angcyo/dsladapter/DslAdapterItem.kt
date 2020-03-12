@@ -6,6 +6,9 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.view.View
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
 import androidx.recyclerview.widget.RecyclerView
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -17,24 +20,59 @@ import kotlin.reflect.KProperty
  * @date 2019/05/07
  * Copyright (c) 2019 ShenZhen O&M Cloud Co., Ltd. All rights reserved.
  */
-open class DslAdapterItem {
+open class DslAdapterItem : LifecycleOwner {
 
     companion object {
-
-        /**负载部分刷新界面*/
-        const val PAYLOAD_UPDATE_PART = 0x1
+        /**负载,请求刷新部分界面*/
+        const val PAYLOAD_UPDATE_PART = 0x1_00_00
+        /**负载,强制更新媒体, 比如图片*/
+        const val PAYLOAD_UPDATE_MEDIA = 0x2_00_00
     }
 
     /**适配器*/
     var itemDslAdapter: DslAdapter? = null
 
+    //<editor-fold desc="update操作">
+
     /**[notifyItemChanged]*/
-    open fun updateAdapterItem(payload: Any? = null, useFilterList: Boolean = true) {
-        if (itemDslAdapter == null) {
-            L.e("updateAdapterItem需要[itemDslAdapter], 请赋值.")
+    open fun updateAdapterItem(payload: Any? = PAYLOAD_UPDATE_PART, useFilterList: Boolean = true) {
+        itemDslAdapter?.notifyItemChanged(this, payload, useFilterList).elseNull {
+            L.w("跳过操作! updateAdapterItem需要[itemDslAdapter],请赋值.")
         }
-        itemDslAdapter?.notifyItemChanged(this, payload, useFilterList)
     }
+
+    /**
+     * 通过diff更新
+     * @param notifyUpdate 是否需要触发 [Depend] 关系链.
+     * */
+    open fun updateItemDepend(
+        filterParams: FilterParams = FilterParams(
+            fromDslAdapterItem = this,
+            updateDependItemWithEmpty = false,
+            payload = PAYLOAD_UPDATE_PART
+        )
+    ) {
+        itemDslAdapter?.updateItemDepend(filterParams).elseNull {
+            L.w("跳过操作! updateItemDepend需要[itemDslAdapter],请赋值.")
+        }
+    }
+
+    /**更新选项*/
+    open fun updateItemSelector(select: Boolean, notifyUpdate: Boolean = false) {
+        itemDslAdapter?.itemSelectorHelper?.selector(
+            SelectorParams(
+                this,
+                select.toSelectOption(),
+                notifySelectListener = true,
+                notifyItemSelectorChange = true,
+                updateItemDepend = notifyUpdate
+            )
+        ).elseNull {
+            L.w("跳过操作! updateItemSelector需要[itemDslAdapter],请赋值.")
+        }
+    }
+
+    //</editor-fold desc="update操作">
 
     //<editor-fold desc="Grid相关属性">
 
@@ -53,6 +91,14 @@ open class DslAdapterItem {
 
     /**附加的数据*/
     var itemData: Any? = null
+        set(value) {
+            field = value
+            onSetItemData(value)
+        }
+
+    open fun onSetItemData(data: Any?) {
+
+    }
 
     /**唯一标识此item的值*/
     var itemTag: String? = null
@@ -64,7 +110,7 @@ open class DslAdapterItem {
     var itemBind: (itemHolder: DslViewHolder, itemPosition: Int, adapterItem: DslAdapterItem, payloads: List<Any>) -> Unit =
         { itemHolder, itemPosition, adapterItem, payloads ->
             onItemBind(itemHolder, itemPosition, adapterItem, payloads)
-            onItemBindOverride(itemHolder, itemPosition, adapterItem, payloads)
+            itemBindOverride(itemHolder, itemPosition, adapterItem, payloads)
         }
 
     /**
@@ -103,7 +149,6 @@ open class DslAdapterItem {
         onItemBind(itemHolder, itemPosition, adapterItem)
     }
 
-    @Deprecated("不支持[payloads]")
     open fun onItemBind(
         itemHolder: DslViewHolder,
         itemPosition: Int,
@@ -113,7 +158,7 @@ open class DslAdapterItem {
     }
 
     /**用于覆盖默认操作*/
-    var onItemBindOverride: (itemHolder: DslViewHolder, itemPosition: Int, adapterItem: DslAdapterItem, payloads: List<Any>) -> Unit =
+    var itemBindOverride: (itemHolder: DslViewHolder, itemPosition: Int, adapterItem: DslAdapterItem, payloads: List<Any>) -> Unit =
         { _, _, _, _ ->
 
         }
@@ -121,23 +166,26 @@ open class DslAdapterItem {
     /**
      * [DslAdapter.onViewAttachedToWindow]
      * */
-    var onItemViewAttachedToWindow: (itemHolder: DslViewHolder) -> Unit = {
-
-    }
+    var itemViewAttachedToWindow: (itemHolder: DslViewHolder, itemPosition: Int) -> Unit =
+        { itemHolder, itemPosition ->
+            onItemViewAttachedToWindow(itemHolder, itemPosition)
+        }
 
     /**
      * [DslAdapter.onViewDetachedFromWindow]
      * */
-    var onItemViewDetachedToWindow: (itemHolder: DslViewHolder) -> Unit = {
-
-    }
+    var itemViewDetachedToWindow: (itemHolder: DslViewHolder, itemPosition: Int) -> Unit =
+        { itemHolder, itemPosition ->
+            onItemViewDetachedToWindow(itemHolder, itemPosition)
+        }
 
     /**
      * [DslAdapter.onViewRecycled]
      * */
-    var onItemViewRecycled: (itemHolder: DslViewHolder) -> Unit = {
-
-    }
+    var itemViewRecycled: (itemHolder: DslViewHolder, itemPosition: Int) -> Unit =
+        { itemHolder, itemPosition ->
+            onItemViewRecycled(itemHolder, itemPosition)
+        }
 
     //</editor-fold>
 
@@ -453,9 +501,9 @@ open class DslAdapterItem {
             }
         }
 
-    var thisGetChangePayload: (fromItem: DslAdapterItem?, newItem: DslAdapterItem) -> Any? =
-        { _, _ ->
-            null
+    var thisGetChangePayload: (fromItem: DslAdapterItem?, filterPayload: Any?, newItem: DslAdapterItem) -> Any? =
+        { _, filterPayload, _ ->
+            filterPayload ?: PAYLOAD_UPDATE_PART
         }
 
     /**
@@ -474,37 +522,6 @@ open class DslAdapterItem {
     var isItemInUpdateList: (checkItem: DslAdapterItem, itemIndex: Int) -> Boolean =
         { _, _ -> false }
 
-    /**
-     * 通过diff更新
-     * @param notifyUpdate 是否需要触发 [Depend] 关系链.
-     * */
-    open fun updateItemDepend(
-        filterParams: FilterParams = FilterParams(
-            fromDslAdapterItem = this,
-            updateDependItemWithEmpty = false
-        )
-    ) {
-        if (itemDslAdapter == null) {
-            L.e("updateItemDepend需要[itemDslAdapter], 请赋值.")
-        }
-        itemDslAdapter?.updateItemDepend(filterParams)
-    }
-
-    /**更新选项*/
-    open fun updateItemSelector(select: Boolean, notifyUpdate: Boolean = false) {
-        if (itemDslAdapter == null) {
-            L.e("updateItemSelector需要[itemDslAdapter], 请赋值.")
-        }
-        itemDslAdapter?.itemSelectorHelper?.selector(
-            SelectorParams(
-                this,
-                select.toSelectOption(),
-                notify = true,
-                notifyItemSelectorChange = true,
-                updateItemDepend = notifyUpdate
-            )
-        )
-    }
 
     var onItemUpdateFrom: (fromItem: DslAdapterItem) -> Unit = {}
 
@@ -605,6 +622,33 @@ open class DslAdapterItem {
     var itemParentList = mutableListOf<DslAdapterItem>()
 
     //</editor-fold>
+
+    //<editor-fold desc="Lifecycle支持">
+
+    val lifecycleRegistry = LifecycleRegistry(this)
+
+    override fun getLifecycle(): Lifecycle {
+        return lifecycleRegistry
+    }
+
+    /**请勿覆盖[itemViewAttachedToWindow]*/
+    open fun onItemViewAttachedToWindow(itemHolder: DslViewHolder, itemPosition: Int) {
+        lifecycleRegistry.currentState = Lifecycle.State.RESUMED
+    }
+
+    /**请勿覆盖[itemViewDetachedToWindow]*/
+    open fun onItemViewDetachedToWindow(itemHolder: DslViewHolder, itemPosition: Int) {
+        lifecycleRegistry.currentState = Lifecycle.State.STARTED
+    }
+
+    /**请勿覆盖[itemViewRecycled]*/
+    open fun onItemViewRecycled(itemHolder: DslViewHolder, itemPosition: Int) {
+        lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
+        itemHolder.clear()
+    }
+
+    //</editor-fold desc="Lifecycle支持">
+
 }
 
 class UpdateDependProperty<T>(var value: T) : ReadWriteProperty<DslAdapterItem, T> {

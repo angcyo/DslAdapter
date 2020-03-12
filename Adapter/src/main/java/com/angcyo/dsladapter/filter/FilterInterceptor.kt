@@ -1,4 +1,4 @@
-package com.angcyo.dsladapter.internal
+package com.angcyo.dsladapter.filter
 
 import com.angcyo.dsladapter.DslAdapter
 import com.angcyo.dsladapter.DslAdapterItem
@@ -6,7 +6,7 @@ import com.angcyo.dsladapter.DslDataFilter
 import com.angcyo.dsladapter.FilterParams
 
 /**
- * 数据过滤拦截器
+ * Diff计算数据过滤拦截器
  * Email:angcyo@126.com
  * @author angcyo
  * @date 2020/02/05

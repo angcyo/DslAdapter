@@ -6,6 +6,8 @@ import androidx.core.view.GestureDetectorCompat
 import androidx.recyclerview.widget.RecyclerView
 import android.view.GestureDetector
 import android.view.MotionEvent
+import com.angcyo.dsladapter.ItemSelectorHelper.Companion.OPTION_DESELECT
+import com.angcyo.dsladapter.ItemSelectorHelper.Companion.OPTION_SELECT
 import kotlin.math.max
 
 /**
@@ -175,7 +177,7 @@ class SlidingSelectorHelper(val context: Context, val dslAdapter: DslAdapter) :
                     if (_lastSelectorItemAdapterPosition != adapterPosition) {
                         //先批量取消, 不满足条件的
                         selectorParams.selector = OPTION_DESELECT
-                        selectorParams.notify = false
+                        selectorParams.notifySelectListener = false
                         dslAdapter.itemSelectorHelper.selector(
                             _lastSelectorItemAdapterPosition..adapterPosition,
                             selectorParams
@@ -183,7 +185,7 @@ class SlidingSelectorHelper(val context: Context, val dslAdapter: DslAdapter) :
                     }
                     //批量选中
                     selectorParams.selector = OPTION_SELECT
-                    selectorParams.notify = true
+                    selectorParams.notifySelectListener = true
                     dslAdapter.itemSelectorHelper.selector(
                         _firstSelectorItemAdapterPosition..adapterPosition,
                         selectorParams

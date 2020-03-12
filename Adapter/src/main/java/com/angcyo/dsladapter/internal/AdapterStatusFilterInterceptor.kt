@@ -1,6 +1,8 @@
 package com.angcyo.dsladapter.internal
 
 import com.angcyo.dsladapter.DslAdapterItem
+import com.angcyo.dsladapter.filter.FilterChain
+import com.angcyo.dsladapter.filter.FilterInterceptor
 
 /**
  *

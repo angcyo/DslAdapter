@@ -4,6 +4,9 @@ import android.graphics.Color
 import android.widget.Toast
 import androidx.recyclerview.widget.GridLayoutManager
 import com.angcyo.dsladapter.*
+import com.angcyo.dsladapter.ItemSelectorHelper.Companion.MODEL_MULTI
+import com.angcyo.dsladapter.ItemSelectorHelper.Companion.MODEL_NORMAL
+import com.angcyo.dsladapter.ItemSelectorHelper.Companion.MODEL_SINGLE
 import com.angcyo.dsladapter.dsl.DslDemoItem
 import kotlin.random.Random.Default.nextInt
 
@@ -123,7 +126,7 @@ class SelectorDemoActivity : BaseRecyclerActivity() {
                             }
                         }
                     }
-                    onItemBindOverride = { itemHolder, itemPosition, adapterItem, _ ->
+                    itemBindOverride = { itemHolder, itemPosition, adapterItem, _ ->
                         itemHolder.itemView.apply {
                             setBackgroundColor(
                                 when {

@@ -133,8 +133,9 @@ fun DslAdapterItem.marginHorizontal(left: Int, right: Int = 0, color: Int = Colo
 
 //<editor-fold desc="操作扩展">
 
-fun DslAdapterItem.itemIndexPosition() =
-    itemDslAdapter?.getValidFilterDataList()?.indexOf(this) ?: RecyclerView.NO_POSITION
+fun DslAdapterItem.itemIndexPosition(dslAdapter: DslAdapter? = null) =
+    (dslAdapter ?: itemDslAdapter)?.getValidFilterDataList()?.indexOf(this)
+        ?: RecyclerView.NO_POSITION
 
 fun DslAdapterItem.itemViewHolder(recyclerView: RecyclerView?): DslViewHolder? {
     val position = itemIndexPosition()

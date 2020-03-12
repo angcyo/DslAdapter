@@ -12,12 +12,16 @@ open class DslLoadMoreItem : BaseDslStateItem() {
     companion object {
         /**正常状态, 等待加载更多*/
         const val ADAPTER_LOAD_NORMAL = 0
+
         /**加载更多中*/
         const val ADAPTER_LOAD_LOADING = 1
+
         /**无更多*/
         const val ADAPTER_LOAD_NO_MORE = 2
+
         /**加载失败*/
         const val ADAPTER_LOAD_ERROR = 10
+
         /**加载失败, 自动重试中*/
         const val _ADAPTER_LOAD_RETRY = 11
     }
@@ -42,17 +46,8 @@ open class DslLoadMoreItem : BaseDslStateItem() {
         itemStateLayoutMap[ADAPTER_LOAD_LOADING] = R.layout.base_loading_layout
         itemStateLayoutMap[ADAPTER_LOAD_NO_MORE] = R.layout.base_no_more_layout
         itemStateLayoutMap[ADAPTER_LOAD_ERROR] = R.layout.base_error_layout
-        itemStateLayoutMap[_ADAPTER_LOAD_RETRY] = itemStateLayoutMap[ADAPTER_LOAD_ERROR]!!
+        itemStateLayoutMap[_ADAPTER_LOAD_RETRY] = R.layout.base_error_layout
 
-        onItemViewDetachedToWindow = {
-            if (itemStateEnable) {
-                //加载失败时, 下次是否还需要加载更多?
-                if (itemState == ADAPTER_LOAD_ERROR) {
-                    itemState =
-                        _ADAPTER_LOAD_RETRY
-                }
-            }
-        }
         thisAreContentsTheSame = { _, _ ->
             false
         }
@@ -102,5 +97,16 @@ open class DslLoadMoreItem : BaseDslStateItem() {
             _isLoadMore = false
         }
         super._onItemStateChange(old, value)
+    }
+
+    override fun onItemViewDetachedToWindow(itemHolder: DslViewHolder, itemPosition: Int) {
+        super.onItemViewDetachedToWindow(itemHolder, itemPosition)
+        if (itemStateEnable) {
+            //加载失败时, 下次是否还需要加载更多?
+            if (itemState == ADAPTER_LOAD_ERROR) {
+                itemState =
+                    _ADAPTER_LOAD_RETRY
+            }
+        }
     }
 }

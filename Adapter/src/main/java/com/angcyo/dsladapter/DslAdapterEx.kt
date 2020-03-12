@@ -14,7 +14,7 @@ import androidx.annotation.LayoutRes
 
 //<editor-fold desc="Item操作">
 
-/**
+ /**
  * 通过条件, 查找[DslAdapterItem].
  *
  * @param useFilterList 是否使用过滤后的数据源. 通常界面上显示的是过滤后的数据, 所有add的数据源在非过滤列表中
@@ -24,6 +24,16 @@ fun DslAdapter.findItem(
     predicate: (DslAdapterItem) -> Boolean
 ): DslAdapterItem? {
     return getDataList(useFilterList).find(predicate)
+}
+
+fun DslAdapter.updateItem(
+    payload: Any? = DslAdapterItem.PAYLOAD_UPDATE_PART,
+    useFilterList: Boolean = true,
+    predicate: (DslAdapterItem) -> Boolean
+): DslAdapterItem? {
+    return findItem(useFilterList, predicate)?.apply {
+        updateAdapterItem(payload, useFilterList)
+    }
 }
 
 fun DslAdapter.findItemByTag(
@@ -61,11 +71,16 @@ fun <T : DslAdapterItem> DslAdapter.dslCustomItem(
 fun DslAdapter.renderEmptyItem(height: Int = 120 * dpi, color: Int = Color.TRANSPARENT) {
     val adapterItem = DslAdapterItem()
     adapterItem.itemLayoutId = R.layout.base_empty_item
-    adapterItem.onItemBindOverride = { itemHolder, _, _, _ ->
+    adapterItem.itemBindOverride = { itemHolder, _, _, _ ->
         itemHolder.itemView.setBackgroundColor(color)
         itemHolder.itemView.setHeight(height)
     }
     addLastItem(adapterItem)
+}
+
+/**换个贴切的名字*/
+fun DslAdapter.render(action: DslAdapter.() -> Unit) {
+    this.action()
 }
 
 fun DslAdapter.renderItem(count: Int = 1, init: DslAdapterItem.(index: Int) -> Unit) {
@@ -83,9 +98,23 @@ fun <T> DslAdapter.renderItem(data: T, init: DslAdapterItem.() -> Unit) {
     addLastItem(adapterItem)
 }
 
+/**获取所有指定类型的数据集合*/
+inline fun <reified ItemData> DslAdapter.getAllItemData(useFilterList: Boolean = true): List<ItemData> {
+    val result = mutableListOf<ItemData>()
+    val itemList = getDataList(useFilterList)
+    for (item in itemList) {
+        if (item.itemData is ItemData) {
+            result.add(item.itemData as ItemData)
+        }
+    }
+    return result
+}
+
 //</editor-fold desc="Item操作">
 
 //<editor-fold desc="payload">
+
+/**是否包含指定的[payload]*/
 fun Iterable<*>.containsPayload(any: Any): Boolean {
     var result = false
     for (payload in this) {
@@ -100,5 +129,15 @@ fun Iterable<*>.containsPayload(any: Any): Boolean {
     }
     return result
 }
+
+/**是否要更新媒体, 比如:图片*/
+fun Iterable<*>.isUpdateMedia(): Boolean {
+    return count() <= 0 || containsPayload(DslAdapterItem.PAYLOAD_UPDATE_MEDIA)
+}
+
+/**需要更新媒体的负载*/
+fun mediaPayload(): List<Int> =
+    listOf(DslAdapterItem.PAYLOAD_UPDATE_PART, DslAdapterItem.PAYLOAD_UPDATE_MEDIA)
+
 //</editor-fold desc="payload">
 
