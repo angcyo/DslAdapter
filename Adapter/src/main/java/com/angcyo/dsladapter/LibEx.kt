@@ -265,3 +265,7 @@ fun <T> T?.elseNull(action: () -> Unit = {}): T? {
 fun Any?.hash(): String? {
     return this?.hashCode()?.run { Integer.toHexString(this) }
 }
+
+fun Any.simpleHash(): String {
+    return "${this.javaClass.simpleName}(${this.hash()})"
+}
