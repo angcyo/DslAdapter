@@ -25,6 +25,7 @@ open class DslAdapterItem : LifecycleOwner {
     companion object {
         /**负载,请求刷新部分界面*/
         const val PAYLOAD_UPDATE_PART = 0x1_00_00
+
         /**负载,强制更新媒体, 比如图片*/
         const val PAYLOAD_UPDATE_MEDIA = 0x2_00_00
     }
@@ -227,7 +228,7 @@ open class DslAdapterItem : LifecycleOwner {
 
     //</editor-fold>
 
-    //<editor-fold desc="表单 分割线配置">
+    //<editor-fold desc="表单/分割线配置">
 
     /**
      * 需要插入分割线的大小
@@ -463,21 +464,9 @@ open class DslAdapterItem : LifecycleOwner {
         }
     }
 
-    //</editor-fold desc="表单 分割线配置">
+    //</editor-fold desc="表单/分割线配置">
 
-    //<editor-fold desc="Diff 相关">
-
-    /**[Item]是否发生过改变*/
-    var itemChanged = false
-
-    /**[Item]是否正在改变, 会影响[thisAreContentsTheSame]的判断, 并且会在[Diff]计算完之后, 设置为`false`*/
-    var itemChanging = false
-        set(value) {
-            field = value
-            if (value) {
-                itemChanged = true
-            }
-        }
+    //<editor-fold desc="Diff相关">
 
     /**
      * 决定
@@ -506,32 +495,63 @@ open class DslAdapterItem : LifecycleOwner {
             filterPayload ?: PAYLOAD_UPDATE_PART
         }
 
+    //</editor-fold desc="Diff相关">
+
+    //<editor-fold desc="定向更新">
+
+    /**标识此[Item]是否发生过改变, 可用于实现退出界面提示是否保存内容.*/
+    var itemChanged = false
+        set(value) {
+            val old = field
+            field = value
+            onItemChanged(old, value)
+        }
+
+    /**[Item]是否正在改变, 会影响[thisAreContentsTheSame]的判断, 并且会在[Diff]计算完之后, 设置为`false`*/
+    var itemChanging = false
+        set(value) {
+            field = value
+            if (value) {
+                itemChanged = true
+            }
+        }
+
+    /**覆盖方法 [itemChanged]*/
+    open fun onItemChanged(from: Boolean, to: Boolean) {
+        if (to) {
+            updateItemDepend()
+        }
+    }
+
     /**
      * [checkItem] 是否需要关联到处理列表
      * [itemIndex] 分组折叠之后数据列表中的index
      *
-     * 返回 true 时, [checkItem]  进行 [hide] 操作
+     * 返回 true 时, [checkItem] 进行 [hide] 操作
      * */
     var isItemInHiddenList: (checkItem: DslAdapterItem, itemIndex: Int) -> Boolean =
         { _, _ -> false }
 
     /**
      * [itemIndex] 最终过滤之后数据列表中的index
-     * 返回 true 时, [checkItem] 会收到 来自 [this] 的 [onItemUpdateFromInner] 触发的回调
+     * 返回 true 时, [checkItem] 会收到 来自 [this] 的 [itemUpdateFrom] 触发的回调
      * */
     var isItemInUpdateList: (checkItem: DslAdapterItem, itemIndex: Int) -> Boolean =
         { _, _ -> false }
 
-
-    var onItemUpdateFrom: (fromItem: DslAdapterItem) -> Unit = {}
-
-    open fun onItemUpdateFromInner(fromItem: DslAdapterItem) {
-        onItemUpdateFrom(fromItem)
+    /**入口方法*/
+    var itemUpdateFrom: (fromItem: DslAdapterItem) -> Unit = {
+        onItemUpdateFrom(it)
     }
 
-    //</editor-fold desc="Diff 相关">
+    /**覆盖方法 [itemUpdateFrom]*/
+    open fun onItemUpdateFrom(fromItem: DslAdapterItem) {
 
-    //<editor-fold desc="单选, 多选相关">
+    }
+
+    //</editor-fold desc="定向更新">
+
+    //<editor-fold desc="单选/多选相关">
 
     /**是否选中, 需要 [ItemSelectorHelper.selectorModel] 的支持. */
     var itemIsSelected = false
@@ -551,7 +571,7 @@ open class DslAdapterItem : LifecycleOwner {
         onItemSelectorChange(selectorParams)
     }
 
-    //</editor-fold desc="单选, 多选相关">
+    //</editor-fold desc="单选/多选相关">
 
     //<editor-fold desc="群组相关">
 
