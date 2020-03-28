@@ -41,8 +41,10 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
 
     /**底部数据, 用来存放 [DslLoadMoreItem] */
     val footerItems = mutableListOf<DslAdapterItem>()
+
     /**头部数据*/
     val headerItems = mutableListOf<DslAdapterItem>()
+
     /**列表数据*/
     val dataItems = mutableListOf<DslAdapterItem>()
 
@@ -106,6 +108,9 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DslViewHolder {
+        if (viewType <= 0) {
+            throw IllegalStateException("请检查是否未指定[itemLayoutId]")
+        }
         //viewType, 就是布局的 Id, 这是设计核心原则.
         val dslViewHolder: DslViewHolder
         val itemView: View = LayoutInflater.from(parent.context).inflate(viewType, parent, false)

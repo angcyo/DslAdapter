@@ -5,15 +5,17 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.Paint
 import android.graphics.Rect
-import androidx.annotation.LayoutRes
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.StaggeredGridLayoutManager
-import androidx.recyclerview.widget.ItemTouchHelper
+import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
+import androidx.annotation.LayoutRes
+import androidx.core.view.ViewCompat
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 
 /**
  *
@@ -22,7 +24,7 @@ import android.view.Window
  * @date 2019/10/16
  * Copyright (c) 2019 ShenZhen O&M Cloud Co., Ltd. All rights reserved.
  */
-public fun RecyclerView.eachChildRViewHolder(
+fun RecyclerView.eachChildRViewHolder(
     targetView: View? = null,/*指定目标, 则只回调目标前后的ViewHolder*/
     callback: (
         beforeViewHolder: DslViewHolder?,
@@ -65,7 +67,7 @@ public fun RecyclerView.eachChildRViewHolder(
 /**
  * 获取View, 相对于手机屏幕的矩形
  * */
-public fun View.getViewRect(result: Rect = Rect()): Rect {
+fun View.getViewRect(result: Rect = Rect()): Rect {
     var offsetX = 0
     var offsetY = 0
 
@@ -85,7 +87,7 @@ public fun View.getViewRect(result: Rect = Rect()): Rect {
 /**
  * 获取View, 相对于手机屏幕的矩形, 带皮阿尼一
  * */
-public fun View.getViewRect(offsetX: Int, offsetY: Int, result: Rect = Rect()): Rect {
+fun View.getViewRect(offsetX: Int, offsetY: Int, result: Rect = Rect()): Rect {
     //可见位置的坐标, 超出屏幕的距离会被剃掉
     //getGlobalVisibleRect(r)
     val r2 = IntArray(2)
@@ -128,7 +130,7 @@ fun navBarHeight(context: Context): Int {
     return result
 }
 
-public fun notNull(vararg anys: Any?, doIt: (Array<Any>) -> Unit) {
+fun notNull(vararg anys: Any?, doIt: (Array<Any>) -> Unit) {
     var haveNull = false
 
     for (any in anys) {
@@ -147,30 +149,30 @@ fun Rect.clear() {
     set(0, 0, 0, 0)
 }
 
-public fun nowTime() = System.currentTimeMillis()
+fun nowTime() = System.currentTimeMillis()
 
-public val <T> T.dp: Float by lazy {
+val <T> T.dp: Float by lazy {
     Resources.getSystem()?.displayMetrics?.density ?: 0f
 }
 
-public val <T> T.dpi: Int by lazy {
+val <T> T.dpi: Int by lazy {
     Resources.getSystem()?.displayMetrics?.density?.toInt() ?: 0
 }
 
-public fun View.setHeight(height: Int) {
+fun View.setHeight(height: Int) {
     val params = layoutParams
     params.height = height
     layoutParams = params
 }
 
-public fun Int.have(value: Int): Boolean = if (this == 0 || value == 0) false
+fun Int.have(value: Int): Boolean = if (this == 0 || value == 0) false
 else if (this == 0 && value == 0) true
 else {
     ((this > 0 && value > 0) || (this < 0 && value < 0)) &&
             this and value == value
 }
 
-public fun ViewGroup.inflate(@LayoutRes layoutId: Int, attachToRoot: Boolean = true): View {
+fun ViewGroup.inflate(@LayoutRes layoutId: Int, attachToRoot: Boolean = true): View {
     if (layoutId == -1) {
         return this
     }
@@ -180,7 +182,7 @@ public fun ViewGroup.inflate(@LayoutRes layoutId: Int, attachToRoot: Boolean = t
 /**
  * 设置视图的宽高
  * */
-public fun View.setWidthHeight(width: Int, height: Int) {
+fun View.setWidthHeight(width: Int, height: Int) {
     val params = layoutParams
     params.width = width
     params.height = height
@@ -188,7 +190,7 @@ public fun View.setWidthHeight(width: Int, height: Int) {
 }
 
 /**快速创建网格布局*/
-public fun gridLayout(
+fun gridLayout(
     context: Context,
     dslAdapter: DslAdapter,
     spanCount: Int = 4,
@@ -206,7 +208,7 @@ public fun gridLayout(
 }
 
 /**SpanSizeLookup*/
-public fun GridLayoutManager.dslSpanSizeLookup(dslAdapter: DslAdapter): GridLayoutManager.SpanSizeLookup {
+fun GridLayoutManager.dslSpanSizeLookup(dslAdapter: DslAdapter): GridLayoutManager.SpanSizeLookup {
     //设置span size
     val spanCount = spanCount
     val spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
@@ -227,7 +229,7 @@ public fun GridLayoutManager.dslSpanSizeLookup(dslAdapter: DslAdapter): GridLayo
     return spanSizeLookup
 }
 
-public fun View.fullSpan(full: Boolean = true) {
+fun View.fullSpan(full: Boolean = true) {
     val layoutParams = layoutParams
     if (layoutParams is StaggeredGridLayoutManager.LayoutParams) {
         if (full != layoutParams.isFullSpan) {
@@ -238,20 +240,20 @@ public fun View.fullSpan(full: Boolean = true) {
 }
 
 /**文本的高度*/
-public fun Paint.textHeight(): Float = descent() - ascent()
+fun Paint.textHeight(): Float = descent() - ascent()
 
-public val FLAG_NO_INIT = -1
+const val FLAG_NO_INIT = -1
 
-public val FLAG_NONE = 0
+const val FLAG_NONE = 0
 
-public val FLAG_ALL = ItemTouchHelper.LEFT or
+const val FLAG_ALL = ItemTouchHelper.LEFT or
         ItemTouchHelper.RIGHT or
         ItemTouchHelper.DOWN or
         ItemTouchHelper.UP
 
-public val FLAG_VERTICAL = ItemTouchHelper.DOWN or ItemTouchHelper.UP
+const val FLAG_VERTICAL = ItemTouchHelper.DOWN or ItemTouchHelper.UP
 
-public val FLAG_HORIZONTAL = ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+const val FLAG_HORIZONTAL = ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
 
 /**如果为空, 则执行[action].
  * 原样返回*/
@@ -268,4 +270,21 @@ fun Any?.hash(): String? {
 
 fun Any.simpleHash(): String {
     return "${this.javaClass.simpleName}(${this.hash()})"
+}
+
+val undefined_size = Int.MIN_VALUE
+
+fun View.setWidth(width: Int) {
+    val params = layoutParams
+    params.width = width
+    layoutParams = params
+}
+
+/**设置系统背景*/
+fun View.setBgDrawable(drawable: Drawable?) {
+    ViewCompat.setBackground(this, drawable)
+}
+
+fun Any.className(): String {
+    return this.javaClass.name
 }

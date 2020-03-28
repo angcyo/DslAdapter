@@ -137,7 +137,7 @@ fun DslAdapter.findItemGroupParams(dslAdapterItem: DslAdapterItem): ItemGroupPar
             }
         }
 
-        if (currentSpanParams.isLastSpan(spanCount)) {
+        if (currentSpanParams.isLastSpan()) {
             //最后一列, 肯定是在右边界
             edge = edge or EDGE_RIGHT
             edgeGroup = edgeGroup or EDGE_RIGHT
@@ -185,6 +185,7 @@ public fun getSpanParams(
 ): SpanParams {
 
     val spanParams = SpanParams()
+    spanParams.spanCount = spanCount
     spanParams.itemPosition = itemPosition
     spanParams.spanGroupIndex = spanSizeLookup.getSpanGroupIndex(itemPosition, spanCount)
     spanParams.spanIndex = spanSizeLookup.getSpanIndex(itemPosition, spanCount)
@@ -224,6 +225,8 @@ data class EdgeGridParams(
 )
 
 data class SpanParams(
+    //androidx.recyclerview.widget.GridLayoutManager.getSpanCount
+    var spanCount: Int = 1,
     //当前的位置
     var itemPosition: Int = RecyclerView.NO_POSITION,
     //当前的索引在群组中
@@ -240,15 +243,19 @@ data class SpanParams(
 fun SpanParams.isFirstSpan(): Boolean = spanIndex == 0
 
 //是否是尾列
-fun SpanParams.isLastSpan(spanCount: Int): Boolean = spanIndex + spanSize == spanCount
+fun SpanParams.isLastSpan(): Boolean = spanIndex + spanSize == spanCount
 
 const val EDGE_NONE = 0x00
+
 //左边界
 const val EDGE_LEFT = 0x01
+
 //顶边界
 const val EDGE_TOP = 0x02
+
 //右边界
 const val EDGE_RIGHT = 0x04
+
 //底边界
 const val EDGE_BOTTOM = 0x08
 
@@ -257,8 +264,10 @@ const val EDGE_LEFT_TOP = 0x10
 const val EDGE_RIGHT_TOP = 0x20
 const val EDGE_LEFT_BOTTOM = 0x40
 const val EDGE_RIGHT_BOTTOM = 0x80
+
 //在一组中的顶部
 const val EDGE_GROUP_TOP = 0x100
+
 //在一组中的底部
 const val EDGE_GROUP_BOTTOM = 0x200
 

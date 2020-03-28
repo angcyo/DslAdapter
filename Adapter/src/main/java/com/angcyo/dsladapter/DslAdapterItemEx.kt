@@ -129,6 +129,22 @@ fun DslAdapterItem.marginHorizontal(left: Int, right: Int = 0, color: Int = Colo
     itemDecorationColor = color
 }
 
+/**仅绘制左边区域的分割线*/
+fun DslAdapterItem.drawLeft(
+    offsetLeft: Int,
+    insertTop: Int = 1 * dpi,
+    color: Int = Color.WHITE
+) {
+    itemLeftOffset = offsetLeft
+    itemRightOffset = 0
+
+    itemTopInsert = insertTop
+    itemBottomInsert = 0
+
+    onlyDrawOffsetArea = true
+    itemDecorationColor = color
+}
+
 //</editor-fold desc="分割线操作扩展">
 
 //<editor-fold desc="操作扩展">
