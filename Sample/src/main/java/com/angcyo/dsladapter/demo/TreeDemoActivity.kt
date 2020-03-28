@@ -80,7 +80,7 @@ class DslTreeItem : DslAdapterItem() {
         itemBottomInsert = 1 * dpi
         itemDecorationColor = Color.parseColor("#D5D5D5")
 
-        onItemClick = {
+        itemClick = {
             itemGroupExtend = !itemGroupExtend
         }
     }

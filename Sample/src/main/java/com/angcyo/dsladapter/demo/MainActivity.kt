@@ -31,7 +31,7 @@ class MainActivity : BaseRecyclerActivity() {
              * */
             dslItem(DslDemoItem()) {
                 itemText = "情感图状态使用示例"
-                onItemClick = {
+                itemClick = {
                     start(AdapterStatusActivity::class.java)
                 }
                 itemTopInsert = 2 * dpi //控制顶部分割线的高度
@@ -39,7 +39,7 @@ class MainActivity : BaseRecyclerActivity() {
 
             dslItem(DslDemoItem()) {
                 itemText = "加载更多使用示例"
-                onItemClick = {
+                itemClick = {
                     start(LoadMoreActivity::class.java)
                 }
                 itemTopInsert = 4 * dpi
@@ -50,7 +50,7 @@ class MainActivity : BaseRecyclerActivity() {
              * */
             DslDemoItem()() {
                 itemText = "群组(线性布局)功能示例"
-                onItemClick = {
+                itemClick = {
                     start(GroupDemoActivity::class.java)
                 }
                 itemTopInsert = 4 * dpi
@@ -58,7 +58,7 @@ class MainActivity : BaseRecyclerActivity() {
 
             DslDemoItem()() {
                 itemText = "群组(网格布局)功能示例"
-                onItemClick = {
+                itemClick = {
                     start(GroupGridDemoActivity::class.java)
                 }
                 itemTopInsert = 4 * dpi
@@ -66,7 +66,7 @@ class MainActivity : BaseRecyclerActivity() {
 
             DslDemoItem()() {
                 itemText = "单选/多选示例"
-                onItemClick = {
+                itemClick = {
                     start(SelectorDemoActivity::class.java)
                 }
                 itemTopInsert = 4 * dpi
@@ -74,7 +74,7 @@ class MainActivity : BaseRecyclerActivity() {
 
             DslDemoItem()() {
                 itemText = "StaggeredGridLayout(拖拽/滑动删除示例)"
-                onItemClick = {
+                itemClick = {
                     start(StaggeredGridLayoutActivity::class.java)
                 }
                 itemTopInsert = 4 * dpi
@@ -82,7 +82,7 @@ class MainActivity : BaseRecyclerActivity() {
 
             DslDemoItem()() {
                 itemText = "树结构使用示例"
-                onItemClick = {
+                itemClick = {
                     start(TreeDemoActivity::class.java)
                 }
                 itemTopInsert = 4 * dpi

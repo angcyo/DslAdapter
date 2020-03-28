@@ -1,3 +1,14 @@
+# 2020-03-28
+
+`2.2.0`
+
+- 修复一些已知位置, 调整一些命名.
+- 新增一些常用的扩展方法, 一些属性修改回调
+- `DslAdapterItem` 新增常用属性 `itemWidth/Height` `itemMinWidth/Height` `itemPadding` `itemBackgroundDrawable` `itemEnable`
+- `DslDataFilter` 共享线程池
+- 新增`updateData`扩展方法, 方便将`List`数据, 渲染进`DslAdapter`
+- 新增`FilterAfterInterceptor`子类`MaxItemCountFilterAfterInterceptor`, 用于控制`RecycleView`最大显示数量.
+
 # 2020-3-12
 
 `2.1.0`

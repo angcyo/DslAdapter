@@ -142,7 +142,7 @@ class SelectorDemoActivity : BaseRecyclerActivity() {
                                 "选我 $itemPosition \n${if (itemIsSelected) "true" else "false"}"
                         }
                     }
-                    onItemClick = {
+                    itemClick = {
                         updateItemSelector(!itemIsSelected)
                     }
                 }
