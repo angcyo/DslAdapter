@@ -80,6 +80,7 @@ open class DslAdapterItem : LifecycleOwner {
     /**
      * 在 GridLayoutManager 中, 需要占多少个 span. -1表示满屏
      * [itemIsGroupHead]
+     * [com.angcyo.dsladapter.DslAdapter.onViewAttachedToWindow]
      * */
     var itemSpanCount = 1
 
@@ -97,7 +98,36 @@ open class DslAdapterItem : LifecycleOwner {
             onSetItemData(value)
         }
 
+    /**[itemData]*/
     open fun onSetItemData(data: Any?) {
+
+    }
+
+    /**强制指定item的宽高*/
+    var itemWidth: Int = undefined_size
+    var itemMinWidth: Int = undefined_size
+
+    var itemHeight: Int = undefined_size
+    var itemMinHeight: Int = undefined_size
+
+    /**padding值*/
+    var itemPaddingLeft: Int = undefined_size
+    var itemPaddingRight: Int = undefined_size
+    var itemPaddingTop: Int = undefined_size
+    var itemPaddingBottom: Int = undefined_size
+
+    /**指定item的背景*/
+    var itemBackgroundDrawable: Drawable? = UndefinedDrawable()
+
+    /**是否激活item, 目前只能控制click, longClick事件不被回调*/
+    var itemEnable: Boolean = true
+        set(value) {
+            field = value
+            onSetItemEnable(value)
+        }
+
+    /**[itemEnable]*/
+    open fun onSetItemEnable(enable: Boolean) {
 
     }
 
@@ -117,17 +147,18 @@ open class DslAdapterItem : LifecycleOwner {
     /**
      * 点击事件和长按事件封装
      * */
-    var onItemClick: ((View) -> Unit)? = null
-    var onItemLongClick: ((View) -> Boolean)? = null
+    var itemClick: ((View) -> Unit)? = null
+
+    var itemLongClick: ((View) -> Boolean)? = null
 
     var _clickListener: View.OnClickListener? = View.OnClickListener { view ->
-        notNull(onItemClick, view) {
-            onItemClick?.invoke(view!!)
+        notNull(itemClick, view) {
+            itemClick?.invoke(view!!)
         }
     }
 
     var _longClickListener: View.OnLongClickListener? =
-        View.OnLongClickListener { view -> onItemLongClick?.invoke(view) ?: false }
+        View.OnLongClickListener { view -> itemLongClick?.invoke(view) ?: false }
 
     open fun onItemBind(
         itemHolder: DslViewHolder,
@@ -135,17 +166,10 @@ open class DslAdapterItem : LifecycleOwner {
         adapterItem: DslAdapterItem,
         payloads: List<Any>
     ) {
-        if (onItemClick == null || _clickListener == null) {
-            itemHolder.itemView.isClickable = false
-        } else {
-            itemHolder.clickItem(_clickListener)
-        }
-
-        if (onItemLongClick == null || _longClickListener == null) {
-            itemHolder.itemView.isLongClickable = false
-        } else {
-            itemHolder.itemView.setOnLongClickListener(_longClickListener)
-        }
+        _initItemBackground(itemHolder)
+        _initItemSize(itemHolder)
+        _initItemPadding(itemHolder)
+        _initItemListener(itemHolder)
 
         onItemBind(itemHolder, itemPosition, adapterItem)
     }
@@ -155,7 +179,7 @@ open class DslAdapterItem : LifecycleOwner {
         itemPosition: Int,
         adapterItem: DslAdapterItem
     ) {
-
+        //no op
     }
 
     /**用于覆盖默认操作*/
@@ -188,8 +212,78 @@ open class DslAdapterItem : LifecycleOwner {
             onItemViewRecycled(itemHolder, itemPosition)
         }
 
-    //</editor-fold>
+    //</editor-fold desc="标准属性">
 
+    //<editor-fold desc="内部初始化">
+
+    //初始化背景
+    open fun _initItemBackground(itemHolder: DslViewHolder) {
+        if (itemBackgroundDrawable !is UndefinedDrawable) {
+            itemHolder.itemView.apply {
+                setBgDrawable(itemBackgroundDrawable)
+            }
+        }
+    }
+
+    //初始化宽高
+    open fun _initItemSize(itemHolder: DslViewHolder) {
+        if (itemMinWidth != undefined_size) {
+            itemHolder.itemView.minimumWidth = itemMinWidth
+        }
+
+        if (itemMinHeight != undefined_size) {
+            itemHolder.itemView.minimumHeight = itemMinHeight
+        }
+
+        if (itemWidth == undefined_size) {
+            itemWidth = itemHolder.itemView.layoutParams.width
+        }
+        itemHolder.itemView.setWidth(itemWidth)
+
+        if (itemHeight == undefined_size) {
+            itemHeight = itemHolder.itemView.layoutParams.height
+        }
+        itemHolder.itemView.setHeight(itemHeight)
+    }
+
+    //初始化事件
+    open fun _initItemListener(itemHolder: DslViewHolder) {
+        if (itemClick == null || _clickListener == null || !itemEnable) {
+            itemHolder.itemView.isClickable = false
+        } else {
+            itemHolder.clickItem(_clickListener)
+        }
+
+        if (itemLongClick == null || _longClickListener == null || !itemEnable) {
+            itemHolder.itemView.isLongClickable = false
+        } else {
+            itemHolder.itemView.setOnLongClickListener(_longClickListener)
+        }
+    }
+
+    //初始化padding
+    open fun _initItemPadding(itemHolder: DslViewHolder) {
+        if (itemPaddingLeft == undefined_size) {
+            itemPaddingLeft = itemHolder.itemView.paddingLeft
+        }
+        if (itemPaddingRight == undefined_size) {
+            itemPaddingRight = itemHolder.itemView.paddingRight
+        }
+        if (itemPaddingTop == undefined_size) {
+            itemPaddingTop = itemHolder.itemView.paddingTop
+        }
+        if (itemPaddingBottom == undefined_size) {
+            itemPaddingBottom = itemHolder.itemView.paddingBottom
+        }
+        itemHolder.itemView.setPadding(
+            itemPaddingLeft,
+            itemPaddingTop,
+            itemPaddingRight,
+            itemPaddingBottom
+        )
+    }
+
+    //</editor-fold desc="内部初始化">
 
     //<editor-fold desc="分组相关属性">
 
@@ -502,9 +596,10 @@ open class DslAdapterItem : LifecycleOwner {
     /**标识此[Item]是否发生过改变, 可用于实现退出界面提示是否保存内容.*/
     var itemChanged = false
         set(value) {
-            val old = field
             field = value
-            onItemChanged(old, value)
+            if (value) {
+                itemChangeListener(this)
+            }
         }
 
     /**[Item]是否正在改变, 会影响[thisAreContentsTheSame]的判断, 并且会在[Diff]计算完之后, 设置为`false`*/
@@ -516,11 +611,14 @@ open class DslAdapterItem : LifecycleOwner {
             }
         }
 
-    /**覆盖方法 [itemChanged]*/
-    open fun onItemChanged(from: Boolean, to: Boolean) {
-        if (to) {
-            updateItemDepend()
-        }
+    /**提供一个可以完全被覆盖的方法*/
+    var itemChangeListener: (DslAdapterItem) -> Unit = {
+        onItemChangeListener(it)
+    }
+
+    /**其次, 提供一个可以被子类覆盖的方法*/
+    open fun onItemChangeListener(item: DslAdapterItem) {
+        updateItemDepend()
     }
 
     /**
@@ -588,9 +686,9 @@ open class DslAdapterItem : LifecycleOwner {
     var itemGroups = mutableListOf<String>()
 
     /**核心群组判断的方法*/
-    var isItemInGroups: (newItem: DslAdapterItem) -> Boolean = {
-        var result = false
-        for (group in it.itemGroups) {
+    var isItemInGroups: (newItem: DslAdapterItem) -> Boolean = { newItem ->
+        var result = newItem.className() == this.className()
+        for (group in newItem.itemGroups) {
             result = result || itemGroups.contains(group)
 
             if (result) {
