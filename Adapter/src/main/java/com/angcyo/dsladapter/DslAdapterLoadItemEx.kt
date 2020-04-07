@@ -110,6 +110,7 @@ inline fun <reified Item : DslAdapterItem> DslAdapter.loadSingleData2(
     }
 }
 
+/**数据更新Dsl配置项*/
 class UpdateDataConfig {
     /**需要加载的页码, 会偏移到指定位置*/
     var updatePage: Int = 1
@@ -179,33 +180,31 @@ class UpdateDataConfig {
     }
 }
 
-/**更新指定页码的数据*/
-fun DslAdapter.updateData(action: UpdateDataConfig.() -> Unit) {
-    val config = UpdateDataConfig()
-    config.action()
+/**轻量差异更新*/
+fun UpdateDataConfig.updateData(originList: List<DslAdapterItem>): List<DslAdapterItem> {
 
-    changeDataItems(config.filterParams) {
+    //最后的结果集
+    val result = mutableListOf<DslAdapterItem>()
 
+    originList.let {
         //旧数据
         val oldList = ArrayList(it)
+
         //新数据
-        val list = config.updateDataList ?: emptyList()
+        val list = updateDataList ?: emptyList()
 
         //需要被移除的旧数据集合
         val oldRemoveList = mutableListOf<DslAdapterItem>()
         val newAddList = mutableListOf<DslAdapterItem>()
 
-        //最后的结果集
-        val result = mutableListOf<DslAdapterItem>()
-
-        val updateStartIndex = max(0, config.updatePage - 1) * config.pageSize
-        val updateEndIndex = updateStartIndex + min(config.pageSize, list.size)
+        val updateStartIndex = max(0, updatePage - 1) * pageSize
+        val updateEndIndex = updateStartIndex + min(pageSize, list.size)
 
         for (i in updateStartIndex until updateEndIndex) {
             val index = i - updateStartIndex
             val data = list[index]
             val oldItem = oldList.getOrNull(i)
-            val newItem = config.updateOrCreateItem(oldItem, data, index)
+            val newItem = updateOrCreateItem(oldItem, data, index)
 
             if (newItem != null) {
                 newItem.itemData = data
@@ -240,10 +239,47 @@ fun DslAdapter.updateData(action: UpdateDataConfig.() -> Unit) {
 
         result.addAll(oldList)
         result.addAll(newAddList)
+    }
 
+    return result
+}
+
+/**支持相同类型之间的轻量差异更新*/
+fun DslAdapter.updateHeaderData(action: UpdateDataConfig.() -> Unit) {
+    val config = UpdateDataConfig()
+    config.updatePage = 0
+    config.pageSize = Int.MAX_VALUE
+    config.action()
+
+    changeHeaderItems(config.filterParams) {
+        val result = config.updateData(it)
         it.clear()
         it.addAll(result)
+    }
+}
 
+fun DslAdapter.updateFooterData(action: UpdateDataConfig.() -> Unit) {
+    val config = UpdateDataConfig()
+    config.updatePage = 0
+    config.pageSize = Int.MAX_VALUE
+    config.action()
+
+    changeFooterItems(config.filterParams) {
+        val result = config.updateData(it)
+        it.clear()
+        it.addAll(result)
+    }
+}
+
+/**更新指定页码的数据, 支持轻量差异更新.*/
+fun DslAdapter.updateData(action: UpdateDataConfig.() -> Unit) {
+    val config = UpdateDataConfig()
+    config.action()
+
+    changeDataItems(config.filterParams) {
+        val result = config.updateData(it)
+        it.clear()
+        it.addAll(result)
         config.adapterUpdateResult(this)
     }
 }
@@ -251,14 +287,16 @@ fun DslAdapter.updateData(action: UpdateDataConfig.() -> Unit) {
 /**更新单页数据*/
 inline fun <reified Item : DslAdapterItem> DslAdapter.updateSingleData(
     dataList: List<Any>?,
+    requestPage: Int = 1,
+    requestPageSize: Int = Int.MAX_VALUE,
     crossinline action: UpdateDataConfig.() -> Unit = {},
     crossinline initItem: Item.(data: Any?) -> Unit = {}
 ) {
     updateData {
-        updatePage = 1
-        pageSize = Int.MAX_VALUE
+        updatePage = requestPage
+        pageSize = requestPageSize
         updateDataList = dataList
-        this.updateOrCreateItem = { oldItem, data, index ->
+        this.updateOrCreateItem = { oldItem, data, _ ->
             var newItem = oldItem
             if (oldItem == null) {
                 newItem = Item::class.java.newInstance()
