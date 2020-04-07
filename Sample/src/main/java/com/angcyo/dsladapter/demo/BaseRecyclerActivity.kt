@@ -1,11 +1,11 @@
 package com.angcyo.dsladapter.demo
 
 import android.os.Bundle
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import android.widget.Toast
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.angcyo.dsladapter.DslAdapter
 import com.angcyo.dsladapter.DslItemDecoration
 import com.angcyo.dsladapter.DslViewHolder
@@ -44,7 +44,7 @@ abstract class BaseRecyclerActivity : AppCompatActivity() {
         onInitBaseLayoutAfter()
     }
 
-    lateinit var refreshLayout: androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    lateinit var refreshLayout: SwipeRefreshLayout
     lateinit var recyclerView: RecyclerView
 
     open fun initBaseLayout() {
@@ -68,12 +68,13 @@ abstract class BaseRecyclerActivity : AppCompatActivity() {
             adapter = dslAdapter
         }
 
-        dslViewHolder.v<androidx.swiperefreshlayout.widget.SwipeRefreshLayout>(R.id.base_refresh_layout)?.apply {
-            refreshLayout = this
-            setOnRefreshListener {
-                onRefresh()
+        dslViewHolder.v<SwipeRefreshLayout>(R.id.base_refresh_layout)
+            ?.apply {
+                refreshLayout = this
+                setOnRefreshListener {
+                    onRefresh()
+                }
             }
-        }
     }
 
     open fun onRefresh() {

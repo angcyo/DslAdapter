@@ -88,6 +88,18 @@ class MainActivity : BaseRecyclerActivity() {
                 itemTopInsert = 4 * dpi
             }
 
+            DslDemoItem()() {
+                itemText = "APP数据加载示例"
+                itemClick = {
+                    start(LoadDataActivity::class.java)
+                }
+                itemTopInsert = 4 * dpi
+                itemLeftOffset = 200 * dpi
+                onlyDrawOffsetArea = true
+                itemDecorationColor = Color.MAGENTA
+            }
+
+
             renderEmptyItem()
 
             dslItem(R.layout.item_demo_list) {

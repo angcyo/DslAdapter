@@ -13,6 +13,9 @@ import com.angcyo.dsladapter.demo.R
  * Copyright (c) 2019 ShenZhen O&M Cloud Co., Ltd. All rights reserved.
  */
 class DslImageItem : DslAdapterItem() {
+
+    var itemText: CharSequence? = null
+
     init {
         itemLayoutId = R.layout.item_image_layout
     }
@@ -23,7 +26,7 @@ class DslImageItem : DslAdapterItem() {
         adapterItem: DslAdapterItem
     ) {
         super.onItemBind(itemHolder, itemPosition, adapterItem)
-        itemHolder.v<TextView>(R.id.text_view)?.text = "文本位置:$itemPosition"
+        itemHolder.v<TextView>(R.id.text_view)?.text = itemText ?: "文本位置:$itemPosition"
     }
 
 }
