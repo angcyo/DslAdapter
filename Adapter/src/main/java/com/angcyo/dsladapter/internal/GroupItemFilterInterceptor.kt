@@ -2,8 +2,8 @@ package com.angcyo.dsladapter.internal
 
 import com.angcyo.dsladapter.DslAdapter
 import com.angcyo.dsladapter.DslAdapterItem
+import com.angcyo.dsladapter.filter.BaseFilterInterceptor
 import com.angcyo.dsladapter.filter.FilterChain
-import com.angcyo.dsladapter.filter.FilterInterceptor
 
 /**
  *
@@ -11,7 +11,7 @@ import com.angcyo.dsladapter.filter.FilterInterceptor
  * @author angcyo
  * @date 2020/02/05
  */
-class GroupItemFilterInterceptor : FilterInterceptor {
+class GroupItemFilterInterceptor : BaseFilterInterceptor() {
 
     /**过滤折叠后后的数据列表*/
     override fun intercept(chain: FilterChain): List<DslAdapterItem> {

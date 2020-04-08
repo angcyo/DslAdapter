@@ -10,7 +10,7 @@ import com.angcyo.dsladapter.DslAdapterItem
  * @date 2020/03/06
  * Copyright (c) 2019 ShenZhen O&M Cloud Co., Ltd. All rights reserved.
  */
-class RemoveItemDecorationFilterAfterInterceptor : FilterAfterInterceptor {
+class RemoveItemDecorationFilterAfterInterceptor : BaseFilterAfterInterceptor() {
 
     var orientation: Int = RecyclerView.VERTICAL
 

@@ -11,7 +11,8 @@ import com.angcyo.dsladapter.DslAdapterStatusItem
  * Copyright (c) 2019 ShenZhen O&M Cloud Co., Ltd. All rights reserved.
  */
 
-class AdapterStatusFilterAfterInterceptor : FilterAfterInterceptor {
+class AdapterStatusFilterAfterInterceptor : BaseFilterAfterInterceptor() {
+
     override fun intercept(chain: FilterAfterChain): List<DslAdapterItem> {
         if (chain.requestList.isEmpty() && chain.originList.isNotEmpty()) {
             chain.interruptChain = true

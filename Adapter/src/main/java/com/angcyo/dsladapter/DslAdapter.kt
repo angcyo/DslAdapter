@@ -4,7 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.angcyo.dsladapter.filter.FilterInterceptor
+import com.angcyo.dsladapter.filter.IFilterInterceptor
 import com.angcyo.dsladapter.internal.AdapterStatusFilterInterceptor
 import com.angcyo.dsladapter.internal.LoadMoreFilterInterceptor
 import kotlin.math.min
@@ -33,8 +33,8 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     var dslLoadMoreItem = DslLoadMoreItem()
 
     /**[dslAdapterStatusItem] [dslLoadMoreItem] 功能的支持*/
-    var adapterStatusFilterInterceptor: FilterInterceptor = AdapterStatusFilterInterceptor()
-    var loadMoreFilterInterceptor: FilterInterceptor = LoadMoreFilterInterceptor()
+    var adapterStatusIFilterInterceptor: IFilterInterceptor = AdapterStatusFilterInterceptor()
+    var loadMoreIFilterInterceptor: IFilterInterceptor = LoadMoreFilterInterceptor()
 
     /**包含所有[DslAdapterItem], 包括 [headerItems] [dataItems] [footerItems]的数据源*/
     val adapterItems = mutableListOf<DslAdapterItem>()
@@ -56,14 +56,14 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
             }
             field?.apply {
                 removeDispatchUpdatesListener(this@DslAdapter)
-                beforeFilterInterceptorList.remove(adapterStatusFilterInterceptor)
-                afterFilterInterceptorList.remove(loadMoreFilterInterceptor)
+                beforeFilterInterceptorList.remove(adapterStatusIFilterInterceptor)
+                afterFilterInterceptorList.remove(loadMoreIFilterInterceptor)
             }
             field = value
             field?.apply {
                 addDispatchUpdatesListener(this@DslAdapter)
-                beforeFilterInterceptorList.add(0, adapterStatusFilterInterceptor)
-                afterFilterInterceptorList.add(loadMoreFilterInterceptor)
+                beforeFilterInterceptorList.add(0, adapterStatusIFilterInterceptor)
+                afterFilterInterceptorList.add(loadMoreIFilterInterceptor)
             }
             updateItemDepend()
         }

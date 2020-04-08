@@ -11,7 +11,12 @@ import com.angcyo.dsladapter.DslDataFilter
  * @date 2020/03/06
  * Copyright (c) 2019 ShenZhen O&M Cloud Co., Ltd. All rights reserved.
  */
-interface FilterAfterInterceptor {
+interface IFilterAfterInterceptor {
+
+    /**是否激活*/
+    var isEnable: Boolean
+
+    /**[com.angcyo.dsladapter.filter.IFilterInterceptor.intercept]*/
     fun intercept(chain: FilterAfterChain): List<DslAdapterItem>
 }
 

@@ -10,7 +10,7 @@ import com.angcyo.dsladapter.toNone
  * @date 2020/03/25
  * Copyright (c) 2019 ShenZhen O&M Cloud Co., Ltd. All rights reserved.
  */
-open class AddMediaFilterAfterInterceptor : FilterAfterInterceptor {
+open class AddMediaFilterAfterInterceptor : BaseFilterAfterInterceptor() {
 
     /**显示的最大媒体数, 不足时. 追加[addMediaDslAdapterItem]*/
     var maxMediaCount = Int.MAX_VALUE

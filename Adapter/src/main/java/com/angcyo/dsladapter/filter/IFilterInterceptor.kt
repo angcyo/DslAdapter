@@ -11,7 +11,10 @@ import com.angcyo.dsladapter.FilterParams
  * @author angcyo
  * @date 2020/02/05
  */
-interface FilterInterceptor {
+interface IFilterInterceptor {
+
+    /**是否激活*/
+    var isEnable: Boolean
 
     /**数据源过滤拦截*/
     fun intercept(chain: FilterChain): List<DslAdapterItem>

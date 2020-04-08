@@ -1,8 +1,8 @@
 package com.angcyo.dsladapter.internal
 
 import com.angcyo.dsladapter.DslAdapterItem
+import com.angcyo.dsladapter.filter.BaseFilterInterceptor
 import com.angcyo.dsladapter.filter.FilterChain
-import com.angcyo.dsladapter.filter.FilterInterceptor
 
 /**
  *
@@ -12,7 +12,7 @@ import com.angcyo.dsladapter.filter.FilterInterceptor
  * @author angcyo
  * @date 2020/02/05
  */
-class LoadMoreFilterInterceptor : FilterInterceptor {
+class LoadMoreFilterInterceptor : BaseFilterInterceptor() {
     override fun intercept(chain: FilterChain): List<DslAdapterItem> {
         return if (chain.dslAdapter.isAdapterStatus() ||
             !chain.dslAdapter.dslLoadMoreItem.itemStateEnable

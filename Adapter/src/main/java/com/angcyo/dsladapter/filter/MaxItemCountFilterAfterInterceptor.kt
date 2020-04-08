@@ -9,7 +9,7 @@ import com.angcyo.dsladapter.DslAdapterItem
  * @date 2020/03/25
  * Copyright (c) 2019 ShenZhen O&M Cloud Co., Ltd. All rights reserved.
  */
-open class MaxItemCountFilterAfterInterceptor : FilterAfterInterceptor {
+open class MaxItemCountFilterAfterInterceptor : BaseFilterAfterInterceptor() {
 
     var maxItemCount = Int.MAX_VALUE
 

@@ -1,8 +1,8 @@
 package com.angcyo.dsladapter.internal
 
 import com.angcyo.dsladapter.DslAdapterItem
+import com.angcyo.dsladapter.filter.BaseFilterInterceptor
 import com.angcyo.dsladapter.filter.FilterChain
-import com.angcyo.dsladapter.filter.FilterInterceptor
 
 /**
  *
@@ -11,7 +11,7 @@ import com.angcyo.dsladapter.filter.FilterInterceptor
  * @date 2020/02/05
  */
 
-class SubItemFilterInterceptor : FilterInterceptor {
+class SubItemFilterInterceptor : BaseFilterInterceptor() {
 
     /**过滤需要追加或者隐藏的子项*/
     override fun intercept(chain: FilterChain): List<DslAdapterItem> {
