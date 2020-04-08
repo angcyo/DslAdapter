@@ -37,9 +37,12 @@ fun DslAdapter.updateItem(
 }
 
 fun DslAdapter.findItemByTag(
-    tag: String,
+    tag: String?,
     useFilterList: Boolean = true
 ): DslAdapterItem? {
+    if (tag == null) {
+        return null
+    }
     return findItem(useFilterList) {
         it.itemTag == tag
     }

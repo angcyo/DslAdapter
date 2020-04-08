@@ -163,3 +163,125 @@ fun DslAdapterItem.itemViewHolder(recyclerView: RecyclerView?): DslViewHolder? {
 }
 
 //</editor-fold desc="操作扩展">
+
+//<editor-fold desc="更新指定的Item">
+
+fun DslAdapter.removeHeaderItem(itemTag: String?, item: DslAdapterItem? = null) {
+    val target = item ?: findItemByTag(itemTag, false)
+    if (target == null) {
+        L.w("移除的目标不存在")
+    } else {
+        changeHeaderItems {
+            it.remove(target)
+        }
+    }
+}
+
+fun DslAdapter.removeItem(itemTag: String?, item: DslAdapterItem? = null) {
+    val target = item ?: findItemByTag(itemTag, false)
+    if (target == null) {
+        L.w("移除的目标不存在")
+    } else {
+        changeDataItems {
+            it.remove(target)
+        }
+    }
+}
+
+fun DslAdapter.removeFooterItem(itemTag: String?, item: DslAdapterItem? = null) {
+    val target = item ?: findItemByTag(itemTag, false)
+    if (target == null) {
+        L.w("移除的目标不存在")
+    } else {
+        changeFooterItems {
+            it.remove(target)
+        }
+    }
+}
+
+/**
+ * 更新或者插入指定的Item
+ * 如果目标item已存在, 则更新Item, 否则创建新的插入
+ * */
+inline fun <reified Item : DslAdapterItem> DslAdapter.updateOrInsertItem(
+    itemTag: String? /*需要更新的Item*/,
+    insertIndex: Int = 0 /*当需要插入时, 插入到列表中的位置*/,
+    crossinline updateOrCreateItem: (oldItem: Item) -> Item?
+    /*返回null, 则会删除对应的[oldItem], 返回与[oldItem]不一样的item, 则会替换原来的[oldItem]*/
+) {
+    changeDataItems {
+        _updateOrInsertItem(it, itemTag, insertIndex, updateOrCreateItem)
+    }
+}
+
+inline fun <reified Item : DslAdapterItem> DslAdapter.updateOrInsertHeaderItem(
+    itemTag: String?,
+    insertIndex: Int = 0,
+    crossinline updateOrCreateItem: (oldItem: Item) -> Item?
+) {
+    changeHeaderItems {
+        _updateOrInsertItem(it, itemTag, insertIndex, updateOrCreateItem)
+    }
+}
+
+inline fun <reified Item : DslAdapterItem> DslAdapter.updateOrInsertFooterItem(
+    itemTag: String?,
+    insertIndex: Int = 0,
+    crossinline updateOrCreateItem: (oldItem: Item) -> Item?
+) {
+
+    changeFooterItems {
+        _updateOrInsertItem(it, itemTag, insertIndex, updateOrCreateItem)
+    }
+}
+
+inline fun <reified Item : DslAdapterItem> DslAdapter._updateOrInsertItem(
+    itemList: MutableList<DslAdapterItem>,
+    itemTag: String? /*需要更新的Item*/,
+    insertIndex: Int = 0 /*当需要插入时, 插入到列表中的位置*/,
+    crossinline updateOrCreateItem: (oldItem: Item) -> Item?
+    /*返回null, 则会删除对应的[oldItem], 返回与[oldItem]不一样的item, 则会替换原来的[oldItem]*/
+) {
+
+    //查找已经存在的item
+    val findItem = findItemByTag(itemTag, false)
+
+    val oldItem: Item
+
+    //不存在, 或者存在的类型不匹配, 则创建新item
+    oldItem = if (findItem == null || findItem !is Item) {
+        Item::class.java.newInstance()
+    } else {
+        findItem
+    }
+
+    //回调处理
+    val newItem = updateOrCreateItem(oldItem)
+
+    if (findItem == null && newItem == null) {
+        return
+    }
+
+    itemList.let {
+        if (newItem == null) {
+            //需要移除处理
+            if (findItem != null) {
+                it.remove(findItem)
+            }
+        } else {
+            if (findItem == null) {
+                //需要insert处理
+                it.add(insertIndex, newItem)
+            } else {
+                //需要更新处理
+                findItem.itemChanging = true
+                val indexOf = it.indexOf(findItem)
+                if (indexOf != -1) {
+                    it[indexOf] = newItem
+                }
+            }
+        }
+    }
+}
+
+//</editor-fold desc="更新指定的Item">

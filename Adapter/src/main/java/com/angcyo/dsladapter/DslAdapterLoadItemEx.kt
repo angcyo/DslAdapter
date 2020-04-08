@@ -243,6 +243,7 @@ fun UpdateDataConfig.updateData(originList: List<DslAdapterItem>): List<DslAdapt
                 }
                 //replace old item
                 oldItem != null && oldItem != newItem -> {
+                    oldItem.itemChanging = true
                     oldList[i] = newItem
                 }
                 //update old item
