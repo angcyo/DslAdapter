@@ -121,6 +121,9 @@ class UpdateDataConfig {
     /**需要加载的数据*/
     var updateDataList: List<Any>? = null
 
+    /**是否一直激活加载更多, 不管第一页数据不够*/
+    var alwaysEnableLoadMore: Boolean = false
+
     var filterParams: FilterParams = FilterParams().apply {
         payload = listOf(
             DslAdapterItem.PAYLOAD_UPDATE_PART,
@@ -153,28 +156,49 @@ class UpdateDataConfig {
 
     /**加载更多检查*/
     var adapterCheckLoadMore: (dslAdapter: DslAdapter) -> Unit = { dslAdapter ->
-        with(dslAdapter) {
-            //需要更新的数据数量
-            val updateSize = updateDataList?.size ?: 0
-            if (updatePage <= 1) {
-                //更新第一页的数据
-                if (updateSize < pageSize) {
-                    //数据不够, 关闭加载更多
-                    setLoadMoreEnable(false)
-                } else {
-                    //激活加载更多, 初始化默认状态
-                    setLoadMoreEnable(true)
-                    setLoadMore(DslLoadMoreItem.ADAPTER_LOAD_NORMAL)
-                }
+        dslAdapter.updateLoadMore(
+            updatePage,
+            updateDataList?.size ?: 0,
+            pageSize,
+            alwaysEnableLoadMore
+        )
+    }
+}
+
+/**根据[adapterItems]的数量, 智能切换[AdapterState]*/
+fun DslAdapter.updateAdapterState() {
+    autoAdapterStatus()
+}
+
+/**智能设置加载更多的状态和激活状态*/
+fun DslAdapter.updateLoadMore(
+    updatePage: Int /*当前数据页*/,
+    updateSize: Int /*数据页数据更新量*/,
+    pageSize: Int = DslAdapter.DEFAULT_PAGE_SIZE /*数据页数据最大量*/,
+    alwaysEnable: Boolean = false /*是否一直激活加载更多, 不管第一页数据不够*/
+) {
+    if (updatePage <= 1) {
+        //更新第一页的数据
+        if (updateSize < pageSize) {
+            //数据不够, 关闭加载更多
+            if (alwaysEnable) {
+                setLoadMoreEnable(true)
+                setLoadMore(DslLoadMoreItem.ADAPTER_LOAD_NO_MORE)
             } else {
-                //更新其他页数据
-                if (dslLoadMoreItem.itemStateEnable) {
-                    if (updateSize < pageSize) {
-                        setLoadMore(DslLoadMoreItem.ADAPTER_LOAD_NO_MORE)
-                    } else {
-                        setLoadMore(DslLoadMoreItem.ADAPTER_LOAD_NORMAL)
-                    }
-                }
+                setLoadMoreEnable(false)
+            }
+        } else {
+            //激活加载更多, 初始化默认状态
+            setLoadMoreEnable(true)
+            setLoadMore(DslLoadMoreItem.ADAPTER_LOAD_NORMAL)
+        }
+    } else {
+        //更新其他页数据
+        if (dslLoadMoreItem.itemStateEnable) {
+            if (updateSize < pageSize) {
+                setLoadMore(DslLoadMoreItem.ADAPTER_LOAD_NO_MORE)
+            } else {
+                setLoadMore(DslLoadMoreItem.ADAPTER_LOAD_NORMAL)
             }
         }
     }

@@ -1,3 +1,12 @@
+# 2020-4-8
+
+`2.2.2`
+
+- 重命名`FilterInterceptor->IFilterInterceptor`
+- 重命名`FilterAfterInterceptor->IFilterAfterInterceptor`
+- `IFilterInterceptor` `IFilterAfterInterceptor` 支持 `enable` 属性
+
+
 # 2020-04-07
 
 `2.2.1`
