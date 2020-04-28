@@ -3,6 +3,7 @@ package com.angcyo.dsladapter
 import android.os.Handler
 import android.os.Looper
 import androidx.recyclerview.widget.DiffUtil
+import com.angcyo.dsladapter.DslDataFilter.Companion.DEFAULT_SHAKE_DELAY
 import com.angcyo.dsladapter.filter.*
 import com.angcyo.dsladapter.internal.*
 import java.util.concurrent.ExecutorService
@@ -22,6 +23,10 @@ import kotlin.concurrent.withLock
 open class DslDataFilter(val dslAdapter: DslAdapter) {
 
     companion object {
+
+        /**默认抖动检查时长, 毫秒. 如果多次连续调用时长小于此时间, 则跳过处理*/
+        var DEFAULT_SHAKE_DELAY = 16L
+
         //异步调度器
         private val asyncExecutor: ExecutorService by lazy {
             Executors.newCachedThreadPool()
@@ -481,7 +486,7 @@ data class FilterParams(
     var shakeType: Int = OnceHandler.SHAKE_TYPE_DEBOUNCE,
 
     /**抖动检查延迟时长*/
-    var shakeDelay: Long = 16,
+    var shakeDelay: Long = DEFAULT_SHAKE_DELAY,
 
     /**计算完diff之后, 延迟多久通知界面*/
     var notifyDiffDelay: Long = -1

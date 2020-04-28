@@ -1,9 +1,10 @@
 # 2020-4-28
 
-`2.2.5`
+`2.2.6`
 
 - 添加RecyclerView快速设置DslAdapter的扩展方法
 - 修复`updateOrInsertItem`方法临界值判断
+- 全局可配的`shakeDelay`默认时长
 
 # 2020-4-8
 
