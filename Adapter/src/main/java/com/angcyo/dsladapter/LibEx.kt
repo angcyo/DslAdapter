@@ -229,6 +229,29 @@ fun GridLayoutManager.dslSpanSizeLookup(dslAdapter: DslAdapter): GridLayoutManag
     return spanSizeLookup
 }
 
+/**SpanSizeLookup*/
+fun GridLayoutManager.dslSpanSizeLookup(recyclerView: RecyclerView): GridLayoutManager.SpanSizeLookup {
+    //设置span size
+    val spanCount = spanCount
+    val spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+        override fun getSpanSize(position: Int): Int {
+            val dslAdapter = recyclerView.adapter as? DslAdapter
+            return when {
+                dslAdapter?.isAdapterStatus() == true -> spanCount
+                else -> dslAdapter?.getItemData(position)?.run {
+                    if (itemSpanCount == -1) {
+                        spanCount
+                    } else {
+                        itemSpanCount
+                    }
+                } ?: 1
+            }
+        }
+    }
+    this.spanSizeLookup = spanSizeLookup
+    return spanSizeLookup
+}
+
 fun View.fullSpan(full: Boolean = true) {
     val layoutParams = layoutParams
     if (layoutParams is StaggeredGridLayoutManager.LayoutParams) {
