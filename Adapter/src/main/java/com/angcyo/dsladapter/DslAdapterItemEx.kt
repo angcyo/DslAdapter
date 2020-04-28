@@ -2,6 +2,8 @@ package com.angcyo.dsladapter
 
 import android.graphics.Color
 import androidx.annotation.LayoutRes
+import androidx.core.math.MathUtils.clamp
+import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.RecyclerView
 
 /**
@@ -162,6 +164,18 @@ fun DslAdapterItem.itemViewHolder(recyclerView: RecyclerView?): DslViewHolder? {
     }
 }
 
+fun DslAdapterItem.isItemAttached(): Boolean {
+    return lifecycle.currentState == Lifecycle.State.RESUMED
+}
+
+/**提供和[DslAdapter]相同的使用方式, 快速创建[DslAdapterItem]集合*/
+fun renderItemList(render: DslAdapter.() -> Unit): List<DslAdapterItem> {
+    return DslAdapter().run {
+        render()
+        adapterItems
+    }
+}
+
 //</editor-fold desc="操作扩展">
 
 //<editor-fold desc="更新指定的Item">
@@ -257,6 +271,7 @@ inline fun <reified Item : DslAdapterItem> DslAdapter._updateOrInsertItem(
 
     //回调处理
     val newItem = updateOrCreateItem(oldItem)
+    newItem?.itemTag = itemTag
 
     if (findItem == null && newItem == null) {
         return
@@ -271,7 +286,7 @@ inline fun <reified Item : DslAdapterItem> DslAdapter._updateOrInsertItem(
         } else {
             if (findItem == null) {
                 //需要insert处理
-                it.add(insertIndex, newItem)
+                it.add(clamp(insertIndex, 0, it.size), newItem)
             } else {
                 //需要更新处理
                 findItem.itemChanging = true

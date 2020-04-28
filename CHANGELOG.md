@@ -1,8 +1,9 @@
 # 2020-4-28
 
-`2.2.4`
+`2.2.5`
 
 - 添加RecyclerView快速设置DslAdapter的扩展方法
+- 修复`updateOrInsertItem`方法临界值判断
 
 # 2020-4-8
 
