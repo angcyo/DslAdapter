@@ -1,8 +1,9 @@
 # 2020-4-28
 
-`2.2.6`
+`2.2.7`
 
 - 添加RecyclerView快速设置DslAdapter的扩展方法
+- 新增`BatchLoad`批量过滤加载
 - 修复`updateOrInsertItem`方法临界值判断
 - 全局可配的`shakeDelay`默认时长
 
