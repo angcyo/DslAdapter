@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.view.View
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -227,10 +228,15 @@ open class DslAdapterItem : LifecycleOwner {
 
     //初始化宽高
     open fun _initItemSize(itemHolder: DslViewHolder) {
+        if (itemMinWidth == undefined_size && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            itemMinWidth = itemHolder.itemView.minimumWidth
+        }
+        if (itemMinHeight == undefined_size && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            itemMinHeight = itemHolder.itemView.minimumHeight
+        }
         if (itemMinWidth != undefined_size) {
             itemHolder.itemView.minimumWidth = itemMinWidth
         }
-
         if (itemMinHeight != undefined_size) {
             itemHolder.itemView.minimumHeight = itemMinHeight
         }
@@ -568,14 +574,23 @@ open class DslAdapterItem : LifecycleOwner {
      * [RecyclerView.Adapter.notifyItemRemoved]
      * 的执行
      * */
-    var thisAreItemsTheSame: (fromItem: DslAdapterItem?, newItem: DslAdapterItem) -> Boolean =
-        { _, newItem -> this == newItem }
+    var thisAreItemsTheSame: (
+        fromItem: DslAdapterItem?, newItem: DslAdapterItem,
+        oldItemPosition: Int, newItemPosition: Int
+    ) -> Boolean =
+        { _, newItem, oldItemPosition, newItemPosition ->
+            this == newItem ||
+                    (this.className() == newItem.className() && oldItemPosition == newItemPosition)
+        }
 
     /**
      * [RecyclerView.Adapter.notifyItemChanged]
      * */
-    var thisAreContentsTheSame: (fromItem: DslAdapterItem?, newItem: DslAdapterItem) -> Boolean =
-        { fromItem, newItem ->
+    var thisAreContentsTheSame: (
+        fromItem: DslAdapterItem?, newItem: DslAdapterItem,
+        oldItemPosition: Int, newItemPosition: Int
+    ) -> Boolean =
+        { fromItem, newItem, _, _ ->
             when {
                 itemChanging -> false
                 (newItem.itemData != null && this.itemData != null && newItem.itemData == this.itemData) -> true
@@ -584,8 +599,11 @@ open class DslAdapterItem : LifecycleOwner {
             }
         }
 
-    var thisGetChangePayload: (fromItem: DslAdapterItem?, filterPayload: Any?, newItem: DslAdapterItem) -> Any? =
-        { _, filterPayload, _ ->
+    var thisGetChangePayload: (
+        fromItem: DslAdapterItem?, filterPayload: Any?, newItem: DslAdapterItem,
+        oldItemPosition: Int, newItemPosition: Int
+    ) -> Any? =
+        { _, filterPayload, _, _, _ ->
             filterPayload ?: PAYLOAD_UPDATE_PART
         }
 

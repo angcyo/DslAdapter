@@ -4,8 +4,8 @@ import android.text.TextUtils
 import androidx.recyclerview.widget.DiffUtil
 
 open class RDiffCallback<T : Any>(
-    val oldDatas: List<T>? = null,
-    val newDatas: List<T>? = null,
+    val oldDataList: List<T>,
+    val newDataList: List<T>,
     val itemDiffCallback: RItemDiffCallback<T>? = null
 ) : DiffUtil.Callback() {
 
@@ -17,20 +17,21 @@ open class RDiffCallback<T : Any>(
 
     override fun getOldListSize(): Int {
         return getListSize(
-            oldDatas
+            oldDataList
         )
     }
 
     override fun getNewListSize(): Int {
         return getListSize(
-            newDatas
+            newDataList
         )
     }
 
     override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any? {
         return itemDiffCallback?.getChangePayload(
-            oldDatas!![oldItemPosition],
-            newDatas!![newItemPosition]
+            oldDataList[oldItemPosition],
+            newDataList[newItemPosition],
+            oldItemPosition, newItemPosition
         )
     }
 
@@ -39,8 +40,9 @@ open class RDiffCallback<T : Any>(
         newItemPosition: Int
     ): Boolean {
         return itemDiffCallback?.areItemsTheSame(
-            oldDatas!![oldItemPosition],
-            newDatas!![newItemPosition]
+            oldDataList[oldItemPosition],
+            newDataList[newItemPosition],
+            oldItemPosition, newItemPosition
         ) ?: false
     }
 
@@ -53,14 +55,15 @@ open class RDiffCallback<T : Any>(
         newItemPosition: Int
     ): Boolean {
         return itemDiffCallback?.areContentsTheSame(
-            oldDatas!![oldItemPosition],
-            newDatas!![newItemPosition]
+            oldDataList[oldItemPosition],
+            newDataList[newItemPosition],
+            oldItemPosition, newItemPosition
         ) ?: false
     }
 }
 
 interface RItemDiffCallback<T : Any> {
-    fun getChangePayload(oldData: T, newData: T): Any? {
+    fun getChangePayload(oldData: T, newData: T, oldItemPosition: Int, newItemPosition: Int): Any? {
         return null
     }
 
@@ -68,19 +71,30 @@ interface RItemDiffCallback<T : Any> {
      * 重写此方法, 判断数据是否相等,
      * 如果item不相同, 会先调用 notifyItemRangeRemoved, 再调用 notifyItemRangeInserted
      */
-    fun areItemsTheSame(oldData: T, newData: T): Boolean {
+    fun areItemsTheSame(
+        oldData: T,
+        newData: T,
+        oldItemPosition: Int,
+        newItemPosition: Int
+    ): Boolean {
         val oldClass: Class<*> = oldData.javaClass
         val newClass: Class<*> = newData.javaClass
-        return if (oldClass.isAssignableFrom(newClass) || newClass.isAssignableFrom(oldClass)) {
-            true
-        } else TextUtils.equals(oldClass.simpleName, newClass.simpleName)
+        return TextUtils.equals(
+            oldClass.simpleName,
+            newClass.simpleName
+        ) && oldItemPosition == newItemPosition
     }
 
     /**
      * 重写此方法, 判断内容是否相等,
      * 如果内容不相等, 会调用notifyItemRangeChanged
      */
-    fun areContentsTheSame(oldData: T, newData: T): Boolean {
+    fun areContentsTheSame(
+        oldData: T,
+        newData: T,
+        oldItemPosition: Int,
+        newItemPosition: Int
+    ): Boolean {
         val oldClass: Class<*> = oldData.javaClass
         val newClass: Class<*> = newData.javaClass
         return if (oldClass.isAssignableFrom(newClass) ||

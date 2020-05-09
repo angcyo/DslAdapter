@@ -300,32 +300,38 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
 
                         override fun areItemsTheSame(
                             oldData: DslAdapterItem,
-                            newData: DslAdapterItem
+                            newData: DslAdapterItem,
+                            oldItemPosition: Int, newItemPosition: Int
                         ): Boolean {
                             return oldData.thisAreItemsTheSame(
                                 _params?.fromDslAdapterItem,
-                                newData
+                                newData,
+                                oldItemPosition, newItemPosition
                             )
                         }
 
                         override fun areContentsTheSame(
                             oldData: DslAdapterItem,
-                            newData: DslAdapterItem
+                            newData: DslAdapterItem,
+                            oldItemPosition: Int, newItemPosition: Int
                         ): Boolean {
                             return oldData.thisAreContentsTheSame(
                                 _params?.fromDslAdapterItem,
-                                newData
+                                newData,
+                                oldItemPosition, newItemPosition
                             )
                         }
 
                         override fun getChangePayload(
                             oldData: DslAdapterItem,
-                            newData: DslAdapterItem
+                            newData: DslAdapterItem,
+                            oldItemPosition: Int, newItemPosition: Int
                         ): Any? {
                             return oldData.thisGetChangePayload(
                                 _params?.fromDslAdapterItem,
                                 _params?.payload,
-                                newData
+                                newData,
+                                oldItemPosition, newItemPosition
                             )
                         }
                     }

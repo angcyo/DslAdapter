@@ -48,7 +48,7 @@ open class DslLoadMoreItem : BaseDslStateItem() {
         itemStateLayoutMap[ADAPTER_LOAD_ERROR] = R.layout.base_error_layout
         itemStateLayoutMap[_ADAPTER_LOAD_RETRY] = R.layout.base_error_layout
 
-        thisAreContentsTheSame = { _, _ ->
+        thisAreContentsTheSame = { _, _, _, _ ->
             false
         }
     }
