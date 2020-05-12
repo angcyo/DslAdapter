@@ -1,7 +1,11 @@
 package com.angcyo.dsladapter
 
+import android.animation.Animator
 import android.graphics.Color
+import android.view.View
+import android.view.ViewGroup
 import androidx.annotation.LayoutRes
+import androidx.recyclerview.widget.RecyclerView
 
 
 /**
@@ -212,3 +216,62 @@ fun DslAdapter.delayNotify(filterParams: FilterParams = FilterParams(notifyDiffD
 
 //</editor-fold desc="Update">
 
+val RecyclerView.dslAdapter: DslAdapter? get() = adapter as? DslAdapter?
+
+fun View?.mH(def: Int = 0): Int {
+    return this?.measuredHeight ?: def
+}
+
+fun View?.mW(def: Int = 0): Int {
+    return this?.measuredWidth ?: def
+}
+
+fun View.getChildOrNull(index: Int): View? {
+    return if (this is ViewGroup) {
+        this.getChildOrNull(index)
+    } else {
+        this
+    }
+}
+
+/**获取指定位置[index]的[child], 如果有.*/
+fun ViewGroup.getChildOrNull(index: Int): View? {
+    return if (index in 0 until childCount) {
+        getChildAt(index)
+    } else {
+        null
+    }
+}
+
+fun ViewGroup.forEach(recursively: Boolean = false, map: (index: Int, child: View) -> Unit) {
+    eachChild(recursively, map)
+}
+
+/**枚举所有child view
+ * [recursively] 递归所有子view*/
+fun ViewGroup.eachChild(recursively: Boolean = false, map: (index: Int, child: View) -> Unit) {
+    for (index in 0 until childCount) {
+        val childAt = getChildAt(index)
+        map.invoke(index, childAt)
+        if (recursively && childAt is ViewGroup) {
+            childAt.eachChild(recursively, map)
+        }
+    }
+}
+
+/**[androidx/core/animation/Animator.kt:82]*/
+inline fun Animator.addListener(
+    crossinline onEnd: (animator: Animator) -> Unit = {},
+    crossinline onStart: (animator: Animator) -> Unit = {},
+    crossinline onCancel: (animator: Animator) -> Unit = {},
+    crossinline onRepeat: (animator: Animator) -> Unit = {}
+): Animator.AnimatorListener {
+    val listener = object : Animator.AnimatorListener {
+        override fun onAnimationRepeat(animator: Animator) = onRepeat(animator)
+        override fun onAnimationEnd(animator: Animator) = onEnd(animator)
+        override fun onAnimationCancel(animator: Animator) = onCancel(animator)
+        override fun onAnimationStart(animator: Animator) = onStart(animator)
+    }
+    addListener(listener)
+    return listener
+}

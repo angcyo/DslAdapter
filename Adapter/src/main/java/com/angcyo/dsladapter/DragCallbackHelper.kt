@@ -20,10 +20,34 @@ import java.util.*
 class DragCallbackHelper : ItemTouchHelper.Callback() {
 
     companion object {
+        /**[Drag] 和 [Swipe] Flag*/
+        const val FLAG_NO_INIT = -1
+
+        /**无*/
+        const val FLAG_NONE = 0
+
+        /**全方向*/
+        const val FLAG_ALL = ItemTouchHelper.LEFT or
+                ItemTouchHelper.RIGHT or
+                ItemTouchHelper.DOWN or
+                ItemTouchHelper.UP
+
+        /**垂直方向*/
+        const val FLAG_VERTICAL = ItemTouchHelper.DOWN or ItemTouchHelper.UP
+
+        /**水平方向*/
+        const val FLAG_HORIZONTAL = ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
 
         /**安装*/
-        fun install(recyclerView: RecyclerView) {
-            DragCallbackHelper().attachToRecyclerView(recyclerView)
+        fun install(recyclerView: RecyclerView): DragCallbackHelper {
+            return DragCallbackHelper().apply {
+                attachToRecyclerView(recyclerView)
+            }
+        }
+
+        /**卸载*/
+        fun uninstall(dragCallbackHelper: DragCallbackHelper) {
+            dragCallbackHelper.detachFromRecyclerView()
         }
     }
 
@@ -53,9 +77,13 @@ class DragCallbackHelper : ItemTouchHelper.Callback() {
     ): Int {
         val dslAdapterItem = _dslAdapter?.getItemData(viewHolder.adapterPosition)
         return dslAdapterItem?.run {
+            val dFlag =
+                if (itemDragFlag >= 0) itemDragFlag else this@DragCallbackHelper.itemDragFlag
+            val sFlag =
+                if (itemSwipeFlag >= 0) itemSwipeFlag else this@DragCallbackHelper.itemSwipeFlag
             makeMovementFlags(
-                if (itemDragEnable) itemDragFlag else FLAG_NONE,
-                if (itemSwipeEnable) itemSwipeFlag else FLAG_NONE
+                if (itemDragEnable) dFlag else FLAG_NONE,
+                if (itemSwipeEnable) sFlag else FLAG_NONE
             )
         } ?: FLAG_NONE
     }

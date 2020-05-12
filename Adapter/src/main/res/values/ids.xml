@@ -2,4 +2,10 @@
 <resources>
     <item name="tag" type="id"/>
     <item name="base_retry_button" type="id"/>
+
+    <!--将DslViewHolder, 放在View的tag中-->
+    <item name="lib_tag_dsl_view_holder" type="id" />
+    <!--将DslAdapterItem, 放在View的tag中-->
+    <item name="lib_tag_dsl_adapter_item" type="id" />
+
 </resources>

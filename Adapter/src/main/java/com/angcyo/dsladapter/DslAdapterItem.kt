@@ -7,10 +7,15 @@ import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.view.View
+import android.view.ViewGroup
+import androidx.core.math.MathUtils.clamp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.angcyo.dsladapter.SwipeMenuHelper.Companion.SWIPE_MENU_TYPE_DEFAULT
+import com.angcyo.dsladapter.SwipeMenuHelper.Companion.SWIPE_MENU_TYPE_FLOWING
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -90,7 +95,7 @@ open class DslAdapterItem : LifecycleOwner {
     //<editor-fold desc="标准属性">
 
     /**布局的xml id, 必须设置.*/
-    var itemLayoutId: Int = -1
+    open var itemLayoutId: Int = -1
 
     /**附加的数据*/
     var itemData: Any? = null
@@ -721,20 +726,101 @@ open class DslAdapterItem : LifecycleOwner {
     //<editor-fold desc="拖拽相关">
 
     /**
-     * 当前[DslAdapterItem]是否可以被拖拽
+     * 当前[DslAdapterItem]是否可以被拖拽.需要[DragCallbackHelper]的支持
      * [itemIsGroupHead]
      * [DragCallbackHelper.getMovementFlags]
      * */
     var itemDragEnable = true
 
     /**
-     * 当前[DslAdapterItem]是否可以被侧滑删除
+     * 当前[DslAdapterItem]是否可以被侧滑删除.需要[DragCallbackHelper]的支持
      * */
     var itemSwipeEnable = true
+
+    /**支持拖拽的方向, 0表示不开启拖拽
+     * [ItemTouchHelper.LEFT]
+     * [ItemTouchHelper.RIGHT]
+     * [ItemTouchHelper.UP]
+     * [ItemTouchHelper.DOWN]
+     * */
+    var itemDragFlag = -1
+
+    /**支持滑动删除的方向, 0表示不开启滑动
+     * [ItemTouchHelper.LEFT]
+     * [ItemTouchHelper.RIGHT]
+     * */
+    var itemSwipeFlag = -1
 
     /**[dragItem]是否可以在此位置[this]放下*/
     var isItemCanDropOver: (dragItem: DslAdapterItem) -> Boolean = {
         itemDragEnable
+    }
+
+    //</editor-fold>
+
+    //<editor-fold desc="侧滑菜单相关">
+
+    /**用于控制打开or关闭菜单*/
+    var _itemSwipeMenuHelper: SwipeMenuHelper? = null
+
+    /**是否激活侧滑菜单.需要[SwipeMenuHelper]的支持*/
+    var itemSwipeMenuEnable = true
+
+    /**支持滑动菜单打开的手势方向.
+     * [ItemTouchHelper.LEFT]
+     * [ItemTouchHelper.RIGHT]
+     * */
+    var itemSwipeMenuFlag = ItemTouchHelper.LEFT
+
+    /**滑动菜单滑动的方式*/
+    var itemSwipeMenuType = SWIPE_MENU_TYPE_DEFAULT
+
+    /**侧滑菜单滑动至多少距离, 重写此方法, 自行处理UI效果*/
+    var itemSwipeMenuTo: (itemHolder: DslViewHolder, dX: Float, dY: Float) -> Unit =
+        { itemHolder, dX, dY ->
+            onItemSwipeMenuTo(itemHolder, dX, dY)
+        }
+
+    /**滑动菜单的宽度*/
+    var itemSwipeWidth: (itemHolder: DslViewHolder) -> Int = {
+        it.itemView.getChildOrNull(0).mW()
+    }
+
+    /**滑动菜单的高度*/
+    var itemSwipeHeight: (itemHolder: DslViewHolder) -> Int = {
+        it.itemView.getChildOrNull(0).mH()
+    }
+
+    /**请将menu, 布局在第1个child的位置, 并且布局的[left]和[top]都是0
+     * 默认的UI效果就是, TranslationX.
+     * 默认实现暂时只支持左/右滑动的菜单, 上/下滑动菜单不支持
+     * */
+    open fun onItemSwipeMenuTo(itemHolder: DslViewHolder, dX: Float, dY: Float) {
+        val parent = itemHolder.itemView
+        if (parent is ViewGroup && parent.childCount > 1) {
+            //菜单最大的宽度, 用于限制滑动的边界
+            val menuWidth = itemSwipeWidth(itemHolder)
+            val tX = clamp(dX, -menuWidth.toFloat(), menuWidth.toFloat())
+            parent.forEach { index, child ->
+                if (index == 0) {
+                    if (itemSwipeMenuType == SWIPE_MENU_TYPE_FLOWING) {
+                        if (dX > 0) {
+                            child.translationX = -menuWidth + tX
+                        } else {
+                            child.translationX = parent.mW() + tX
+                        }
+                    } else {
+                        if (dX > 0) {
+                            child.translationX = 0f
+                        } else {
+                            child.translationX = (parent.mW() - menuWidth).toFloat()
+                        }
+                    }
+                } else {
+                    child.translationX = tX
+                }
+            }
+        }
     }
 
     //</editor-fold>
