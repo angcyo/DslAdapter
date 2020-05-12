@@ -68,6 +68,7 @@ renderAdapter{
 10. 支持`滑动选择`(手指拖拽, 就可以选中范围内item)
 11. 支持`拖拽排序` `侧滑删除` (注意不是侧滑菜单)
 12. 支持`树结构`类似于`idea`中的文件列表目录结构
+13. 支持`左右侧滑菜单`(`2.4.0`后)
 
 # 功能展示
 
@@ -91,6 +92,10 @@ renderAdapter{
 --|--
 ![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_slide.gif)|![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_tree.gif)
 
+[侧滑菜单](https://github.com/angcyo/DslAdapter/wiki/%E4%BE%A7%E6%BB%91%E8%8F%9C%E5%8D%95)|--
+--|--
+![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_swipe_menu.gif)|--
+
 # 使用`JitPack`的方式, 引入库.
 
 ## 根目录中的 `build.gradle`
@@ -109,7 +114,7 @@ allprojects {
 ```kotlin
 dependencies {
     //androidx(推荐)
-    implementation 'com.github.angcyo:DslAdapter:2.3.0'
+    implementation 'com.github.angcyo:DslAdapter:2.4.0'
     //support版请使用(不保证及时更新)
     implementation 'com.github.angcyo:DslAdapter:1.2.0'
     //跟随作者最新版请使用
