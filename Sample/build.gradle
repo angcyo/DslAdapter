@@ -8,7 +8,7 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "com.angcyo.dsladapter.demo"
-        minSdkVersion 14
+        minSdkVersion 16
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -17,7 +17,7 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -36,4 +36,8 @@ dependencies {
 
     implementation project(':Adapter')
     //implementation 'com.github.angcyo:DslAdapter:master-SNAPSHOT'
+
+    implementation('com.github.angcyo:DslItem:1.0.7') {
+        exclude module: 'DslAdapter'
+    }
 }

@@ -9,6 +9,7 @@ import com.angcyo.dsladapter.*
 import com.angcyo.dsladapter.dsl.DslDemoItem
 import com.angcyo.dsladapter.dsl.dslImageItem
 import com.angcyo.dsladapter.dsl.dslTextItem
+import com.angcyo.dsladapter.filter.batchLoad
 
 /**
  *
@@ -99,6 +100,17 @@ class MainActivity : BaseRecyclerActivity() {
                 itemDecorationColor = Color.MAGENTA
             }
 
+            DslDemoItem()() {
+                itemText = "侧滑菜单使用示例"
+                itemClick = {
+                    start(SwipeMenuActivity::class.java)
+                }
+                itemTopInsert = 4 * dpi
+                itemRightOffset = 200 * dpi
+                onlyDrawOffsetArea = true
+                itemDecorationColor = Color.GREEN
+            }
+
 
             renderEmptyItem()
 
@@ -142,6 +154,8 @@ class MainActivity : BaseRecyclerActivity() {
             this - DslAdapterItem() - DslAdapterItem() - DslAdapterItem() - DslAdapterItem()
 
             renderEmptyItem()
+
+            batchLoad()
 
             //模拟网络延迟
             dslViewHolder.postDelay(1000) {

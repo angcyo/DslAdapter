@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/lib_item_root_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:minHeight="50dp">
+
+    <LinearLayout
+        android:id="@+id/menu_wrap_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.angcyo.widget.DslButton
+            android:id="@+id/delete_button"
+            style="@style/DefaultButtonStyleNormal"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:paddingLeft="@dimen/lib_xhdpi"
+            android:paddingRight="@dimen/lib_xhdpi"
+            android:text="删除"
+            app:button_gradient_end_color="@color/error"
+            app:button_gradient_start_color="@color/error"
+            app:button_radius="0dp" />
+
+        <com.angcyo.widget.DslButton
+            android:id="@+id/top_button"
+            style="@style/DefaultButtonStyleNormal"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:paddingLeft="@dimen/lib_xhdpi"
+            android:paddingRight="@dimen/lib_xhdpi"
+            android:text="取消置顶"
+            app:button_gradient_end_color="@color/success"
+            app:button_gradient_start_color="@color/success"
+            app:button_radius="0dp" />
+
+        <com.angcyo.widget.DslButton
+            android:id="@+id/read_button"
+            style="@style/DefaultButtonStyleNormal"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:paddingLeft="@dimen/lib_xhdpi"
+            android:paddingRight="@dimen/lib_xhdpi"
+            android:text="标记已读"
+            app:button_gradient_end_color="@color/info"
+            app:button_gradient_start_color="@color/info"
+            app:button_radius="0dp" />
+
+    </LinearLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/lib_content_wrap_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/lib_white"
+        android:clickable="true"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/lib_item_height"
+        android:paddingTop="@dimen/lib_hdpi"
+        android:paddingBottom="@dimen/lib_hdpi"
+        tools:visibility="gone">
+
+        <com.angcyo.widget.text.DslSpanTextView
+            android:id="@+id/lib_text_view"
+            style="@style/LibBodyTextStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawablePadding="@dimen/lib_drawable_padding"
+            android:paddingLeft="@dimen/lib_padding_left"
+            android:paddingRight="@dimen/lib_padding_right"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@id/wrap_layout"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:drawableLeft="@drawable/lib_image_tip"
+            tools:text="关于我们关于我们关于我们关于我们关于我们关于我们关于我们关于我们关于我们关于我们关于我们关于我们关于我们关于我们关于我们关于我们关于我们关于我们关于我们" />
+
+        <FrameLayout
+            android:id="@+id/wrap_layout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintHorizontal_weight="1"
+            app:layout_constraintLeft_toRightOf="@id/lib_text_view"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_min="40dp"
+            tools:layout_height="20dp" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

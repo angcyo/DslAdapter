@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.angcyo.widget.DslButton xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/lib_button"
+    style="@style/DefaultButtonStyleNormal"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:paddingLeft="@dimen/lib_xhdpi"
+    android:paddingRight="@dimen/lib_xhdpi"
+    app:button_radius="0dp"
+    tools:button_gradient_end_color="@color/error"
+    tools:button_gradient_start_color="@color/error"
+    tools:text="删除" />

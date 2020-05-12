@@ -36,6 +36,9 @@
             android:name=".LoadDataActivity"
             android:label="APP数据加载示例" />
         <activity
+            android:name=".SwipeMenuActivity"
+            android:label="侧滑菜单使用示例" />
+        <activity
             android:name=".MainActivity"
             android:label="@string/app_name">
             <intent-filter>
