@@ -37,7 +37,7 @@ dependencies {
     //implementation project(':Adapter')
     //implementation 'com.github.angcyo:DslAdapter:master-SNAPSHOT'
 
-    implementation('com.github.angcyo:DslItem:1.0.8') {
+    implementation('com.github.angcyo:DslItem:1.0.9') {
         //exclude module: 'DslAdapter'
     }
 }
