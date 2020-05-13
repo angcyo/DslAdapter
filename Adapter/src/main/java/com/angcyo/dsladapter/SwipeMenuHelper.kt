@@ -251,6 +251,16 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback) : ItemDecoration
                     closeSwipeMenu(_swipeMenuViewHolder)
                 } else {
                     findSwipedView.apply {
+                        _recyclerView?.adapter?.let {
+                            if (it is DslAdapter) {
+                                it[adapterPosition, true, false]?.apply {
+                                    if (_itemSwipeMenuHelper != this@SwipeMenuHelper) {
+                                        _itemSwipeMenuHelper = this@SwipeMenuHelper
+                                    }
+                                }
+                            }
+                        }
+
                         if (_lastValueAnimator?.isRunning == true ||
                             (_downViewHolder != null && _downViewHolder != this)
                         ) {
@@ -331,7 +341,9 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback) : ItemDecoration
 
                     if (_swipeFlags == DragCallbackHelper.FLAG_HORIZONTAL) {
                         _scrollY = 0f
-                        if (swipeFlag.have(ItemTouchHelper.LEFT) || swipeFlag.have(ItemTouchHelper.RIGHT)) {
+                        if (swipeFlag.have(ItemTouchHelper.LEFT) ||
+                            swipeFlag.have(ItemTouchHelper.RIGHT)
+                        ) {
                             if (_scrollX < 0 && swipeFlag and ItemTouchHelper.LEFT == 0) {
                                 //不具备向左滑动
                                 _scrollX = 0f
@@ -398,21 +410,6 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback) : ItemDecoration
         _lastDistanceX = 0f
         _lastDistanceY = 0f
         _swipeFlags = 0
-    }
-
-    override fun onDraw(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
-        super.onDraw(c, parent, state)
-        parent.adapter.apply {
-            if (this is DslAdapter) {
-                parent.forEach { _, child ->
-                    parent.getChildViewHolder(child)?.let { viewHolder ->
-                        this[viewHolder.adapterPosition, true, false]?.apply {
-                            _itemSwipeMenuHelper = this@SwipeMenuHelper
-                        }
-                    }
-                }
-            }
-        }
     }
 
     override fun onChildViewDetachedFromWindow(view: View) {
