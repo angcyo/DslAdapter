@@ -75,7 +75,7 @@ class GroupGridDemoActivity : BaseRecyclerActivity() {
                                 if (isOnlyOne()) {
                                     itemHolder.itemView
                                         .setBackgroundResource(R.drawable.shape_group_all)
-                                } else if (isFirstPosition()) {
+                                } else if (isEdgeGroupTop()) {
                                     itemHolder.itemView
                                         .setBackgroundResource(R.drawable.shape_group_header)
                                 } else {

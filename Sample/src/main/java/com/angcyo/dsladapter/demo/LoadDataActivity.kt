@@ -1,11 +1,11 @@
 package com.angcyo.dsladapter.demo
 
 import com.angcyo.dsladapter.DslAdapterStatusItem
+import com.angcyo.dsladapter.data.updateSingleData
 import com.angcyo.dsladapter.dpi
 import com.angcyo.dsladapter.dsl.DslImageItem
 import com.angcyo.dsladapter.dsl.DslTextItem
 import com.angcyo.dsladapter.nowTime
-import com.angcyo.dsladapter.updateSingleData
 import kotlin.random.Random.Default.nextInt
 
 /**

@@ -5,7 +5,9 @@ import android.view.View
 import android.view.ViewGroup
 import com.angcyo.dsladapter.DslAdapterItem
 import com.angcyo.dsladapter.DslViewHolder
+import com.angcyo.dsladapter.data.updateOrCreateItemByClass
 import com.angcyo.dsladapter.dpi
+import com.angcyo.dsladapter.updateSubItem
 import kotlin.random.Random.Default.nextInt
 
 /**
@@ -24,7 +26,7 @@ class TreeDemoActivity : BaseRecyclerActivity() {
                 DslTreeItem()() {
                     itemText = "顶级目录$i"
 
-                    onItemLoadSubList = loadSubList(this)
+                    itemLoadSubList = loadSubList(this)
                 }
             }
         }
@@ -39,34 +41,43 @@ class TreeDemoActivity : BaseRecyclerActivity() {
 
                 //模拟延迟
                 dslViewHolder.postDelay(1000) {
-                    treeItem.itemSubList.clear()
-                    for (i in 0..nextInt(0, 10)) {
-                        treeItem.itemSubList.add(DslTreeItem().apply {
-                            itemText = "子目录$i"
+                    treeItem.updateSubItem {
 
-                            //到达一定数量数, 模拟无子目录的情况
-                            if (treeItem.itemParentList.size > 0 && i > 4) {
-                                onItemLoadSubList = {
-                                    if (!itemIsLoadSub && itemSubList.isEmpty()) {
-                                        //加载中
-                                        itemSubList.add(DslTreeLoadItem())
+                        //更新数据源
+                        val dataList = mutableListOf<String>()
+                        for (i in 0..nextInt(0, 10)) {
+                            dataList.add("子目录$i")
+                        }
+                        updateDataList = dataList
 
-                                        dslViewHolder.postDelay(1000) {
-                                            itemSubList.clear()
-                                            updateItemDepend()
+                        //轻量差分更新
+                        updateOrCreateItem = { oldItem, data, index ->
+                            updateOrCreateItemByClass(DslTreeItem::class.java, oldItem) {
+                                itemText = data.toString()
+
+                                //到达一定数量数, 模拟无子目录的情况
+                                if (itemParentList.size > 0 && index > 4) {
+                                    itemLoadSubList = {
+                                        if (!itemIsLoadSub && itemSubList.isEmpty()) {
+                                            //加载中
+                                            itemSubList.add(DslTreeLoadItem())
+
+                                            dslViewHolder.postDelay(1000) {
+                                                itemSubList.clear()
+                                                updateItemDepend()
+                                            }
                                         }
-                                    }
 
+                                        itemIsLoadSub = true
+                                    }
+                                } else if (itemParentList.size > 0 && index > 2) {
                                     itemIsLoadSub = true
+                                } else {
+                                    itemLoadSubList = this@TreeDemoActivity.loadSubList(this)
                                 }
-                            } else if (treeItem.itemParentList.size > 0 && i > 2) {
-                                itemIsLoadSub = true
-                            } else {
-                                onItemLoadSubList = this@TreeDemoActivity.loadSubList(this)
                             }
-                        })
+                        }
                     }
-                    treeItem.updateItemDepend()
                 }
             }
         }
@@ -119,7 +130,7 @@ class DslTreeItem : DslAdapterItem() {
             itemHolder.v<View>(R.id.icon_view)?.run {
                 animate()
                     .setDuration(300)
-                    .rotation(if (itemGroupExtend) -90f else 90f)
+                    .rotation(if (itemGroupExtend) 0f else 90f)
                     .start()
             }
             itemGroupExtend = !itemGroupExtend

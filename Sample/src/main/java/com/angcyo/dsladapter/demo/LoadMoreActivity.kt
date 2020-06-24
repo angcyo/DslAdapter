@@ -3,7 +3,6 @@ package com.angcyo.dsladapter.demo
 import android.widget.Toast
 import com.angcyo.dsladapter.DslAdapterStatusItem
 import com.angcyo.dsladapter.DslLoadMoreItem
-import com.angcyo.dsladapter.demo.R
 
 /**
  *
@@ -47,10 +46,10 @@ class LoadMoreActivity : BaseRecyclerActivity() {
                 loadPage++
                 if (loadPage == 2) {
                     //模拟加载失败
-                    dslAdapter.setLoadMore(DslLoadMoreItem.ADAPTER_LOAD_ERROR)
+                    dslAdapter.setLoadMore(DslLoadMoreItem.LOAD_MORE_ERROR)
                 } else if (loadPage > 3) {
                     //模拟没有更多
-                    dslAdapter.setLoadMore(DslLoadMoreItem.ADAPTER_LOAD_NO_MORE)
+                    dslAdapter.setLoadMore(DslLoadMoreItem.LOAD_MORE_NO_MORE)
                 } else {
                     dslAdapter.来点数据()
 
@@ -63,7 +62,7 @@ class LoadMoreActivity : BaseRecyclerActivity() {
 //                        }
 //                    }
 
-                    dslAdapter.setLoadMore(DslLoadMoreItem.ADAPTER_LOAD_NORMAL)
+                    dslAdapter.setLoadMore(DslLoadMoreItem.LOAD_MORE_NORMAL)
                 }
             }
         }
@@ -74,11 +73,11 @@ class LoadMoreActivity : BaseRecyclerActivity() {
         }
         dslViewHolder.click(R.id.load_more_error) {
             loadPage = 0
-            dslAdapter.setLoadMore(DslLoadMoreItem.ADAPTER_LOAD_ERROR)
+            dslAdapter.setLoadMore(DslLoadMoreItem.LOAD_MORE_ERROR)
         }
         dslViewHolder.click(R.id.load_more_no) {
             loadPage = 0
-            dslAdapter.setLoadMore(DslLoadMoreItem.ADAPTER_LOAD_NO_MORE)
+            dslAdapter.setLoadMore(DslLoadMoreItem.LOAD_MORE_NO_MORE)
         }
     }
 }
