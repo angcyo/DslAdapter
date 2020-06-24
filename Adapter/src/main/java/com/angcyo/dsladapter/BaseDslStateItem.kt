@@ -89,5 +89,5 @@ abstract class BaseDslStateItem : DslAdapterItem() {
     }
 
     /**是否处于状态显示模式*/
-    open fun isInStateLayout() = itemStateEnable && itemState > 0
+    open fun isInStateLayout() = itemEnable && itemStateEnable && itemState > 0
 }

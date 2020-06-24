@@ -19,10 +19,6 @@ import kotlin.math.min
 open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     RecyclerView.Adapter<DslViewHolder>(), OnDispatchUpdatesListener {
 
-    companion object {
-        var DEFAULT_PAGE_SIZE = 20
-    }
-
     /**
      * 为了简单起见, 这里写死套路, 理论上应该用状态器管理的.
      * 2.0.0 版本更新之后, [dslAdapterStatusItem] [dslLoadMoreItem] 将在过滤数据源后加载追加,
@@ -173,8 +169,9 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     override fun onFailedToRecycleView(holder: DslViewHolder): Boolean {
-        L.w("回收失败:$holder")
-        return super.onFailedToRecycleView(holder)
+        return super.onFailedToRecycleView(holder).apply {
+            L.w("是否回收失败:$holder $this")
+        }
     }
 
     /**返回[DslViewHolder]对应的[DslAdapterItem]*/
@@ -281,9 +278,9 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     /**
-     * [DslLoadMoreItem.ADAPTER_LOAD_NORMAL]
-     * [DslLoadMoreItem.ADAPTER_LOAD_NO_MORE]
-     * [DslLoadMoreItem.ADAPTER_LOAD_ERROR]
+     * [DslLoadMoreItem.LOAD_MORE_NORMAL]
+     * [DslLoadMoreItem.LOAD_MORE_NO_MORE]
+     * [DslLoadMoreItem.LOAD_MORE_ERROR]
      * */
     fun setLoadMore(status: Int, payload: Any? = null, notify: Boolean = true) {
         if (dslLoadMoreItem.itemStateEnable && dslLoadMoreItem.itemState == status) {

@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.angcyo.dsladapter.SwipeMenuHelper.Companion.SWIPE_MENU_TYPE_DEFAULT
 import com.angcyo.dsladapter.SwipeMenuHelper.Companion.SWIPE_MENU_TYPE_FLOWING
+import com.angcyo.dsladapter.internal.ThrottleClickListener
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -36,7 +37,7 @@ open class DslAdapterItem : LifecycleOwner {
         const val PAYLOAD_UPDATE_MEDIA = 0x2_00_00
     }
 
-    /**适配器*/
+    /**适配器, 自动赋值[com.angcyo.dsladapter.DslAdapter.onBindViewHolder]*/
     var itemDslAdapter: DslAdapter? = null
 
     //<editor-fold desc="update操作">
@@ -157,11 +158,12 @@ open class DslAdapterItem : LifecycleOwner {
 
     var itemLongClick: ((View) -> Boolean)? = null
 
-    var _clickListener: View.OnClickListener? = View.OnClickListener { view ->
+    //使用节流方式处理点击事件
+    var _clickListener: View.OnClickListener? = ThrottleClickListener(action = { view ->
         notNull(itemClick, view) {
-            itemClick?.invoke(view!!)
+            itemClick?.invoke(view)
         }
-    }
+    })
 
     var _longClickListener: View.OnLongClickListener? =
         View.OnLongClickListener { view -> itemLongClick?.invoke(view) ?: false }
@@ -224,6 +226,8 @@ open class DslAdapterItem : LifecycleOwner {
 
     //初始化背景
     open fun _initItemBackground(itemHolder: DslViewHolder) {
+        itemHolder.itemView.isSelected = itemIsSelected
+
         if (itemBackgroundDrawable !is UndefinedDrawable) {
             itemHolder.itemView.apply {
                 setBgDrawable(itemBackgroundDrawable)
@@ -233,28 +237,32 @@ open class DslAdapterItem : LifecycleOwner {
 
     //初始化宽高
     open fun _initItemSize(itemHolder: DslViewHolder) {
+        val itemView = itemHolder.itemView
+
+        //初始化默认值
         if (itemMinWidth == undefined_size && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            itemMinWidth = itemHolder.itemView.minimumWidth
+            itemMinWidth = itemView.minimumWidth
         }
         if (itemMinHeight == undefined_size && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            itemMinHeight = itemHolder.itemView.minimumHeight
+            itemMinHeight = itemView.minimumHeight
         }
+        //设置
         if (itemMinWidth != undefined_size) {
-            itemHolder.itemView.minimumWidth = itemMinWidth
+            itemView.minimumWidth = itemMinWidth
         }
         if (itemMinHeight != undefined_size) {
-            itemHolder.itemView.minimumHeight = itemMinHeight
+            itemView.minimumHeight = itemMinHeight
         }
 
+        //初始化默认值
         if (itemWidth == undefined_size) {
-            itemWidth = itemHolder.itemView.layoutParams.width
+            itemWidth = itemView.layoutParams.width
         }
-        itemHolder.itemView.setWidth(itemWidth)
-
         if (itemHeight == undefined_size) {
-            itemHeight = itemHolder.itemView.layoutParams.height
+            itemHeight = itemView.layoutParams.height
         }
-        itemHolder.itemView.setHeight(itemHeight)
+        //设置
+        itemView.setWidthHeight(itemWidth, itemHeight)
     }
 
     //初始化事件
@@ -329,7 +337,7 @@ open class DslAdapterItem : LifecycleOwner {
      * 是否需要悬停, 在使用了 [HoverItemDecoration] 时, 有效.
      * [itemIsGroupHead]
      * */
-    var itemIsHover = itemIsGroupHead
+    var itemIsHover: Boolean = itemIsGroupHead
 
     //</editor-fold>
 
@@ -436,9 +444,9 @@ open class DslAdapterItem : LifecycleOwner {
                 }
             } else {
                 drawRect.set(
-                    itemView.left,
+                    itemView.left + itemLeftOffset,
                     itemView.top - offsetRect.top,
-                    itemView.right,
+                    itemView.right - itemRightOffset,
                     itemView.top
                 )
                 canvas.drawRect(drawRect, paint)
@@ -474,9 +482,9 @@ open class DslAdapterItem : LifecycleOwner {
                 }
             } else {
                 drawRect.set(
-                    itemView.left,
+                    itemView.left + itemLeftOffset,
                     itemView.bottom,
-                    itemView.right,
+                    itemView.right - itemRightOffset,
                     itemView.bottom + offsetRect.bottom
                 )
                 canvas.drawRect(drawRect, paint)
@@ -513,9 +521,9 @@ open class DslAdapterItem : LifecycleOwner {
             } else {
                 drawRect.set(
                     itemView.left - offsetRect.left,
-                    itemView.top,
+                    itemView.top + itemTopOffset,
                     itemView.left,
-                    itemView.bottom
+                    itemView.bottom - itemBottomOffset
                 )
                 canvas.drawRect(drawRect, paint)
                 onDrawItemDecorationDrawable(canvas, drawRect)
@@ -551,9 +559,9 @@ open class DslAdapterItem : LifecycleOwner {
             } else {
                 drawRect.set(
                     itemView.right,
-                    itemView.top,
+                    itemView.top + itemTopOffset,
                     itemView.right + offsetRect.right,
-                    itemView.bottom
+                    itemView.bottom - itemBottomOffset
                 )
                 canvas.drawRect(drawRect, paint)
                 onDrawItemDecorationDrawable(canvas, drawRect)
@@ -634,7 +642,11 @@ open class DslAdapterItem : LifecycleOwner {
             }
         }
 
-    /**提供一个可以完全被覆盖的方法*/
+    /**
+     * 当[itemChanged]为true之后, 触发的回调.
+     * 如果拦截了默认操作, 需要注意[updateItemDepend]方法的触发时机
+     *
+     * 提供一个可以完全被覆盖的方法*/
     var itemChangeListener: (DslAdapterItem) -> Unit = {
         onItemChangeListener(it)
     }
@@ -706,11 +718,16 @@ open class DslAdapterItem : LifecycleOwner {
             )
 
     /**所在的分组名, 只用来做快捷变量存储*/
-    var itemGroups = mutableListOf<String>()
+    var itemGroups: List<String> = listOf()
 
     /**核心群组判断的方法*/
     var isItemInGroups: (newItem: DslAdapterItem) -> Boolean = { newItem ->
-        var result = newItem.className() == this.className()
+        var result = if (itemGroups.isEmpty()) {
+            //如果自身没有配置分组信息, 那么取相同类名, 布局id一样的item, 当做一组
+            className() == newItem.className() && itemLayoutId == newItem.itemLayoutId
+        } else {
+            false
+        }
         for (group in newItem.itemGroups) {
             result = result || itemGroups.contains(group)
 
@@ -832,16 +849,16 @@ open class DslAdapterItem : LifecycleOwner {
      *
      * 子项列表
      * */
-    var itemSubList = mutableListOf<DslAdapterItem>()
+    var itemSubList: MutableList<DslAdapterItem> = mutableListOf()
 
     /**
      * 在控制[itemSubList]之前, 都会回调此方法.
      * 相当于hook了[itemSubList], 可以在[itemSubList]为空时, 展示[加载中Item]等
      * */
-    var onItemLoadSubList: () -> Unit = {}
+    var itemLoadSubList: () -> Unit = {}
 
     /**父级列表, 会自动赋值*/
-    var itemParentList = mutableListOf<DslAdapterItem>()
+    var itemParentList: MutableList<DslAdapterItem> = mutableListOf()
 
     //</editor-fold>
 

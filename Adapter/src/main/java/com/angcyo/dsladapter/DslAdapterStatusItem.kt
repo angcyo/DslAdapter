@@ -12,16 +12,22 @@ open class DslAdapterStatusItem : BaseDslStateItem() {
     companion object {
         /**正常状态, 切换到内容*/
         const val ADAPTER_STATUS_NONE = 0
+
         /**空数据*/
         const val ADAPTER_STATUS_EMPTY = 1
+
         /**加载中*/
         const val ADAPTER_STATUS_LOADING = 2
+
         /**错误*/
         const val ADAPTER_STATUS_ERROR = 3
+
+        /**预加载状态, 不会触发加载中回调*/
+        const val ADAPTER_STATUS_PRE_LOADING = 4
     }
 
     /**刷新回调*/
-    var onRefresh: (DslViewHolder) -> Unit = {
+    var onRefresh: (itemHolder: DslViewHolder) -> Unit = {
         L.i("[DslAdapterStatusItem] 触发刷新")
     }
 
@@ -29,6 +35,7 @@ open class DslAdapterStatusItem : BaseDslStateItem() {
     var _isRefresh = false
 
     init {
+        itemStateLayoutMap[ADAPTER_STATUS_PRE_LOADING] = R.layout.base_loading_layout
         itemStateLayoutMap[ADAPTER_STATUS_LOADING] = R.layout.base_loading_layout
         itemStateLayoutMap[ADAPTER_STATUS_ERROR] = R.layout.base_error_layout
         itemStateLayoutMap[ADAPTER_STATUS_EMPTY] = R.layout.base_empty_layout

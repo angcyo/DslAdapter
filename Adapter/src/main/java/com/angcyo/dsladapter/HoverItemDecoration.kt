@@ -571,7 +571,9 @@ open class HoverItemDecoration : RecyclerView.ItemDecoration() {
             //复用adapter的机制, 创建View
             val holder = adapter.createViewHolder(recyclerView, layoutType)
 
-            //注意这里的position
+            //注意这里的position, 直接调用
+            //[androidx.recyclerview.widget.RecyclerView.Adapter.onBindViewHolder(VH, int, java.util.List<java.lang.Object>)]
+            //?
             adapter.bindViewHolder(holder, overAdapterPosition)
 
             //测量view

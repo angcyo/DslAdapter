@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.LayoutRes
 import androidx.recyclerview.widget.RecyclerView
+import com.angcyo.dsladapter.data.Page
 
 
 /**
@@ -52,6 +53,37 @@ fun DslAdapter.findItemByTag(
     }
 }
 
+fun DslAdapter.findItemByGroup(
+    groups: List<String>,
+    useFilterList: Boolean = true
+): List<DslAdapterItem> {
+    return getDataList(useFilterList).findItemByGroup(groups)
+}
+
+/**通过Tag查找item*/
+fun List<DslAdapterItem>.findItemByTag(tag: String?): DslAdapterItem? {
+    if (tag == null) {
+        return null
+    }
+    return find {
+        it.itemTag == tag
+    }
+}
+
+/**通过group查找item*/
+fun List<DslAdapterItem>.findItemByGroup(groups: List<String>): List<DslAdapterItem> {
+    val result = mutableListOf<DslAdapterItem>()
+
+    groups.forEach { group ->
+        forEach {
+            if (it.itemGroups.contains(group)) {
+                result.add(it)
+            }
+        }
+    }
+    return result
+}
+
 fun DslAdapter.dslItem(@LayoutRes layoutId: Int, config: DslAdapterItem.() -> Unit = {}) {
     val item = DslAdapterItem()
     item.itemLayoutId = layoutId
@@ -84,7 +116,7 @@ fun DslAdapter.renderEmptyItem(
     adapterItem.itemLayoutId = R.layout.base_empty_item
     adapterItem.itemBindOverride = { itemHolder, _, _, _ ->
         itemHolder.itemView.setBackgroundColor(color)
-        itemHolder.itemView.setHeight(height)
+        itemHolder.itemView.setWidthHeight(-1, height)
     }
     adapterItem.action()
     addLastItem(adapterItem)
@@ -163,36 +195,54 @@ fun mediaPayload(): List<Int> =
 
 //<editor-fold desc="AdapterStatus">
 
-fun DslAdapter.toLoading(
-    filterParams: FilterParams = defaultFilterParams!!.apply {
-        justRun = true
-    }
-) {
+fun DslAdapter.adapterStatus() = dslAdapterStatusItem.itemState
+
+fun DslAdapter.isAdapterStatusLoading() =
+    dslAdapterStatusItem.itemState == DslAdapterStatusItem.ADAPTER_STATUS_LOADING
+
+fun DslAdapter.justRunFilterParams() = defaultFilterParams!!.apply {
+    justRun = true
+    asyncDiff = false
+}
+
+fun DslAdapter.toLoading(filterParams: FilterParams = justRunFilterParams()) {
     setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING, filterParams)
 }
 
-fun DslAdapter.toEmpty(
-    filterParams: FilterParams = defaultFilterParams!!.apply {
-        justRun = true
-    }
-) {
+fun DslAdapter.toEmpty(filterParams: FilterParams = justRunFilterParams()) {
     setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY, filterParams)
 }
 
-fun DslAdapter.toError(
-    filterParams: FilterParams = defaultFilterParams!!.apply {
-        justRun = true
-    }
-) {
+fun DslAdapter.toError(filterParams: FilterParams = justRunFilterParams()) {
     setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_ERROR, filterParams)
 }
 
-fun DslAdapter.toNone(
-    filterParams: FilterParams = defaultFilterParams!!.apply {
-        justRun = true
-    }
-) {
+fun DslAdapter.toNone(filterParams: FilterParams = defaultFilterParams!!) {
     setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE, filterParams)
+}
+
+fun DslAdapter.toLoadMoreError() {
+    setLoadMore(DslLoadMoreItem.LOAD_MORE_ERROR)
+}
+
+/**加载更多技术*/
+fun DslAdapter.toLoadMoreEnd() {
+    setLoadMore(DslLoadMoreItem.LOAD_MORE_NORMAL)
+}
+
+/**无更多*/
+fun DslAdapter.toLoadNoMore() {
+    setLoadMore(DslLoadMoreItem.LOAD_MORE_NO_MORE)
+}
+
+/**快速同时监听刷新/加载更多的回调*/
+fun DslAdapter.onRefreshOrLoadMore(action: (itemHolder: DslViewHolder, loadMore: Boolean) -> Unit) {
+    dslAdapterStatusItem.onRefresh = {
+        action(it, false)
+    }
+    dslLoadMoreItem.onLoadMore = {
+        action(it, true)
+    }
 }
 
 //</editor-fold desc="AdapterStatus">
@@ -200,14 +250,8 @@ fun DslAdapter.toNone(
 //<editor-fold desc="Update">
 
 /**立即更新*/
-fun DslAdapter.updateNow(
-    filterParams: FilterParams = FilterParams(
-        justRun = true,
-        asyncDiff = false
-    )
-) {
+fun DslAdapter.updateNow(filterParams: FilterParams = justRunFilterParams()) =
     updateItemDepend(filterParams)
-}
 
 /**延迟通知*/
 fun DslAdapter.delayNotify(filterParams: FilterParams = FilterParams(notifyDiffDelay = 300)) {
@@ -216,7 +260,7 @@ fun DslAdapter.delayNotify(filterParams: FilterParams = FilterParams(notifyDiffD
 
 //</editor-fold desc="Update">
 
-val RecyclerView.dslAdapter: DslAdapter? get() = adapter as? DslAdapter?
+val RecyclerView._dslAdapter: DslAdapter? get() = adapter as? DslAdapter?
 
 fun View?.mH(def: Int = 0): Int {
     return this?.measuredHeight ?: def

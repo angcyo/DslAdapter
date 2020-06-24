@@ -40,7 +40,7 @@ class SubItemFilterInterceptor : BaseFilterInterceptor() {
             subList.add(currentItem)
             if (currentItem.itemGroupExtend) {
                 //需要展开
-                currentItem.onItemLoadSubList()
+                currentItem.itemLoadSubList()
                 currentItem.itemSubList.forEach {
                     val pList = ArrayList(parentList)
                     pList.add(currentItem)

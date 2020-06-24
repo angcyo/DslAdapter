@@ -311,3 +311,13 @@ fun View.setBgDrawable(drawable: Drawable?) {
 fun Any.className(): String {
     return this.javaClass.name
 }
+
+/**判断列表是否为空, 包括内部的数据也是非空*/
+fun List<Any?>?.isListEmpty(): Boolean {
+    if (this?.size ?: -1 > 0) {
+        return false
+    }
+    return this?.run {
+        find { it != null } == null
+    } ?: true
+}

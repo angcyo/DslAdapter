@@ -8,6 +8,9 @@ import androidx.annotation.LayoutRes
 import androidx.core.math.MathUtils.clamp
 import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.RecyclerView
+import com.angcyo.dsladapter.data.Page
+import com.angcyo.dsladapter.data.UpdateDataConfig
+import com.angcyo.dsladapter.data.updateData
 import com.angcyo.dsladapter.internal.DslHierarchyChangeListenerWrap
 import kotlin.math.min
 
@@ -75,7 +78,6 @@ fun <T> List<Any>.toAnyList(
 
 //</editor-fold desc="DslAdapterItem结构转换">
 
-
 //<editor-fold desc="分割线操作扩展">
 
 fun DslAdapterItem.setTopInsert(insert: Int, leftOffset: Int = 0, rightOffset: Int = 0) {
@@ -117,7 +119,7 @@ fun DslAdapterItem.margin(margin: Int, color: Int = Color.TRANSPARENT) {
     itemDecorationColor = color
 }
 
-fun DslAdapterItem.marginVertical(top: Int, bottom: Int = 0, color: Int = Color.TRANSPARENT) {
+fun DslAdapterItem.marginVertical(top: Int, bottom: Int = top, color: Int = Color.TRANSPARENT) {
     itemLeftOffset = 0
     itemRightOffset = 0
     itemTopInsert = top
@@ -126,7 +128,7 @@ fun DslAdapterItem.marginVertical(top: Int, bottom: Int = 0, color: Int = Color.
     itemDecorationColor = color
 }
 
-fun DslAdapterItem.marginHorizontal(left: Int, right: Int = 0, color: Int = Color.TRANSPARENT) {
+fun DslAdapterItem.marginHorizontal(left: Int, right: Int = left, color: Int = Color.TRANSPARENT) {
     itemTopOffset = 0
     itemBottomOffset = 0
 
@@ -134,6 +136,23 @@ fun DslAdapterItem.marginHorizontal(left: Int, right: Int = 0, color: Int = Colo
     itemRightInsert = right
     onlyDrawOffsetArea = false
     itemDecorationColor = color
+}
+
+fun DslAdapterItem.padding(padding: Int) {
+    itemPaddingLeft = padding
+    itemPaddingTop = padding
+    itemPaddingRight = padding
+    itemPaddingBottom = padding
+}
+
+fun DslAdapterItem.paddingVertical(top: Int, bottom: Int = 0) {
+    itemPaddingTop = top
+    itemPaddingBottom = bottom
+}
+
+fun DslAdapterItem.paddingHorizontal(left: Int, right: Int = 0) {
+    itemPaddingLeft = left
+    itemPaddingRight = right
 }
 
 /**仅绘制左边区域的分割线*/
@@ -150,6 +169,22 @@ fun DslAdapterItem.drawLeft(
 
     onlyDrawOffsetArea = true
     itemDecorationColor = color
+}
+
+/**清空分割线绘制参数*/
+fun DslAdapterItem.noDraw() {
+    itemLeftOffset = 0
+    itemTopOffset = 0
+    itemRightOffset = 0
+    itemBottomOffset = 0
+
+    itemLeftInsert = 0
+    itemTopInsert = 0
+    itemRightInsert = 0
+    itemBottomInsert = 0
+
+    onlyDrawOffsetArea = false
+    itemDecorationColor = Color.TRANSPARENT
 }
 
 //</editor-fold desc="分割线操作扩展">
@@ -179,6 +214,19 @@ fun renderItemList(render: DslAdapter.() -> Unit): List<DslAdapterItem> {
         render()
         adapterItems
     }
+}
+
+/**当前的item, 是否包含指定的分组信息*/
+fun DslAdapterItem.haveGroup(vararg group: String): Boolean {
+    return group.find { itemGroups.contains(it) } != null
+}
+
+/**指定的item, 是否在当前item的分组中*/
+fun DslAdapterItem.isInGroupItem(targetItem: DslAdapterItem?): Boolean {
+    if (targetItem == null) {
+        return false
+    }
+    return itemGroups.find { targetItem.itemGroups.contains(it) } != null
 }
 
 //</editor-fold desc="操作扩展">
@@ -302,6 +350,27 @@ inline fun <reified Item : DslAdapterItem> DslAdapter._updateOrInsertItem(
             }
         }
     }
+}
+
+/**[itemSubList]*/
+fun DslAdapterItem.updateSubItem(action: UpdateDataConfig.() -> Unit) {
+    val config = UpdateDataConfig()
+    config.updatePage = Page.FIRST_PAGE_INDEX
+    config.pageSize = Int.MAX_VALUE
+    config.adapterUpdateResult = {
+        //no op
+    }
+    config.adapterCheckLoadMore = {
+        //no op
+    }
+    config.action()
+
+    val subItemList = itemSubList
+    val result = config.updateData(subItemList)
+    itemSubList.clear()
+    itemSubList.addAll(result)
+
+    updateItemDepend(config.filterParams)
 }
 
 //</editor-fold desc="更新指定的Item">
