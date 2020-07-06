@@ -2,10 +2,10 @@ package com.angcyo.dsladapter.demo
 
 import android.graphics.Color
 import android.os.SystemClock
-import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import android.widget.Toast
 import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.angcyo.dsladapter.*
 import com.angcyo.dsladapter.dsl.dslImageItem
 import java.util.*
@@ -33,7 +33,7 @@ class StaggeredGridLayoutActivity : BaseRecyclerActivity() {
             //开启横向侧滑删除
             itemSwipeFlag = FLAG_HORIZONTAL
 
-            onClearView = { _, _ ->
+            onClearView = { recyclerView, viewHolder ->
 
                 /*
                  * [DslAdapter]默认刷新数据是通过[Diff]实现的,
@@ -44,9 +44,36 @@ class StaggeredGridLayoutActivity : BaseRecyclerActivity() {
                  *
                  * 这里强制刷界面.如果界面不受[position]的影响, 就可以不用刷新界面.
                  * */
-                if (_dragHappened) {
-                    dslAdapter.updateAllItem()
+
+                recyclerView.post {
+                    if (_dragHappened) {
+                        dslAdapter.updateAllItem()
+                    }
                 }
+            }
+
+            onItemMoveChanged = { fromList, toList, fromPosition, toPosition ->
+                L.i(buildString {
+                    append(
+                        when (fromList) {
+                            dslAdapter.headerItems -> "从头部列表"
+                            dslAdapter.dataItems -> "从列表"
+                            dslAdapter.footerItems -> "从底部列表"
+                            else -> ""
+                        }
+                    )
+                    append("[$fromPosition] -> ")
+
+                    append(
+                        when (toList) {
+                            dslAdapter.headerItems -> "到头部列表"
+                            dslAdapter.dataItems -> "到列表"
+                            dslAdapter.footerItems -> "到底部列表"
+                            else -> ""
+                        }
+                    )
+                    append("[$toPosition]")
+                })
             }
 
             /**如果是快速的侧滑删除, [clearView] 可能无法被执行, 所以对[Swipe]特殊处理以下*/
@@ -57,41 +84,76 @@ class StaggeredGridLayoutActivity : BaseRecyclerActivity() {
             }
         }
 
+        loadData()
+
+        Toast.makeText(this, "长按拖拽, 左右侧滑删除", Toast.LENGTH_LONG).show()
+    }
+
+    override fun onRefresh() {
+        super.onRefresh()
+        loadData()
+    }
+
+    fun loadData() {
         renderAdapter {
+            clearAllItems()
+
             setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
+            val random = Random(SystemClock.uptimeMillis())
 
             dslViewHolder.postDelay(1000) {
                 setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
 
-                dslImageItem {
-                    itemSpanCount = -1
-                    marginVertical(4 * dpi, 2 * dpi)
-                    marginHorizontal(4 * dpi, 2 * dpi)
+                changeHeaderItems {
+                    for (i in 0..2) {
+                        it.add(ColorItem().apply {
+                            itemText = "头部:原位置$i"
+                            itemTag = itemText
+                            itemColor = randomColor(random)
+                            margin()
+                        })
+                    }
+                }
+
+                changeFooterItems {
+                    for (i in 0..2) {
+                        it.add(ColorItem().apply {
+                            itemText = "尾部:原位置$i"
+                            itemTag = itemText
+                            itemColor = randomColor(random)
+                            margin()
+                        })
+                    }
                 }
 
                 dslImageItem {
                     itemSpanCount = -1
-                    marginVertical(4 * dpi, 2 * dpi)
-                    marginHorizontal(4 * dpi, 2 * dpi)
+                    margin()
                 }
 
-                val random = Random(SystemClock.uptimeMillis())
-                for (i in 0..100) {
+                dslImageItem {
+                    itemSpanCount = -1
+                    margin()
+                }
+
+                for (i in 0..10) {
                     dslItem(ColorItem()) {
                         itemText = "原位置$i"
                         itemTag = itemText
                         itemColor = randomColor(random)
-                        marginVertical(4 * dpi, 2 * dpi)
-                        marginHorizontal(4 * dpi, 2 * dpi)
+                        margin()
                     }
                 }
 
-                来点数据()
+                //来点数据()
             }
 
         }
+    }
 
-        Toast.makeText(this, "长按拖拽, 左右侧滑删除", Toast.LENGTH_LONG).show()
+    fun DslAdapterItem.margin() {
+        marginVertical(4 * dpi, 2 * dpi)
+        marginHorizontal(4 * dpi, 2 * dpi)
     }
 }
 
@@ -112,13 +174,23 @@ fun randomColor(random: Random, minValue: Int, maxValue: Int): Int {
 }
 
 class ColorItem : DslAdapterItem() {
-    init {
-        itemLayoutId = R.layout.item_color_item
-    }
 
     var itemColor = Color.WHITE
 
     var itemText = "文本"
+
+    init {
+        itemLayoutId = R.layout.item_color_item
+
+        //Diff算法匹配内容是否一致
+        thisAreContentsTheSame = { fromItem, newItem, oldItemPosition, newItemPosition ->
+            if (newItem is ColorItem) {
+                itemText == newItem.itemText
+            } else {
+                false
+            }
+        }
+    }
 
     override fun onItemBind(
         itemHolder: DslViewHolder,
