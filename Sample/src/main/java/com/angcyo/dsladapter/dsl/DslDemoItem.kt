@@ -2,6 +2,8 @@ package com.angcyo.dsladapter.dsl
 
 import com.angcyo.dsladapter.DslAdapterItem
 import com.angcyo.dsladapter.DslViewHolder
+import com.angcyo.dsladapter.containsPayload
+import com.angcyo.dsladapter.demo.MainActivity
 import com.angcyo.dsladapter.demo.R
 
 /**
@@ -21,9 +23,17 @@ class DslDemoItem : DslAdapterItem() {
     override fun onItemBind(
         itemHolder: DslViewHolder,
         itemPosition: Int,
-        adapterItem: DslAdapterItem
+        adapterItem: DslAdapterItem,
+        payloads: List<Any>
     ) {
-        super.onItemBind(itemHolder, itemPosition, adapterItem)
+        super.onItemBind(itemHolder, itemPosition, adapterItem, payloads)
         itemHolder.tv(R.id.text_view)?.text = itemText
+
+        if (payloads.containsPayload(MainActivity.TAG_UPDATE_DATA)) {
+            //识别到刷新标识
+            itemHolder.view(R.id.text_view)?.apply {
+                animate().rotationBy(360f).setDuration(1000).start()
+            }
+        }
     }
 }

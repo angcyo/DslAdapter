@@ -20,6 +20,10 @@ import com.angcyo.dsladapter.filter.batchLoad
  */
 class MainActivity : BaseRecyclerActivity() {
 
+    companion object {
+        val TAG_UPDATE_DATA = "update_data"
+    }
+
     override fun onInitBaseLayoutAfter() {
         super.onInitBaseLayoutAfter()
 
@@ -111,6 +115,17 @@ class MainActivity : BaseRecyclerActivity() {
                 itemDecorationColor = Color.GREEN
             }
 
+            DslDemoItem()() {
+                itemText = "测试数据动态更新"
+                itemTag = TAG_UPDATE_DATA //标识item, 方便后续find
+                itemBackgroundDrawable = null
+                itemBindOverride = { itemHolder, _, _, _ ->
+                    itemHolder.tv(R.id.text_view)?.gravity = Gravity.CENTER
+                }
+                itemClick = {
+                    updateData()
+                }
+            }
 
             renderEmptyItem()
 
@@ -161,6 +176,20 @@ class MainActivity : BaseRecyclerActivity() {
             dslViewHolder.postDelay(1000) {
                 //设置情感图状态, 正常
                 setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateData()
+    }
+
+    fun updateData() {
+        dslAdapter.findItemByTag(TAG_UPDATE_DATA)?.apply {
+            if (this is DslDemoItem) {
+                itemText = "数据刷新:${System.currentTimeMillis()}"
+                updateAdapterItem(TAG_UPDATE_DATA) /*使用[payload]标识此次刷新动作*/
             }
         }
     }
