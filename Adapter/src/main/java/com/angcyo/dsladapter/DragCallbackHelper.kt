@@ -68,6 +68,18 @@ class DragCallbackHelper : ItemTouchHelper.Callback() {
     /**是否触发过[ACTION_STATE_SWIPE]*/
     var _swipeHappened = false
 
+    /**拖拽排序后的回调, 数据源可以是[DslAdapter]中的[headerItems] [dataItems] [footerItems]其中之一
+     * [fromList] [fromPosition]所在的数据源
+     * [toList] [toPosition]所在的数据源
+     * */
+    var onItemMoveChanged: ((fromList: List<DslAdapterItem>, toList: List<DslAdapterItem>, fromPosition: Int, toPosition: Int) -> Unit)? =
+        null
+
+    /**当[item]被滑动删除后的回调
+     * [item] 被删除的item*/
+    var onItemSwipeDeleted: ((item: DslAdapterItem) -> Unit)? =
+        null
+
     /**
      * 返回[viewHolder] 能够支持的 [ACTION_STATE_DRAG] [ACTION_STATE_SWIPE] 方向.
      * */
@@ -98,22 +110,60 @@ class DragCallbackHelper : ItemTouchHelper.Callback() {
 
         //如果[viewHolder]已经移动到[target]位置, 则返回[true]
         return _dslAdapter?.run {
-            //交换数据
-            Collections.swap(getValidFilterDataList(), fromPosition, toPosition)
-            Collections.swap(dataItems, fromPosition, toPosition)
-            //更新数据列表
-            _updateAdapterItems()
-            //交换界面
-            notifyItemMoved(fromPosition, toPosition)
-            _dragHappened = true
-            true
+
+            val validFilterDataList = getValidFilterDataList()
+            val fromItem = validFilterDataList.getOrNull(fromPosition)
+            val toItem = validFilterDataList.getOrNull(toPosition)
+
+            if (fromItem == null || toItem == null) {
+                //异常操作
+                false
+            } else {
+                val fromPair = getItemListPairByItem(fromItem)
+                val toPair = getItemListPairByItem(toItem)
+
+                //[fromPosition]所在的数据集合
+                val fromList: MutableList<DslAdapterItem>? = fromPair.first
+
+                //[toPosition]所在的数据集合
+                val toList: MutableList<DslAdapterItem>? = toPair.first
+
+                if (fromList.isNullOrEmpty() && toList.isNullOrEmpty()) {
+                    false
+                } else {
+                    //交换数据
+                    Collections.swap(validFilterDataList, fromPosition, toPosition) //界面上的集合
+
+                    if (fromList == toList) {
+                        //在同一个数据集合中
+                        Collections.swap(fromList, fromPair.second, toPair.second) //数据池的集合
+                    } else {
+                        //不同列表中数据交换
+                        val temp = fromList!![fromPair.second]
+                        fromList[fromPair.second] = toList!![toPair.second]
+                        toList[toPair.second] = temp
+                    }
+
+                    //更新数据列表
+                    _updateAdapterItems()
+                    //交换界面
+                    notifyItemMoved(fromPosition, toPosition)
+                    _dragHappened = true
+
+                    onItemMoveChanged?.invoke(fromList!!, toList!!, fromPair.second, toPair.second)
+                    true
+                }
+            }
         } ?: false
     }
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
         _swipeHappened = true
-        _dslAdapter?.getItemData(viewHolder.adapterPosition)?.apply {
-            _dslAdapter?.removeItem(this)
+        _dslAdapter?.apply {
+            getItemData(viewHolder.adapterPosition)?.apply {
+                removeItem(this)
+                onItemSwipeDeleted?.invoke(this)
+            }
         }
     }
 

@@ -368,6 +368,23 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         _updateAdapterItems()
     }
 
+    fun clearHeaderItems() {
+        headerItems.clear()
+        _updateAdapterItems()
+    }
+
+    fun clearFooterItems() {
+        footerItems.clear()
+        _updateAdapterItems()
+    }
+
+    fun clearAllItems() {
+        headerItems.clear()
+        dataItems.clear()
+        footerItems.clear()
+        _updateAdapterItems()
+    }
+
     /**可以在回调中改变数据, 并且会自动刷新界面*/
     fun changeItems(filterParams: FilterParams = defaultFilterParams!!, change: () -> Unit) {
         change()

@@ -1,5 +1,6 @@
 package com.angcyo.dsladapter
 
+import android.animation.Animator
 import android.app.Activity
 import android.content.Context
 import android.content.res.Resources
@@ -320,4 +321,29 @@ fun List<Any?>?.isListEmpty(): Boolean {
     return this?.run {
         find { it != null } == null
     } ?: true
+}
+
+fun View?.mH(def: Int = 0): Int {
+    return this?.measuredHeight ?: def
+}
+
+fun View?.mW(def: Int = 0): Int {
+    return this?.measuredWidth ?: def
+}
+
+/**[androidx/core/animation/Animator.kt:82]*/
+inline fun Animator.addListener(
+    crossinline onEnd: (animator: Animator) -> Unit = {},
+    crossinline onStart: (animator: Animator) -> Unit = {},
+    crossinline onCancel: (animator: Animator) -> Unit = {},
+    crossinline onRepeat: (animator: Animator) -> Unit = {}
+): Animator.AnimatorListener {
+    val listener = object : Animator.AnimatorListener {
+        override fun onAnimationRepeat(animator: Animator) = onRepeat(animator)
+        override fun onAnimationEnd(animator: Animator) = onEnd(animator)
+        override fun onAnimationCancel(animator: Animator) = onCancel(animator)
+        override fun onAnimationStart(animator: Animator) = onStart(animator)
+    }
+    addListener(listener)
+    return listener
 }
