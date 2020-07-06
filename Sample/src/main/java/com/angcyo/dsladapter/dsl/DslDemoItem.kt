@@ -14,11 +14,19 @@ import com.angcyo.dsladapter.demo.R
  * Copyright (c) 2019 ShenZhen O&M Cloud Co., Ltd. All rights reserved.
  */
 class DslDemoItem : DslAdapterItem() {
+
+    var itemText: CharSequence? = null
+        set(value) {
+            _oldText = field
+            field = value
+        }
+
+    //存储旧数据
+    var _oldText: CharSequence? = null
+
     init {
         itemLayoutId = R.layout.item_demo_list
     }
-
-    var itemText: CharSequence? = null
 
     override fun onItemBind(
         itemHolder: DslViewHolder,
@@ -31,7 +39,8 @@ class DslDemoItem : DslAdapterItem() {
 
         if (payloads.containsPayload(MainActivity.TAG_UPDATE_DATA)) {
             //识别到刷新标识
-            itemHolder.view(R.id.text_view)?.apply {
+            itemHolder.tv(R.id.text_view)?.apply {
+                text = "from:$_oldText\nto:${itemText}"
                 animate().rotationBy(360f).setDuration(1000).start()
             }
         }
