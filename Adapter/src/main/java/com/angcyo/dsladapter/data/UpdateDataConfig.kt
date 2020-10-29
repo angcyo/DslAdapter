@@ -2,7 +2,6 @@ package com.angcyo.dsladapter.data
 
 import com.angcyo.dsladapter.*
 import kotlin.math.max
-import kotlin.math.min
 
 /**
  *数据更新Dsl配置项
@@ -31,6 +30,9 @@ class UpdateDataConfig {
             DslAdapterItem.PAYLOAD_UPDATE_MEDIA
         )
     }
+
+    /**本次更新, 需要更新的数据量*/
+    var updateSize: () -> Int = { max(updateDataList?.size ?: 0, pageSize) }
 
     /**
      * 更新已有的item, 创建不存在的item, 移除不需要的item
@@ -107,11 +109,11 @@ fun UpdateDataConfig.updateData(originList: List<DslAdapterItem>): List<DslAdapt
         val newAddList = mutableListOf<DslAdapterItem>()
 
         val updateStartIndex = max(0, updatePage - 1) * pageSize
-        val updateEndIndex = updateStartIndex + list.size
+        val updateEndIndex = updateStartIndex + updateSize()
 
         for (i in updateStartIndex until updateEndIndex) {
             val index = i - updateStartIndex
-            val data = list[index]
+            val data = list.getOrNull(index)
             val oldItem = oldList.getOrNull(i)
             val newItem = updateOrCreateItem(oldItem, data, index)
 
