@@ -35,6 +35,29 @@ class UpdateDataConfig {
     /**
      * 更新已有的item, 创建不存在的item, 移除不需要的item
      * [oldItem] 如果有值, 则希望更新[oldItem]
+     * [data] 需要更新的数据
+     * [index] 需要更新的数据索引
+     *
+     * 举个例子:
+     * ```
+     *   item1
+     *   item2
+     *   item3
+     *   item4
+     *   item5
+     * ```
+     * 当前界面已经有5个item.
+     * 此时需要更新, 页码(updatePage)为2, 数据量(pageSize)为3, 数据(updateDataList)为[i1, i2, i3, i4, i5]
+     * 这样第1页的数据就是(pageSize)3条, 对应界面上的[item1, item2, item3], 从第2页开始更新界面[item4, item5, ...]
+     * 那么updateOrCreateItem方法执行参数依次是:
+     * ```
+     *  1: oldItem = item4; data = i1; index = 0;
+     *  2: oldItem = item5; data = i2; index = 1;
+     *  3: oldItem = null; data = i3; index = 2;
+     *  4: oldItem = null; data = i4; index = 3;
+     *  5: oldItem = null; data = i5; index = 4;
+     * ```
+     *
      * @return 返回null, 则会删除对应的[oldItem], 返回与[oldItem]不一样的item, 则会替换原来的[oldItem]
      * */
     var updateOrCreateItem: (oldItem: DslAdapterItem?, data: Any?, index: Int) -> DslAdapterItem? =
@@ -84,7 +107,7 @@ fun UpdateDataConfig.updateData(originList: List<DslAdapterItem>): List<DslAdapt
         val newAddList = mutableListOf<DslAdapterItem>()
 
         val updateStartIndex = max(0, updatePage - 1) * pageSize
-        val updateEndIndex = updateStartIndex + min(pageSize, list.size)
+        val updateEndIndex = updateStartIndex + if (list.size > pageSize) list.size else pageSize
 
         for (i in updateStartIndex until updateEndIndex) {
             val index = i - updateStartIndex
@@ -232,6 +255,12 @@ inline fun <reified Item : DslAdapterItem> DslAdapter.updateSingleDataIndex(
 /**
  * 单一数据类型加载完成后, 调用此方法.
  * 自动处理, 情感图切换, 加载更多切换.
+ *
+ * [itemClass] 渲染界面的`DslAdapterItem`
+ * [dataList] 数据列表, 数据bean, 会被自动赋值给`dslAdapter.itemData`成员
+ * [error] 是否有错误, 如果有错误, 将会根据已有数据量智能切换到错误情感图, 或者加载更多失败的情况
+ * [page] 当前Page参数 包含请求页码, 每页请求数据量
+ * [initItem] 根据`Item`的类型, 为自定义的数据结构赋值
  * */
 fun <Item : DslAdapterItem, Bean> DslAdapter.loadDataEnd(
     itemClass: Class<Item>,
