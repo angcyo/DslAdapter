@@ -2,6 +2,7 @@ package com.angcyo.dsladapter.data
 
 import com.angcyo.dsladapter.*
 import kotlin.math.max
+import kotlin.math.min
 
 /**
  *数据更新Dsl配置项
@@ -32,7 +33,15 @@ class UpdateDataConfig {
     }
 
     /**本次更新, 需要更新的数据量*/
-    var updateSize: () -> Int = { max(updateDataList?.size ?: 0, pageSize) }
+    var updateSize: () -> Int = {
+        val listSize = if (updateDataList.isListEmpty()) 0 else (updateDataList?.size ?: 0)
+        val pageSize = pageSize
+        if (listSize > pageSize) {
+            listSize
+        } else {
+            min(pageSize, listSize)
+        }
+    }
 
     /**
      * 更新已有的item, 创建不存在的item, 移除不需要的item
@@ -84,7 +93,7 @@ class UpdateDataConfig {
     var adapterCheckLoadMore: (dslAdapter: DslAdapter) -> Unit = { dslAdapter ->
         dslAdapter.updateLoadMore(
             updatePage,
-            if (updateDataList.isListEmpty()) 0 else (updateDataList?.size ?: 0),
+            updateSize(),
             pageSize,
             alwaysEnableLoadMore
         )
