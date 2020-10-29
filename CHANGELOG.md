@@ -1,8 +1,9 @@
 # 2020-10-29
 
-`2.5.3`
+`2.5.4`
 
 - 修复`updateData`时索引计算
+- 新增`UpdateDataConfig`的`updateSize`回调配置
 
 # 2020-7-6
 
