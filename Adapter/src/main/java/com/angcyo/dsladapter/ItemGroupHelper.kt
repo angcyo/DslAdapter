@@ -1,6 +1,7 @@
 package com.angcyo.dsladapter
 
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 
@@ -50,126 +51,131 @@ fun DslAdapter.findItemGroupParams(dslAdapterItem: DslAdapterItem): ItemGroupPar
     //网格边界计算
     var edge = EDGE_NONE
     var edgeGroup = EDGE_NONE
-    val gridLayoutManager = _recyclerView?.layoutManager as? GridLayoutManager
-    gridLayoutManager?.apply {
-        val itemPosition = allItemList.indexOf(dslAdapterItem)
+    val layoutManager = _recyclerView?.layoutManager
 
-        val groupList = if (params.groupItems.size <= 1) {
-            //仅有自己
-            allItemList
-        } else {
-            params.groupItems
-        }
+    if (layoutManager is GridLayoutManager) {
+        layoutManager.apply {
+            val itemPosition = allItemList.indexOf(dslAdapterItem)
 
-        val spanSizeLookup = spanSizeLookup ?: GridLayoutManager.DefaultSpanSizeLookup()
-
-        //当前位置
-        val currentSpanParams = getSpanParams(spanSizeLookup, itemPosition, spanCount)
-
-        //下一个的信息
-        val nextItemPosition: Int = itemPosition + 1
-        val nextSpanParams = if (allItemList.size > nextItemPosition) {
-            getSpanParams(spanSizeLookup, nextItemPosition, spanCount).apply {
-                indexInGroup = groupList.indexOf(allItemList[nextItemPosition])
+            val groupList = if (params.groupItems.size <= 1) {
+                //仅有自己
+                allItemList
+            } else {
+                params.groupItems
             }
-        } else {
-            SpanParams()
-        }
 
-        //分组第一个
-        val firstItemPosition = allItemList.indexOf(groupList.firstOrNull())
-        val firstSpanParams = if (firstItemPosition == -1) {
-            SpanParams()
-        } else {
-            getSpanParams(spanSizeLookup, firstItemPosition, spanCount).apply {
-                indexInGroup = groupList.indexOf(allItemList[firstItemPosition])
+            val spanSizeLookup = spanSizeLookup ?: GridLayoutManager.DefaultSpanSizeLookup()
+
+            //当前位置
+            val currentSpanParams = getSpanParams(spanSizeLookup, itemPosition, spanCount)
+
+            //下一个的信息
+            val nextItemPosition: Int = itemPosition + 1
+            val nextSpanParams = if (allItemList.size > nextItemPosition) {
+                getSpanParams(spanSizeLookup, nextItemPosition, spanCount).apply {
+                    indexInGroup = groupList.indexOf(allItemList[nextItemPosition])
+                }
+            } else {
+                SpanParams()
             }
-        }
 
-        //分组最后一个
-        val lastItemPosition = allItemList.indexOf(groupList.lastOrNull())
-        val lastSpanParams = if (lastItemPosition == -1) {
-            SpanParams()
-        } else {
-            getSpanParams(spanSizeLookup, lastItemPosition, spanCount).apply {
-                indexInGroup = groupList.indexOf(allItemList[lastItemPosition])
+            //分组第一个
+            val firstItemPosition = allItemList.indexOf(groupList.firstOrNull())
+            val firstSpanParams = if (firstItemPosition == -1) {
+                SpanParams()
+            } else {
+                getSpanParams(spanSizeLookup, firstItemPosition, spanCount).apply {
+                    indexInGroup = groupList.indexOf(allItemList[firstItemPosition])
+                }
             }
-        }
 
-        if (firstSpanParams.spanGroupIndex == currentSpanParams.spanGroupIndex) {
-            //分组的第一行
-            edgeGroup = edgeGroup or EDGE_GROUP_TOP
-        }
-        if (lastSpanParams.spanGroupIndex == currentSpanParams.spanGroupIndex) {
-            //分组的最后一行
-            edgeGroup = edgeGroup or EDGE_GROUP_BOTTOM
-        }
-
-        if (currentSpanParams.isFirstSpan()) {
-            //第0列, 肯定是在左边界
-            edge = edge or EDGE_LEFT
-            edgeGroup = edgeGroup or EDGE_LEFT
-
-            if (params.indexInGroup == 0) {
-                edgeGroup = edgeGroup or EDGE_TOP
-                edgeGroup = edgeGroup or EDGE_LEFT_TOP
+            //分组最后一个
+            val lastItemPosition = allItemList.indexOf(groupList.lastOrNull())
+            val lastSpanParams = if (lastItemPosition == -1) {
+                SpanParams()
+            } else {
+                getSpanParams(spanSizeLookup, lastItemPosition, spanCount).apply {
+                    indexInGroup = groupList.indexOf(allItemList[lastItemPosition])
+                }
             }
-            if (currentSpanParams.spanSize == spanCount) {
-                edgeGroup = edgeGroup or EDGE_RIGHT
-                edgeGroup = edgeGroup or EDGE_RIGHT_TOP
-            }
-            if (params.groupItems.size == 1) {
-                edgeGroup = edgeGroup or EDGE_TOP
-                edgeGroup = edgeGroup or EDGE_BOTTOM
-                edgeGroup = edgeGroup or EDGE_LEFT_BOTTOM
-                edgeGroup = edgeGroup or EDGE_RIGHT_BOTTOM
+
+            if (firstSpanParams.spanGroupIndex == currentSpanParams.spanGroupIndex) {
+                //分组的第一行
+                edgeGroup = edgeGroup or EDGE_GROUP_TOP
             }
             if (lastSpanParams.spanGroupIndex == currentSpanParams.spanGroupIndex) {
-                //第0列, 又在同一组的最后一行
-                edgeGroup = edgeGroup or EDGE_BOTTOM
-                edgeGroup = edgeGroup or EDGE_LEFT_BOTTOM
+                //分组的最后一行
+                edgeGroup = edgeGroup or EDGE_GROUP_BOTTOM
             }
-            if (currentSpanParams.spanSize == spanCount) {
-                //占满一行
+
+            if (currentSpanParams.isFirstSpan()) {
+                //第0列, 肯定是在左边界
+                edge = edge or EDGE_LEFT
+                edgeGroup = edgeGroup or EDGE_LEFT
+
+                if (params.indexInGroup == 0) {
+                    edgeGroup = edgeGroup or EDGE_TOP
+                    edgeGroup = edgeGroup or EDGE_LEFT_TOP
+                }
+                if (currentSpanParams.spanSize == spanCount) {
+                    edgeGroup = edgeGroup or EDGE_RIGHT
+                    edgeGroup = edgeGroup or EDGE_RIGHT_TOP
+                }
+                if (params.groupItems.size == 1) {
+                    edgeGroup = edgeGroup or EDGE_TOP
+                    edgeGroup = edgeGroup or EDGE_BOTTOM
+                    edgeGroup = edgeGroup or EDGE_LEFT_BOTTOM
+                    edgeGroup = edgeGroup or EDGE_RIGHT_BOTTOM
+                }
+                if (lastSpanParams.spanGroupIndex == currentSpanParams.spanGroupIndex) {
+                    //第0列, 又在同一组的最后一行
+                    edgeGroup = edgeGroup or EDGE_BOTTOM
+                    edgeGroup = edgeGroup or EDGE_LEFT_BOTTOM
+                }
+                if (currentSpanParams.spanSize == spanCount) {
+                    //占满一行
+                    edge = edge or EDGE_RIGHT
+                    edgeGroup = edgeGroup or EDGE_GROUP_TOP
+                    edgeGroup = edgeGroup or EDGE_RIGHT_TOP
+                }
+            }
+
+            if (currentSpanParams.isLastSpan()) {
+                //最后一列, 肯定是在右边界
                 edge = edge or EDGE_RIGHT
-                edgeGroup = edgeGroup or EDGE_GROUP_TOP
-                edgeGroup = edgeGroup or EDGE_RIGHT_TOP
+                edgeGroup = edgeGroup or EDGE_RIGHT
             }
-        }
 
-        if (currentSpanParams.isLastSpan()) {
-            //最后一列, 肯定是在右边界
-            edge = edge or EDGE_RIGHT
-            edgeGroup = edgeGroup or EDGE_RIGHT
-        }
+            if (currentSpanParams.spanGroupIndex == 0) {
+                //第0行, 肯定是在顶边界
+                edge = edge or EDGE_TOP
+                edgeGroup = edgeGroup or EDGE_TOP
 
-        if (currentSpanParams.spanGroupIndex == 0) {
-            //第0行, 肯定是在顶边界
-            edge = edge or EDGE_TOP
-            edgeGroup = edgeGroup or EDGE_TOP
-
-            if (params.groupItems.size - 1 == itemPosition) {
-                edgeGroup = edgeGroup or EDGE_LEFT_TOP
+                if (params.groupItems.size - 1 == itemPosition) {
+                    edgeGroup = edgeGroup or EDGE_LEFT_TOP
+                }
             }
-        }
 
-        if (params.indexInGroup == params.groupItems.size - 1) {
-            //一组中的最后一个
-            edgeGroup = edgeGroup or EDGE_RIGHT_BOTTOM
-        }
+            if (params.indexInGroup == params.groupItems.size - 1) {
+                //一组中的最后一个
+                edgeGroup = edgeGroup or EDGE_RIGHT_BOTTOM
+            }
 
-        if (itemPosition == allItemList.size - 1) {
-            //最后一个, 肯定是在底边界
-            edge = edge or EDGE_BOTTOM
-            edgeGroup = edgeGroup or EDGE_BOTTOM
-        }
+            if (itemPosition == allItemList.size - 1) {
+                //最后一个, 肯定是在底边界
+                edge = edge or EDGE_BOTTOM
+                edgeGroup = edgeGroup or EDGE_BOTTOM
+            }
 
-        params.edgeGridParams = EdgeGridParams(
-            edge,
-            edgeGroup,
-            currentSpanParams, nextSpanParams,
-            firstSpanParams, lastSpanParams
-        )
+            params.edgeGridParams = EdgeGridParams(
+                edge,
+                edgeGroup,
+                currentSpanParams, nextSpanParams,
+                firstSpanParams, lastSpanParams
+            )
+        }
+    } else if (layoutManager is LinearLayoutManager) {
+
     }
 
     params.edgeInGrid = edge
@@ -178,7 +184,7 @@ fun DslAdapter.findItemGroupParams(dslAdapterItem: DslAdapterItem): ItemGroupPar
     return params
 }
 
-public fun getSpanParams(
+fun getSpanParams(
     spanSizeLookup: GridLayoutManager.SpanSizeLookup,
     itemPosition: Int,
     spanCount: Int
@@ -253,16 +259,16 @@ fun SpanParams.isLastSpan(): Boolean = spanIndex + spanSize == spanCount
 
 const val EDGE_NONE = 0x00
 
-//左边界
+//左边界, 靠边
 const val EDGE_LEFT = 0x01
 
-//顶边界
+//顶边界, 靠边
 const val EDGE_TOP = 0x02
 
-//右边界
+//右边界, 靠边
 const val EDGE_RIGHT = 0x04
 
-//底边界
+//底边界, 靠边
 const val EDGE_BOTTOM = 0x08
 
 //[edgeInGroup]特有的边界, 左上, 右上, 左下, 右下
