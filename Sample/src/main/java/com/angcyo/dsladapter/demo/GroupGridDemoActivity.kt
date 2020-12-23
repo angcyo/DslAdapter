@@ -15,15 +15,13 @@ import kotlin.random.Random.Default.nextInt
 class GroupGridDemoActivity : BaseRecyclerActivity() {
 
     override fun onInitBaseLayoutAfter() {
-        super.onInitBaseLayoutAfter()
 
         val spanCount = 4
         val spanSizeLookup: GridLayoutManager.SpanSizeLookup
 
-        recyclerView.layoutManager =
-            GridLayoutManager(this, spanCount).apply {
-                spanSizeLookup = dslSpanSizeLookup(dslAdapter)
-            }
+        recyclerView.layoutManager = GridLayoutManager(this, spanCount).apply {
+            spanSizeLookup = dslSpanSizeLookup(dslAdapter)
+        }
 
         dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
 
@@ -59,13 +57,17 @@ class GroupGridDemoActivity : BaseRecyclerActivity() {
                             itemHolder.tv(R.id.text_view)?.text =
                                 "分组${i + 1}" +
                                         "    :${itemHolder.adapterPosition}/${itemHolder.layoutPosition}" +
-                                        "    :${spanSizeLookup.getSpanIndex(
-                                            itemPosition,
-                                            spanCount
-                                        )}/${spanSizeLookup.getSpanSize(itemPosition)}/${spanSizeLookup.getSpanGroupIndex(
-                                            itemPosition,
-                                            spanCount
-                                        )}"
+                                        "    :${
+                                            spanSizeLookup.getSpanIndex(
+                                                itemPosition,
+                                                spanCount
+                                            )
+                                        }/${spanSizeLookup.getSpanSize(itemPosition)}/${
+                                            spanSizeLookup.getSpanGroupIndex(
+                                                itemPosition,
+                                                spanCount
+                                            )
+                                        }"
 
                             itemHolder.click(R.id.fold_button) {
                                 itemGroupExtend = !itemGroupExtend
@@ -121,13 +123,17 @@ class GroupGridDemoActivity : BaseRecyclerActivity() {
                                 }
 
                                 itemHolder.tv(R.id.text_view)?.text =
-                                    "${spanSizeLookup.getSpanIndex(
-                                        itemPosition,
-                                        spanCount
-                                    )}/${spanSizeLookup.getSpanSize(itemPosition)}/${spanSizeLookup.getSpanGroupIndex(
-                                        itemPosition,
-                                        spanCount
-                                    )}"
+                                    "${
+                                        spanSizeLookup.getSpanIndex(
+                                            itemPosition,
+                                            spanCount
+                                        )
+                                    }/${spanSizeLookup.getSpanSize(itemPosition)}/${
+                                        spanSizeLookup.getSpanGroupIndex(
+                                            itemPosition,
+                                            spanCount
+                                        )
+                                    }"
                             }
                         }
                     }

@@ -27,6 +27,9 @@
             android:name=".GroupGridDemoActivity"
             android:label="群组(网格布局)功能" />
         <activity
+            android:name=".GridFillDemoActivity"
+            android:label="网格,群组,填充功能示例" />
+        <activity
             android:name=".LoadMoreActivity"
             android:label="加载更多示例" />
         <activity

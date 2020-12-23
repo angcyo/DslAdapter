@@ -70,6 +70,14 @@ class MainActivity : BaseRecyclerActivity() {
             }
 
             DslDemoItem()() {
+                itemText = "网格,群组,填充功能示例"
+                itemClick = {
+                    start(GridFillDemoActivity::class.java)
+                }
+                itemTopInsert = 4 * dpi
+            }
+
+            DslDemoItem()() {
                 itemText = "单选/多选示例"
                 itemClick = {
                     start(SelectorDemoActivity::class.java)
