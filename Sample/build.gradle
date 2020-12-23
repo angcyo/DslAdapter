@@ -36,7 +36,7 @@ dependencies {
 
     implementation project(':Adapter')
 
-    //compileOnly 'com.github.angcyo:DslAdapter:2.5.5'
+    //compileOnly 'com.github.angcyo:DslAdapter:2.6.0'
     implementation('com.github.angcyo:DslItem:1.0.10') {
         exclude module: 'DslAdapter'
     }
