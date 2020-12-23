@@ -49,137 +49,94 @@ fun DslAdapter.findItemGroupParams(dslAdapterItem: DslAdapterItem): ItemGroupPar
     params.indexInGroup = params.groupItems.indexOf(dslAdapterItem)
 
     //网格边界计算
-    var edge = EDGE_NONE
-    var edgeGroup = EDGE_NONE
     val layoutManager = _recyclerView?.layoutManager
 
     if (layoutManager is GridLayoutManager) {
         layoutManager.apply {
             val itemPosition = allItemList.indexOf(dslAdapterItem)
 
-            val groupList = if (params.groupItems.size <= 1) {
-                //仅有自己
-                allItemList
-            } else {
-                params.groupItems
-            }
+            val groupItemList = params.groupItems
 
             val spanSizeLookup = spanSizeLookup ?: GridLayoutManager.DefaultSpanSizeLookup()
 
             //当前位置
-            val currentSpanParams = getSpanParams(spanSizeLookup, itemPosition, spanCount)
+            val currentSpanParams =
+                getSpanParams(spanSizeLookup, itemPosition, spanCount, params.indexInGroup)
 
             //下一个的信息
             val nextItemPosition: Int = itemPosition + 1
             val nextSpanParams = if (allItemList.size > nextItemPosition) {
-                getSpanParams(spanSizeLookup, nextItemPosition, spanCount).apply {
-                    indexInGroup = groupList.indexOf(allItemList[nextItemPosition])
-                }
+                getSpanParams(
+                    spanSizeLookup,
+                    nextItemPosition,
+                    spanCount,
+                    groupItemList.indexOf(allItemList[nextItemPosition])
+                )
             } else {
                 SpanParams()
             }
 
             //分组第一个
-            val firstItemPosition = allItemList.indexOf(groupList.firstOrNull())
+            val firstItemPosition = allItemList.indexOf(groupItemList.firstOrNull())
             val firstSpanParams = if (firstItemPosition == -1) {
                 SpanParams()
             } else {
-                getSpanParams(spanSizeLookup, firstItemPosition, spanCount).apply {
-                    indexInGroup = groupList.indexOf(allItemList[firstItemPosition])
-                }
+                getSpanParams(
+                    spanSizeLookup,
+                    firstItemPosition,
+                    spanCount,
+                    groupItemList.indexOf(allItemList[firstItemPosition])
+                )
             }
 
             //分组最后一个
-            val lastItemPosition = allItemList.indexOf(groupList.lastOrNull())
+            val lastItemPosition = allItemList.indexOf(groupItemList.lastOrNull())
             val lastSpanParams = if (lastItemPosition == -1) {
                 SpanParams()
             } else {
-                getSpanParams(spanSizeLookup, lastItemPosition, spanCount).apply {
-                    indexInGroup = groupList.indexOf(allItemList[lastItemPosition])
-                }
+                getSpanParams(
+                    spanSizeLookup,
+                    lastItemPosition,
+                    spanCount,
+                    groupItemList.indexOf(allItemList[lastItemPosition])
+                )
             }
 
-            if (firstSpanParams.spanGroupIndex == currentSpanParams.spanGroupIndex) {
-                //分组的第一行
-                edgeGroup = edgeGroup or EDGE_GROUP_TOP
-            }
-            if (lastSpanParams.spanGroupIndex == currentSpanParams.spanGroupIndex) {
-                //分组的最后一行
-                edgeGroup = edgeGroup or EDGE_GROUP_BOTTOM
-            }
-
-            if (currentSpanParams.isFirstSpan()) {
-                //第0列, 肯定是在左边界
-                edge = edge or EDGE_LEFT
-                edgeGroup = edgeGroup or EDGE_LEFT
-
-                if (params.indexInGroup == 0) {
-                    edgeGroup = edgeGroup or EDGE_TOP
-                    edgeGroup = edgeGroup or EDGE_LEFT_TOP
-                }
-                if (currentSpanParams.spanSize == spanCount) {
-                    edgeGroup = edgeGroup or EDGE_RIGHT
-                    edgeGroup = edgeGroup or EDGE_RIGHT_TOP
-                }
-                if (params.groupItems.size == 1) {
-                    edgeGroup = edgeGroup or EDGE_TOP
-                    edgeGroup = edgeGroup or EDGE_BOTTOM
-                    edgeGroup = edgeGroup or EDGE_LEFT_BOTTOM
-                    edgeGroup = edgeGroup or EDGE_RIGHT_BOTTOM
-                }
-                if (lastSpanParams.spanGroupIndex == currentSpanParams.spanGroupIndex) {
-                    //第0列, 又在同一组的最后一行
-                    edgeGroup = edgeGroup or EDGE_BOTTOM
-                    edgeGroup = edgeGroup or EDGE_LEFT_BOTTOM
-                }
-                if (currentSpanParams.spanSize == spanCount) {
-                    //占满一行
-                    edge = edge or EDGE_RIGHT
-                    edgeGroup = edgeGroup or EDGE_GROUP_TOP
-                    edgeGroup = edgeGroup or EDGE_RIGHT_TOP
-                }
+            //adapter第一个
+            val firstPosition = 0
+            val firstParams = if (allItemList.isEmpty()) {
+                SpanParams()
+            } else {
+                getSpanParams(
+                    spanSizeLookup,
+                    firstPosition,
+                    spanCount,
+                    groupItemList.indexOf(allItemList[firstPosition])
+                )
             }
 
-            if (currentSpanParams.isLastSpan()) {
-                //最后一列, 肯定是在右边界
-                edge = edge or EDGE_RIGHT
-                edgeGroup = edgeGroup or EDGE_RIGHT
-            }
-
-            if (currentSpanParams.spanGroupIndex == 0) {
-                //第0行, 肯定是在顶边界
-                edge = edge or EDGE_TOP
-                edgeGroup = edgeGroup or EDGE_TOP
-
-                if (params.groupItems.size - 1 == itemPosition) {
-                    edgeGroup = edgeGroup or EDGE_LEFT_TOP
-                }
-            }
-
-            if (params.indexInGroup == params.groupItems.size - 1) {
-                //一组中的最后一个
-                edgeGroup = edgeGroup or EDGE_RIGHT_BOTTOM
-            }
-
-            if (itemPosition == allItemList.size - 1) {
-                //最后一个, 肯定是在底边界
-                edge = edge or EDGE_BOTTOM
-                edgeGroup = edgeGroup or EDGE_BOTTOM
+            //adapter最后一个
+            val lastPosition = allItemList.lastIndex
+            val lastParams = if (allItemList.isEmpty()) {
+                SpanParams()
+            } else {
+                getSpanParams(
+                    spanSizeLookup,
+                    lastPosition,
+                    spanCount,
+                    groupItemList.indexOf(allItemList[lastPosition])
+                )
             }
 
             params.edgeGridParams = EdgeGridParams(
-                edge,
-                edgeGroup,
                 currentSpanParams, nextSpanParams,
-                firstSpanParams, lastSpanParams
+                firstSpanParams, lastSpanParams,
+                firstParams, lastParams
             )
         }
     } else if (layoutManager is LinearLayoutManager) {
-
+        //todo
     }
-
-    params.edgeInGrid = edge
-    params.edgeInGroup = edgeGroup
 
     return params
 }
@@ -187,10 +144,11 @@ fun DslAdapter.findItemGroupParams(dslAdapterItem: DslAdapterItem): ItemGroupPar
 fun getSpanParams(
     spanSizeLookup: GridLayoutManager.SpanSizeLookup,
     itemPosition: Int,
-    spanCount: Int
+    spanCount: Int,
+    indexInGroup: Int = -1
 ): SpanParams {
 
-    val spanParams = SpanParams()
+    val spanParams = SpanParams(indexInGroup = indexInGroup)
     spanParams.spanCount = spanCount
     spanParams.itemPosition = itemPosition
     spanParams.spanGroupIndex = spanSizeLookup.getSpanGroupIndex(itemPosition, spanCount)
@@ -208,21 +166,11 @@ data class ItemGroupParams(
     /**一组中的所有[item]*/
     var groupItems: MutableList<DslAdapterItem> = mutableListOf(),
 
-    /**以下参数,仅在使用了[GridLayoutManager]时有效*/
-    var edgeInGrid: Int = EDGE_NONE,
-    /**更细粒度的分组边界信息*/
-    var edgeInGroup: Int = EDGE_NONE,
     var edgeGridParams: EdgeGridParams = EdgeGridParams()
 )
 
 /**网格分组边界[Edge]信息*/
 data class EdgeGridParams(
-
-    /**相对于整个网格系统的边界*/
-    var edgeInGrid: Int = EDGE_NONE,
-
-    /**在同一组中的边界*/
-    var edgeInGroup: Int = EDGE_NONE,
 
     //当前位置的参数
     var currentSpanParams: SpanParams = SpanParams(),
@@ -231,15 +179,22 @@ data class EdgeGridParams(
 
     //分组中第一个位置的数据
     var firstSpanParams: SpanParams = SpanParams(),
+
     //分组中最后一个位置的数据
-    var lastSpanParams: SpanParams = SpanParams()
+    var lastSpanParams: SpanParams = SpanParams(),
+
+    //adapter第一个位置的数据
+    var firstParams: SpanParams = SpanParams(),
+
+    //adapter最后一个位置的数据
+    var lastParams: SpanParams = SpanParams()
 )
 
 /**网格分组中[Span]的信息*/
 data class SpanParams(
     //androidx.recyclerview.widget.GridLayoutManager.getSpanCount
     var spanCount: Int = 1,
-    //当前的位置
+    //当前的位置, 在适配器中的索引
     var itemPosition: Int = RecyclerView.NO_POSITION,
     //当前的索引在群组中
     var indexInGroup: Int = RecyclerView.NO_POSITION,
@@ -256,32 +211,6 @@ fun SpanParams.isFirstSpan(): Boolean = spanIndex == 0
 
 //是否是尾列
 fun SpanParams.isLastSpan(): Boolean = spanIndex + spanSize == spanCount
-
-const val EDGE_NONE = 0x00
-
-//左边界, 靠边
-const val EDGE_LEFT = 0x01
-
-//顶边界, 靠边
-const val EDGE_TOP = 0x02
-
-//右边界, 靠边
-const val EDGE_RIGHT = 0x04
-
-//底边界, 靠边
-const val EDGE_BOTTOM = 0x08
-
-//[edgeInGroup]特有的边界, 左上, 右上, 左下, 右下
-const val EDGE_LEFT_TOP = 0x10
-const val EDGE_RIGHT_TOP = 0x20
-const val EDGE_LEFT_BOTTOM = 0x40
-const val EDGE_RIGHT_BOTTOM = 0x80
-
-//在一组中的顶部
-const val EDGE_GROUP_TOP = 0x100
-
-//在一组中的底部
-const val EDGE_GROUP_BOTTOM = 0x200
 
 //<editor-fold desc="线性布局中的分组信息扩展方法">
 
@@ -303,16 +232,20 @@ fun ItemGroupParams.isLastPosition(): Boolean =
 //是否在4条边上
 
 /**在网格的左边*/
-fun ItemGroupParams.isEdgeLeft(): Boolean = edgeInGrid.have(EDGE_LEFT)
+fun ItemGroupParams.isEdgeLeft(): Boolean = edgeGridParams.currentSpanParams.spanIndex == 0
 
 /**在网格的右边*/
-fun ItemGroupParams.isEdgeRight(): Boolean = edgeInGrid.have(EDGE_RIGHT)
+fun ItemGroupParams.isEdgeRight(): Boolean = edgeGridParams.currentSpanParams.run {
+    spanIndex + spanSize == spanCount
+}
 
 /**在网格的上边*/
-fun ItemGroupParams.isEdgeTop(): Boolean = edgeInGrid.have(EDGE_TOP)
+fun ItemGroupParams.isEdgeTop(): Boolean = edgeGridParams.currentSpanParams.spanGroupIndex == 0
 
 /**在网格的下边*/
-fun ItemGroupParams.isEdgeBottom(): Boolean = edgeInGrid.have(EDGE_BOTTOM)
+fun ItemGroupParams.isEdgeBottom(): Boolean = edgeGridParams.run {
+    lastParams.spanGroupIndex == currentSpanParams.spanGroupIndex
+}
 
 /**全屏占满网格整个一行*/
 fun ItemGroupParams.isEdgeHorizontal(): Boolean = isEdgeLeft() && isEdgeRight()
@@ -327,22 +260,37 @@ fun ItemGroupParams.isEdgeVertical(): Boolean = isEdgeTop() && isEdgeBottom()
 //是否在分组4个角上
 
 /**是否在分组左上角*/
-fun ItemGroupParams.isEdgeGroupLeftTop(): Boolean = edgeInGroup.have(EDGE_LEFT_TOP)
+fun ItemGroupParams.isEdgeGroupLeftTop(): Boolean = edgeGridParams.run {
+    currentSpanParams.spanIndex == 0 && currentSpanParams.spanGroupIndex == firstSpanParams.spanGroupIndex
+}
 
 /**是否在分组右上角*/
-fun ItemGroupParams.isEdgeGroupRightTop(): Boolean = edgeInGroup.have(EDGE_RIGHT_TOP)
+fun ItemGroupParams.isEdgeGroupRightTop(): Boolean = edgeGridParams.run {
+    isEdgeRight() && isEdgeGroupTop()
+}
 
 /**是否在分组左下角*/
-fun ItemGroupParams.isEdgeGroupLeftBottom(): Boolean = edgeInGroup.have(EDGE_LEFT_BOTTOM)
+fun ItemGroupParams.isEdgeGroupLeftBottom(): Boolean = edgeGridParams.run {
+    isEdgeLeft() && isEdgeGroupBottom()
+}
+
+/**是否在一组中的最后一个位置*/
+fun ItemGroupParams.isLastInGroup() = indexInGroup == groupItems.lastIndex
 
 /**是否在分组右下角*/
-fun ItemGroupParams.isEdgeGroupRightBottom(): Boolean = edgeInGroup.have(EDGE_RIGHT_BOTTOM)
+fun ItemGroupParams.isEdgeGroupRightBottom(): Boolean = edgeGridParams.run {
+    isLastInGroup() && isEdgeGroupBottom()
+}
 
-/**在一组中的第一行*/
-fun ItemGroupParams.isEdgeGroupTop(): Boolean = edgeInGroup.have(EDGE_GROUP_TOP)
+/**在一组中的第一行中*/
+fun ItemGroupParams.isEdgeGroupTop(): Boolean = edgeGridParams.run {
+    currentSpanParams.spanGroupIndex == firstSpanParams.spanGroupIndex
+}
 
-/**在一组中的最后一行*/
-fun ItemGroupParams.isEdgeGroupBottom(): Boolean = edgeInGroup.have(EDGE_GROUP_BOTTOM)
+/**在一组中的最后一行中*/
+fun ItemGroupParams.isEdgeGroupBottom(): Boolean = edgeGridParams.run {
+    currentSpanParams.spanGroupIndex == lastSpanParams.spanGroupIndex
+}
 
 /**占满整个一行(允许非全屏)*/
 fun ItemGroupParams.isEdgeGroupHorizontal(): Boolean =
@@ -351,6 +299,26 @@ fun ItemGroupParams.isEdgeGroupHorizontal(): Boolean =
 /**占满整个一列(允许非全屏)*/
 fun ItemGroupParams.isEdgeGroupVertical(): Boolean =
     (isEdgeGroupLeftTop() && isEdgeGroupLeftBottom()) || (isEdgeGroupRightTop() && isEdgeGroupRightBottom())
+
+/**在一组中的第一列上, 支持横竖布局*/
+fun ItemGroupParams.isGroupFirstColumn(): Boolean = edgeGridParams.run {
+    currentSpanParams.spanIndex == firstSpanParams.spanIndex
+}
+
+/**在一组中的最后一列上, 支持横竖布局, 如果这一列未满, 也属于最后一列*/
+fun ItemGroupParams.isGroupLastColumn(): Boolean = edgeGridParams.run {
+    currentSpanParams.spanIndex == lastSpanParams.spanIndex
+}
+
+/**在一组中的第一行上, 支持横竖布局*/
+fun ItemGroupParams.isGroupFirstRow(): Boolean = edgeGridParams.run {
+    currentSpanParams.spanGroupIndex == firstSpanParams.spanGroupIndex
+}
+
+/**在一组中的最后一行上, 支持横竖布局*/
+fun ItemGroupParams.isGroupLastRow(): Boolean = edgeGridParams.run {
+    currentSpanParams.spanGroupIndex == lastSpanParams.spanGroupIndex
+}
 
 //</editor-fold desc="细粒度 分组边界扩展">
 
