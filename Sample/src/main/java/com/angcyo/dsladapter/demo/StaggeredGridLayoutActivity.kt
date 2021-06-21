@@ -22,11 +22,7 @@ class StaggeredGridLayoutActivity : BaseRecyclerActivity() {
     override fun onInitBaseLayoutAfter() {
         super.onInitBaseLayoutAfter()
 
-        recyclerView.layoutManager =
-            StaggeredGridLayoutManager(
-                3,
-                RecyclerView.VERTICAL
-            )
+        recyclerView.layoutManager = StaggeredGridLayoutManager(3, RecyclerView.VERTICAL)
 
         DragCallbackHelper().apply {
             attachToRecyclerView(recyclerView)

@@ -124,6 +124,14 @@ class MainActivity : BaseRecyclerActivity() {
             }
 
             DslDemoItem()() {
+                itemText = "侧滑菜单+拖拽使用示例"
+                itemClick = {
+                    start(SwipeDragActivity::class.java)
+                }
+                itemTopInsert = 4 * dpi
+            }
+
+            DslDemoItem()() {
                 itemText = "测试数据动态更新"
                 itemTag = TAG_UPDATE_DATA //标识item, 方便后续find
                 itemBackgroundDrawable = null

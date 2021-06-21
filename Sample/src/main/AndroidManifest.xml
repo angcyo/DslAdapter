@@ -16,7 +16,7 @@
             android:label="树结构示例" />
         <activity
             android:name=".StaggeredGridLayoutActivity"
-            android:label="StaggeredGridLayout" />
+            android:label="拖拽+滑动删除示例" />
         <activity
             android:name=".SelectorDemoActivity"
             android:label="选择功能" />
@@ -41,6 +41,9 @@
         <activity
             android:name=".SwipeMenuActivity"
             android:label="侧滑菜单使用示例" />
+        <activity
+            android:name=".SwipeDragActivity"
+            android:label="侧滑菜单+拖拽使用示例" />
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name">

@@ -18,7 +18,9 @@ import kotlin.random.Random
  * @date 2020/05/12
  * Copyright (c) 2020 ShenZhen Wayto Ltd. All rights reserved.
  */
-class SwipeMenuActivity : BaseRecyclerActivity() {
+open class SwipeMenuActivity : BaseRecyclerActivity() {
+
+    var swipeMenuHelper: SwipeMenuHelper? = null
 
     override fun onInitBaseLayoutAfter() {
         super.onInitBaseLayoutAfter()
@@ -27,7 +29,7 @@ class SwipeMenuActivity : BaseRecyclerActivity() {
         }
         dslAdapter.setLoadMoreEnable(false)
         dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
-        SwipeMenuHelper.install(dslViewHolder.v(R.id.base_recycler_view))
+        swipeMenuHelper = SwipeMenuHelper.install(dslViewHolder.v(R.id.base_recycler_view))
     }
 
     override fun onRefresh() {
