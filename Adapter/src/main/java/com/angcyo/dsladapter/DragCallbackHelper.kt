@@ -62,6 +62,9 @@ class DragCallbackHelper : ItemTouchHelper.Callback() {
      * */
     var enableLongPressDrag = true
 
+    /**[androidx.recyclerview.widget.ItemTouchHelper.ItemTouchHelperGestureListener.mShouldReactToLongPress]*/
+    var _shouldReactToLongPress = true
+
     /**是否触发过[ACTION_STATE_DRAG]*/
     var _dragHappened = false
 
@@ -174,7 +177,7 @@ class DragCallbackHelper : ItemTouchHelper.Callback() {
 
     /**长按是否激活[ACTION_STATE_DRAG]*/
     override fun isLongPressDragEnabled(): Boolean {
-        return enableLongPressDrag
+        return enableLongPressDrag && _shouldReactToLongPress
     }
 
     /**[current]是否可以[ACTION_STATE_DRAG]拖拽到[target]*/
