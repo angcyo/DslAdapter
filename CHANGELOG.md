@@ -1,6 +1,6 @@
-# 2021-6-21
+# 2021-6-29
 
-`2.6.1`
+`2.6.2`
 
 - 修复`DragCallbackHelper`和`SwipeMenuHelper`的手势冲突
 
