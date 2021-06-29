@@ -13,6 +13,6 @@
         android:gravity="center_vertical"
         android:minHeight="45dp"
         android:padding="10dp"
-        tools:text="文本测试" />
+        android:text="文本测试" />
 
 </FrameLayout>
