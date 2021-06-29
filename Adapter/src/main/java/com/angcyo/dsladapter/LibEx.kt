@@ -310,6 +310,9 @@ fun View.setBgDrawable(drawable: Drawable?) {
 }
 
 fun Any.className(): String {
+    if (this is Class<*>) {
+        return name
+    }
     return this.javaClass.name
 }
 

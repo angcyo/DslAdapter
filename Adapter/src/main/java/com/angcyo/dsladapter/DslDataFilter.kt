@@ -261,8 +261,10 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
             val diffResult = calculateDiff(resultList)
             val nowTime = nowTime()
             val s = (nowTime - startTime) / 1000
-            val ms = ((nowTime - startTime) % 1000) * 1f / 1000
-            L.v("${hash()} Diff计算耗时:${String.format("%.3f", s + ms)}s")
+            //val ms = ((nowTime - startTime) % 1000) * 1f / 1000
+            val ms = (nowTime - startTime) % 1000
+            //L.v("${hash()} Diff计算耗时:${String.format("%.3f", s + ms)}s")
+            L.v("${hash()} Diff计算耗时:${s}s${ms}ms")
 
             //回调到主线程
             val notifyDelay = _params?.notifyDiffDelay ?: -1
@@ -292,50 +294,45 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
 
             //开始计算diff
             val diffResult = DiffUtil.calculateDiff(
-                RDiffCallback(
-                    oldList,
-                    _newList,
-                    object :
-                        RItemDiffCallback<DslAdapterItem> {
+                RDiffCallback(oldList, _newList, object : RItemDiffCallback<DslAdapterItem> {
 
-                        override fun areItemsTheSame(
-                            oldData: DslAdapterItem,
-                            newData: DslAdapterItem,
-                            oldItemPosition: Int, newItemPosition: Int
-                        ): Boolean {
-                            return oldData.thisAreItemsTheSame(
-                                _params?.fromDslAdapterItem,
-                                newData,
-                                oldItemPosition, newItemPosition
-                            )
-                        }
-
-                        override fun areContentsTheSame(
-                            oldData: DslAdapterItem,
-                            newData: DslAdapterItem,
-                            oldItemPosition: Int, newItemPosition: Int
-                        ): Boolean {
-                            return oldData.thisAreContentsTheSame(
-                                _params?.fromDslAdapterItem,
-                                newData,
-                                oldItemPosition, newItemPosition
-                            )
-                        }
-
-                        override fun getChangePayload(
-                            oldData: DslAdapterItem,
-                            newData: DslAdapterItem,
-                            oldItemPosition: Int, newItemPosition: Int
-                        ): Any? {
-                            return oldData.thisGetChangePayload(
-                                _params?.fromDslAdapterItem,
-                                _params?.payload,
-                                newData,
-                                oldItemPosition, newItemPosition
-                            )
-                        }
+                    override fun areItemsTheSame(
+                        oldData: DslAdapterItem,
+                        newData: DslAdapterItem,
+                        oldItemPosition: Int, newItemPosition: Int
+                    ): Boolean {
+                        return oldData.thisAreItemsTheSame(
+                            _params?.fromDslAdapterItem,
+                            newData,
+                            oldItemPosition, newItemPosition
+                        )
                     }
-                )
+
+                    override fun areContentsTheSame(
+                        oldData: DslAdapterItem,
+                        newData: DslAdapterItem,
+                        oldItemPosition: Int, newItemPosition: Int
+                    ): Boolean {
+                        return oldData.thisAreContentsTheSame(
+                            _params?.fromDslAdapterItem,
+                            newData,
+                            oldItemPosition, newItemPosition
+                        )
+                    }
+
+                    override fun getChangePayload(
+                        oldData: DslAdapterItem,
+                        newData: DslAdapterItem,
+                        oldItemPosition: Int, newItemPosition: Int
+                    ): Any? {
+                        return oldData.thisGetChangePayload(
+                            _params?.fromDslAdapterItem,
+                            _params?.payload,
+                            newData,
+                            oldItemPosition, newItemPosition
+                        )
+                    }
+                })
             )
 
             return diffResult

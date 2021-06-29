@@ -88,6 +88,9 @@ open class DslAdapterItem : LifecycleOwner {
      * 在 GridLayoutManager 中, 需要占多少个 span. -1表示满屏
      * [itemIsGroupHead]
      * [com.angcyo.dsladapter.DslAdapter.onViewAttachedToWindow]
+     * 需要[dslSpanSizeLookup]支持.
+     *
+     * 在[StaggeredGridLayoutManager]中, 会使用[layoutParams.isFullSpan]的方式满屏
      * */
     var itemSpanCount = 1
 
@@ -187,7 +190,8 @@ open class DslAdapterItem : LifecycleOwner {
         itemPosition: Int,
         adapterItem: DslAdapterItem
     ) {
-        //no op
+        //请注意缓存.
+        //itemHolder.clear()
     }
 
     /**用于覆盖默认操作*/
@@ -256,10 +260,10 @@ open class DslAdapterItem : LifecycleOwner {
 
         //初始化默认值
         if (itemWidth == undefined_size) {
-            itemWidth = itemView.layoutParams.width
+            itemWidth = itemView.layoutParams?.width ?: itemWidth
         }
         if (itemHeight == undefined_size) {
-            itemHeight = itemView.layoutParams.height
+            itemHeight = itemView.layoutParams?.height ?: itemHeight
         }
         //设置
         itemView.setWidthHeight(itemWidth, itemHeight)
@@ -585,40 +589,70 @@ open class DslAdapterItem : LifecycleOwner {
      * 决定
      * [RecyclerView.Adapter.notifyItemInserted]
      * [RecyclerView.Adapter.notifyItemRemoved]
-     * 的执行
+     * 的执行判断
+     *
+     * [fromItem] 由那个item触发的更新操作
+     * [this] 旧item
+     * [newItem] 新item
+     *
+     * 此方法的默认实现可能无法应对所有场景, 请自行覆盖重写
+     *
+     * @return true 表示2个item相同, false 表示不同
      * */
     var thisAreItemsTheSame: (
         fromItem: DslAdapterItem?, newItem: DslAdapterItem,
         oldItemPosition: Int, newItemPosition: Int
-    ) -> Boolean =
-        { _, newItem, oldItemPosition, newItemPosition ->
-            this == newItem ||
-                    (this.className() == newItem.className() && oldItemPosition == newItemPosition)
+    ) -> Boolean = { fromItem, newItem, oldItemPosition, newItemPosition ->
+        var result = this == newItem
+        if (!result) {
+            val thisItemClassname = this.className()
+            if (thisItemClassname == newItem.className()) {
+                //类名相同的2个item
+                if (itemData != null || newItem.itemData != null) {
+                    //如果有数据, 则使用数据判断2个item是否一样
+                    result = itemData == newItem.itemData
+                } else {
+                    if (thisItemClassname == DslAdapterItem::class.java.className()) {
+                        //默认的DslAdapterItem
+                        result = itemLayoutId == newItem.itemLayoutId
+                    }
+                }
+            } else {
+                //不相同类名的2个item
+            }
         }
+        result
+    }
 
     /**
      * [RecyclerView.Adapter.notifyItemChanged]
+     *
+     * [fromItem] 由那个item触发的更新操作
+     * [this] 旧item
+     * [newItem] 新item
+     *
+     * 此方法的默认实现可能无法应对所有场景, 请自行覆盖重写
+     *
+     * @return true 表示2个item内容相同, false 表示内容不同, 则会触发[RecyclerView.Adapter.notifyItemChanged]
      * */
     var thisAreContentsTheSame: (
         fromItem: DslAdapterItem?, newItem: DslAdapterItem,
         oldItemPosition: Int, newItemPosition: Int
-    ) -> Boolean =
-        { fromItem, newItem, _, _ ->
-            when {
-                itemChanging -> false
-                (newItem.itemData != null && this.itemData != null && newItem.itemData == this.itemData) -> true
-                fromItem == null -> this == newItem
-                else -> this != fromItem && this == newItem
-            }
+    ) -> Boolean = { fromItem, newItem, _, _ ->
+        when {
+            itemChanging -> false
+            (newItem.itemData != null && itemData != null && newItem.itemData == itemData) -> true
+            fromItem == null -> this == newItem
+            else -> this != fromItem && this == newItem
         }
+    }
 
     var thisGetChangePayload: (
         fromItem: DslAdapterItem?, filterPayload: Any?, newItem: DslAdapterItem,
         oldItemPosition: Int, newItemPosition: Int
-    ) -> Any? =
-        { _, filterPayload, _, _, _ ->
-            filterPayload ?: PAYLOAD_UPDATE_PART
-        }
+    ) -> Any? = { _, filterPayload, _, _, _ ->
+        filterPayload ?: PAYLOAD_UPDATE_PART
+    }
 
     //</editor-fold desc="Diff相关">
 
@@ -710,12 +744,13 @@ open class DslAdapterItem : LifecycleOwner {
 
     /**动态计算的属性*/
     val itemGroupParams: ItemGroupParams
-        get() =
-            itemDslAdapter?.findItemGroupParams(this) ?: ItemGroupParams(
-                0,
-                this,
-                mutableListOf(this)
-            )
+        get() = itemDslAdapter?.findItemGroupParams(this) ?: ItemGroupParams(
+            0,
+            this,
+            mutableListOf(this)
+        ).apply {
+            L.w("注意获取[itemGroupParams]时[itemDslAdapter]为null")
+        }
 
     /**所在的分组名, 只用来做快捷变量存储*/
     var itemGroups: List<String> = listOf()
@@ -897,7 +932,13 @@ class UpdateDependProperty<T>(var value: T) : ReadWriteProperty<DslAdapterItem, 
         val old = this.value
         this.value = value
         if (old != value) {
-            thisRef.updateItemDepend(FilterParams(thisRef, updateDependItemWithEmpty = true))
+            thisRef.updateItemDepend(
+                FilterParams(
+                    thisRef,
+                    updateDependItemWithEmpty = true,
+                    payload = DslAdapterItem.PAYLOAD_UPDATE_PART
+                )
+            )
         }
     }
 }
