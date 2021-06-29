@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ItemDecoration
 import androidx.recyclerview.widget.RecyclerView.OnChildAttachStateChangeListener
 import com.angcyo.dsladapter.internal.SwipeMenuCallback
+import java.lang.reflect.Field
 import kotlin.math.abs
 import kotlin.math.absoluteValue
 
@@ -289,8 +290,8 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback) : ItemDecoration
         }
 
         override fun onScroll(
-            e1: MotionEvent?,
-            e2: MotionEvent?,
+            e1: MotionEvent,
+            e2: MotionEvent,
             distanceX: Float,
             distanceY: Float
         ): Boolean {
@@ -301,6 +302,7 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback) : ItemDecoration
 
             if (absDx >= _slop || absDy >= _slop) {
                 _dragCallbackHelper?._shouldReactToLongPress = false
+                _cancelDragHelper(e1)
 
                 if (absDx > absDy) {
                     _lastDistanceX = distanceX
@@ -423,6 +425,34 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback) : ItemDecoration
             _lastVelocityX = velocityX
             _lastVelocityY = velocityY
             return super.onFling(e1, e2, velocityX, velocityY)
+        }
+    }
+
+    var _dragCallbackHelperTouchField: Field? = null
+
+    fun _cancelDragHelper(e1: MotionEvent) {
+        _dragCallbackHelper?._itemTouchHelper?.apply {
+            if (_dragCallbackHelperTouchField == null) {
+                javaClass.declaredFields.forEach {
+                    if (it.type.isAssignableFrom(RecyclerView.OnItemTouchListener::class.java)) {
+                        _dragCallbackHelperTouchField = it
+                    }
+                }
+            }
+            _dragCallbackHelperTouchField?.let {
+                it.isAccessible = true
+                val touchListener: RecyclerView.OnItemTouchListener =
+                    it.get(this) as RecyclerView.OnItemTouchListener
+
+                val rv = _recyclerView
+                if (rv != null) {
+                    val cancelEvent = MotionEvent.obtain(e1).apply {
+                        action = MotionEvent.ACTION_CANCEL
+                    }
+                    touchListener.onInterceptTouchEvent(rv, cancelEvent)
+                    cancelEvent.recycle()
+                }
+            }
         }
     }
 
