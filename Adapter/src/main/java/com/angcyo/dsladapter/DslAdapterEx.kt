@@ -29,6 +29,35 @@ fun DslAdapter.findItem(
     return getDataList(useFilterList).find(predicate)
 }
 
+inline fun <reified Item : DslAdapterItem> DslAdapter.find(
+    tag: String? = null,
+    useFilterList: Boolean = true,
+    predicate: (DslAdapterItem) -> Boolean = {
+        when {
+            tag != null -> it.itemTag == tag
+            it is Item -> true
+            else -> false
+        }
+    }
+): Item? {
+    return getDataList(useFilterList).find(predicate) as? Item
+}
+
+inline fun <reified Item : DslAdapterItem> DslAdapter.findItem(
+    tag: String? = null,
+    useFilterList: Boolean = true,
+    predicate: (DslAdapterItem) -> Boolean = {
+        when {
+            tag != null -> it.itemTag == tag
+            it is Item -> true
+            else -> false
+        }
+    },
+    dsl: Item.() -> Unit
+): Item? {
+    return find<Item>(tag, useFilterList, predicate)?.apply(dsl)
+}
+
 fun DslAdapter.updateItem(
     payload: Any? = DslAdapterItem.PAYLOAD_UPDATE_PART,
     useFilterList: Boolean = true,
@@ -37,6 +66,30 @@ fun DslAdapter.updateItem(
     return findItem(useFilterList, predicate)?.apply {
         updateAdapterItem(payload, useFilterList)
     }
+}
+
+/**通过[itemTags]更新对应的[DslAdapterItem]*/
+fun DslAdapter.updateItem(vararg itemTags: String): List<DslAdapterItem> {
+    return updateItem(DslAdapterItem.PAYLOAD_UPDATE_PART, true, *itemTags)
+}
+
+fun DslAdapter.updateItem(
+    payload: Any?,
+    useFilterList: Boolean,
+    vararg itemTags: String
+): List<DslAdapterItem> {
+    val result = mutableListOf<DslAdapterItem>()
+    itemTags.forEach { tag ->
+        findItemByTag(tag, useFilterList)?.let { item ->
+            result.add(item)
+            if (isMain()) {
+                item.updateAdapterItem(payload)
+            } else {
+                Handler(Looper.getMainLooper()).post { item.updateAdapterItem(payload) }
+            }
+        }
+    }
+    return result
 }
 
 fun DslAdapter.findItemByTag(
@@ -49,6 +102,20 @@ fun DslAdapter.findItemByTag(
     return findItem(useFilterList) {
         it.itemTag == tag
     }
+}
+
+fun <T : DslAdapterItem> DslAdapter.findItemByTag(
+    tag: String?,
+    clazz: Class<T>,
+    useFilterList: Boolean = true
+): T? {
+    if (tag == null) {
+        return null
+    }
+    val item = findItem(useFilterList) {
+        it::class.java.isAssignableFrom(clazz) && it.itemTag == tag
+    } ?: return null
+    return item as T
 }
 
 fun DslAdapter.findItemByGroup(
@@ -149,13 +216,21 @@ fun <T : DslAdapterItem> DslAdapter.dslCustomItem(
 /**空的占位item*/
 fun DslAdapter.renderEmptyItem(
     height: Int = 120 * dpi,
-    color: Int = Color.TRANSPARENT,
+    backgroundColor: Int = Color.TRANSPARENT,
+    action: DslAdapterItem.() -> Unit = {}
+) {
+    renderEmptyItem(height, ColorDrawable(backgroundColor), action)
+}
+
+fun DslAdapter.renderEmptyItem(
+    height: Int = 120 * dpi,
+    background: Drawable?,
     action: DslAdapterItem.() -> Unit = {}
 ) {
     val adapterItem = DslAdapterItem()
-    adapterItem.itemLayoutId = R.layout.base_empty_item
+    adapterItem.itemLayoutId = R.layout.lib_empty_item
     adapterItem.itemBindOverride = { itemHolder, _, _, _ ->
-        itemHolder.itemView.setBackgroundColor(color)
+        itemHolder.itemView.setBgDrawable(background)
         itemHolder.itemView.setWidthHeight(-1, height)
     }
     adapterItem.action()
@@ -173,6 +248,19 @@ fun DslAdapter.renderItem(count: Int = 1, init: DslAdapterItem.(index: Int) -> U
         adapterItem.init(i)
         addLastItem(adapterItem)
     }
+}
+
+/**追加一个简单的[DslAdapterItem]*/
+fun DslAdapter.singleItem(
+    @LayoutRes layoutId: Int,
+    init: DslAdapterItem.() -> Unit = {},
+    bind: (itemHolder: DslViewHolder, itemPosition: Int, adapterItem: DslAdapterItem, payloads: List<Any>) -> Unit
+) {
+    val adapterItem = DslAdapterItem()
+    adapterItem.itemLayoutId = layoutId
+    adapterItem.itemBindOverride = bind
+    adapterItem.init()
+    addLastItem(adapterItem)
 }
 
 fun <T> DslAdapter.renderItem(data: T, init: DslAdapterItem.() -> Unit) {
@@ -208,12 +296,18 @@ fun DslAdapter.eachItem(
 
 /**是否包含指定的[payload]*/
 fun Iterable<*>.containsPayload(any: Any): Boolean {
+    return havePayload {
+        it == any
+    }
+}
+
+fun Iterable<*>.havePayload(predicate: (Any?) -> Boolean): Boolean {
     var result = false
     for (payload in this) {
         result = if (payload is Iterable<*>) {
-            payload.containsPayload(any)
+            payload.havePayload(predicate)
         } else {
-            payload == any
+            predicate(payload)
         }
         if (result) {
             break

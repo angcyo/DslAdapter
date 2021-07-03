@@ -41,6 +41,9 @@ open class DslAdapterStatusItem : BaseDslStateItem() {
         itemStateLayoutMap[ADAPTER_STATUS_EMPTY] = R.layout.base_empty_layout
 
         itemState = ADAPTER_STATUS_NONE
+
+        itemWidth = ViewGroup.LayoutParams.MATCH_PARENT
+        itemHeight = ViewGroup.LayoutParams.MATCH_PARENT
     }
 
     override fun onItemBind(
@@ -48,7 +51,6 @@ open class DslAdapterStatusItem : BaseDslStateItem() {
         itemPosition: Int,
         adapterItem: DslAdapterItem
     ) {
-        itemHolder.itemView.setWidthHeight(-1, -1)
         super.onItemBind(itemHolder, itemPosition, adapterItem)
     }
 

@@ -15,7 +15,7 @@ import kotlin.math.max
 inline fun <reified Item : DslAdapterItem> DslAdapter.loadSingleData(
     dataList: List<Any>?,
     page: Int = Page.FIRST_PAGE_INDEX,
-    pageSize: Int = Page.PAGE_SIZE,
+    pageSize: Int = Int.MAX_VALUE,
     filterParams: FilterParams = defaultFilterParams!!.apply {
         payload = listOf(
             DslAdapterItem.PAYLOAD_UPDATE_PART,
@@ -94,7 +94,7 @@ inline fun <reified Item : DslAdapterItem> DslAdapter.loadSingleData(
 inline fun <reified Item : DslAdapterItem> DslAdapter.loadSingleData2(
     dataList: List<Any>?,
     page: Int = Page.FIRST_PAGE_INDEX,
-    pageSize: Int = Page.PAGE_SIZE,
+    pageSize: Int = Int.MAX_VALUE,
     filterParams: FilterParams = defaultFilterParams!!.apply {
         payload = listOf(
             DslAdapterItem.PAYLOAD_UPDATE_PART,

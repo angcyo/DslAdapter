@@ -16,26 +16,33 @@ import androidx.recyclerview.widget.RecyclerView
  * Copyright (c) 2019 ShenZhen O&M Cloud Co., Ltd. All rights reserved.
  */
 
-/**查找与[dslAdapterItem]相同分组的所有[DslAdapterItem]*/
-fun DslAdapter.findItemGroupParams(dslAdapterItem: DslAdapterItem): ItemGroupParams {
+/**查找与[dslAdapterItem]相同分组的所有[DslAdapterItem]
+ * [dslAdapterItem] 查询的目标
+ * [useFilterList] 数据源
+ * [lm] 指定外部的布局管理*/
+fun DslAdapter.findItemGroupParams(
+    dslAdapterItem: DslAdapterItem,
+    useFilterList: Boolean = true,
+    lm: RecyclerView.LayoutManager? = null
+): ItemGroupParams {
     val params = ItemGroupParams()
     params.currentAdapterItem = dslAdapterItem
 
-    val allItemList = getValidFilterDataList()
+    val allItemList = getDataList(useFilterList)
     var interruptGroup = false
     var findAnchor = false
 
     //分组数据计算
     for (i in allItemList.indices) {
-        val newItem = allItemList[i]
+        val targetItem = allItemList[i]
 
         if (!interruptGroup) {
             when {
-                newItem == dslAdapterItem -> {
-                    params.groupItems.add(newItem)
+                targetItem == dslAdapterItem -> {
+                    params.groupItems.add(targetItem)
                     findAnchor = true
                 }
-                dslAdapterItem.isItemInGroups(newItem) -> params.groupItems.add(newItem)
+                dslAdapterItem.isItemInGroups(targetItem) -> params.groupItems.add(targetItem)
                 //如果不是连续的, 则中断分组
                 findAnchor -> interruptGroup = true
             }
@@ -49,7 +56,7 @@ fun DslAdapter.findItemGroupParams(dslAdapterItem: DslAdapterItem): ItemGroupPar
     params.indexInGroup = params.groupItems.indexOf(dslAdapterItem)
 
     //网格边界计算
-    val layoutManager = _recyclerView?.layoutManager
+    val layoutManager = lm ?: _recyclerView?.layoutManager
 
     if (layoutManager is GridLayoutManager) {
         layoutManager.apply {
@@ -136,6 +143,8 @@ fun DslAdapter.findItemGroupParams(dslAdapterItem: DslAdapterItem): ItemGroupPar
         }
     } else if (layoutManager is LinearLayoutManager) {
         //todo
+    } else if (layoutManager == null) {
+        L.w("layoutManager is null")
     }
 
     return params

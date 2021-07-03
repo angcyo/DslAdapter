@@ -31,10 +31,16 @@ open class DslAdapterItem : LifecycleOwner {
 
     companion object {
         /**负载,请求刷新部分界面*/
-        const val PAYLOAD_UPDATE_PART = 0x1_00_00
+        const val PAYLOAD_UPDATE_PART = 0b0001
 
         /**负载,强制更新媒体, 比如图片*/
-        const val PAYLOAD_UPDATE_MEDIA = 0x2_00_00
+        const val PAYLOAD_UPDATE_MEDIA = 0b0011
+
+        /**负载,请求更新[itemGroupExtend]*/
+        const val PAYLOAD_UPDATE_EXTEND = 0b00101
+
+        /**负载,请求更新[itemHidden]*/
+        const val PAYLOAD_UPDATE_HIDDEN = 0b001001
     }
 
     /**适配器, 自动赋值[com.angcyo.dsladapter.DslAdapter.onBindViewHolder]*/
@@ -328,10 +334,10 @@ open class DslAdapterItem : LifecycleOwner {
     /**
      * 当前分组是否[展开]
      * */
-    var itemGroupExtend: Boolean by UpdateDependProperty(true)
+    var itemGroupExtend: Boolean by UpdateDependProperty(true, PAYLOAD_UPDATE_EXTEND)
 
     /**是否需要隐藏item*/
-    var itemHidden: Boolean by UpdateDependProperty(false)
+    var itemHidden: Boolean by UpdateDependProperty(false, PAYLOAD_UPDATE_HIDDEN)
 
     //</editor-fold>
 
@@ -374,12 +380,12 @@ open class DslAdapterItem : LifecycleOwner {
     var itemBottomOffset = 0
 
     /**可以覆盖设置分割线的边距*/
-    var onSetItemOffset: (rect: Rect) -> Unit = {}
+    var onSetItemOffset: (outRect: Rect) -> Unit = {}
 
     /**分割线入口 [DslItemDecoration]*/
-    fun setItemOffsets(rect: Rect) {
-        rect.set(itemLeftInsert, itemTopInsert, itemRightInsert, itemBottomInsert)
-        onSetItemOffset(rect)
+    fun setItemOffsets(outRect: Rect) {
+        outRect.set(itemLeftInsert, itemTopInsert, itemRightInsert, itemBottomInsert)
+        onSetItemOffset(outRect)
     }
 
     /**
@@ -755,19 +761,33 @@ open class DslAdapterItem : LifecycleOwner {
     /**所在的分组名, 只用来做快捷变量存储*/
     var itemGroups: List<String> = listOf()
 
-    /**核心群组判断的方法*/
-    var isItemInGroups: (newItem: DslAdapterItem) -> Boolean = { newItem ->
+    /**核心群组判断的方法
+     * 目标[targetItem]是否和[this]属于同一组
+     * */
+    var isItemInGroups: (targetItem: DslAdapterItem) -> Boolean = { targetItem ->
         var result = if (itemGroups.isEmpty()) {
             //如果自身没有配置分组信息, 那么取相同类名, 布局id一样的item, 当做一组
-            className() == newItem.className() && itemLayoutId == newItem.itemLayoutId
+            className() == targetItem.className() && itemLayoutId == targetItem.itemLayoutId
         } else {
             false
         }
-        for (group in newItem.itemGroups) {
-            result = result || itemGroups.contains(group)
+        if (!result) {
+            //自身具有sub list, 那么sub中的元素也属于当前组
+            result = itemSubList.contains(targetItem)
+        }
+        if (!result) {
+            //自身是子item, 则最近一层的parent
+            itemParentList.lastOrNull()?.let { last ->
+                result = last.isItemInGroups(targetItem)
+            }
+        }
+        if (!result) {
+            for (group in targetItem.itemGroups) {
+                result = result || itemGroups.contains(group)
 
-            if (result) {
-                break
+                if (result) {
+                    break
+                }
             }
         }
         result
@@ -881,18 +901,23 @@ open class DslAdapterItem : LifecycleOwner {
 
     /**
      * 折叠/展开 依旧使用[itemGroupExtend]控制
+     * [itemLoadSubList] 加载完之后, 数据放在[itemSubList]
      *
      * 子项列表
+     * [com.angcyo.dsladapter.internal.SubItemFilterInterceptor.loadSubItemList]
      * */
     var itemSubList: MutableList<DslAdapterItem> = mutableListOf()
 
     /**
      * 在控制[itemSubList]之前, 都会回调此方法.
      * 相当于hook了[itemSubList], 可以在[itemSubList]为空时, 展示[加载中Item]等
+     *
+     * [com.angcyo.dsladapter.internal.SubItemFilterInterceptor.loadSubItemList]
      * */
     var itemLoadSubList: () -> Unit = {}
 
-    /**父级列表, 会自动赋值*/
+    /**父级列表, 会自动赋值
+     * [com.angcyo.dsladapter.internal.SubItemFilterInterceptor.loadSubItemList]*/
     var itemParentList: MutableList<DslAdapterItem> = mutableListOf()
 
     //</editor-fold>
@@ -925,7 +950,8 @@ open class DslAdapterItem : LifecycleOwner {
 
 }
 
-class UpdateDependProperty<T>(var value: T) : ReadWriteProperty<DslAdapterItem, T> {
+class UpdateDependProperty<T>(var value: T, val payload: Int = DslAdapterItem.PAYLOAD_UPDATE_PART) :
+    ReadWriteProperty<DslAdapterItem, T> {
     override fun getValue(thisRef: DslAdapterItem, property: KProperty<*>): T = value
 
     override fun setValue(thisRef: DslAdapterItem, property: KProperty<*>, value: T) {
@@ -933,11 +959,7 @@ class UpdateDependProperty<T>(var value: T) : ReadWriteProperty<DslAdapterItem, 
         this.value = value
         if (old != value) {
             thisRef.updateItemDepend(
-                FilterParams(
-                    thisRef,
-                    updateDependItemWithEmpty = true,
-                    payload = DslAdapterItem.PAYLOAD_UPDATE_PART
-                )
+                FilterParams(thisRef, updateDependItemWithEmpty = true, payload = payload)
             )
         }
     }

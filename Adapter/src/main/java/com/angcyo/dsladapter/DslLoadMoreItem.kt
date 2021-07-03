@@ -34,7 +34,7 @@ open class DslLoadMoreItem : BaseDslStateItem() {
         }
 
     /**加载更多回调*/
-    var onLoadMore: (DslViewHolder) -> Unit = {
+    var onLoadMore: (itemHolder: DslViewHolder) -> Unit = {
         L.i("[DslLoadMoreItem] 触发加载更多")
     }
 
@@ -48,6 +48,10 @@ open class DslLoadMoreItem : BaseDslStateItem() {
         itemStateLayoutMap[LOAD_MORE_ERROR] = R.layout.base_error_layout
         itemStateLayoutMap[_LOAD_MORE_RETRY] = R.layout.base_error_layout
 
+
+        itemWidth = ViewGroup.LayoutParams.MATCH_PARENT
+        itemHeight = ViewGroup.LayoutParams.WRAP_CONTENT
+
         thisAreContentsTheSame = { _, _, _, _ ->
             false
         }
@@ -58,7 +62,6 @@ open class DslLoadMoreItem : BaseDslStateItem() {
         itemPosition: Int,
         adapterItem: DslAdapterItem
     ) {
-        itemHolder.itemView.setWidthHeight(-1, -2)
         super.onItemBind(itemHolder, itemPosition, adapterItem)
     }
 
