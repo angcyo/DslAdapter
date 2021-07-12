@@ -1,6 +1,10 @@
 package com.angcyo.dsladapter
 
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.LayoutRes
@@ -228,7 +232,7 @@ fun DslAdapter.renderEmptyItem(
     action: DslAdapterItem.() -> Unit = {}
 ) {
     val adapterItem = DslAdapterItem()
-    adapterItem.itemLayoutId = R.layout.lib_empty_item
+    adapterItem.itemLayoutId = R.layout.base_empty_item
     adapterItem.itemBindOverride = { itemHolder, _, _, _ ->
         itemHolder.itemView.setBgDrawable(background)
         itemHolder.itemView.setWidthHeight(-1, height)

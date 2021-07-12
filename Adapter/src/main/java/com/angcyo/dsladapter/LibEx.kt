@@ -7,6 +7,7 @@ import android.content.res.Resources
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -350,3 +351,6 @@ inline fun Animator.addListener(
     addListener(listener)
     return listener
 }
+
+/**是否是主线程*/
+fun isMain() = Looper.getMainLooper() == Looper.myLooper()

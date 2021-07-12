@@ -1,5 +1,7 @@
 package com.angcyo.dsladapter
 
+import android.view.ViewGroup
+
 /**
  * [DslAdapter] 中, 控制情感图显示状态的 [Item]
  * Email:angcyo@126.com

@@ -1,5 +1,7 @@
 package com.angcyo.dsladapter
 
+import android.view.ViewGroup
+
 /**
  * [RecyclerView.Adapter] 加载更多实现
  * Email:angcyo@126.com
