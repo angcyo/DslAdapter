@@ -7,6 +7,7 @@ import android.view.Gravity
 import android.widget.TextView
 import com.angcyo.dsladapter.*
 import com.angcyo.dsladapter.dsl.DslDemoItem
+import com.angcyo.dsladapter.dsl.DslWrapItem
 import com.angcyo.dsladapter.dsl.dslImageItem
 import com.angcyo.dsladapter.dsl.dslTextItem
 import com.angcyo.dsladapter.filter.batchLoad
@@ -183,6 +184,17 @@ class MainActivity : BaseRecyclerActivity() {
              * [minus]运算符重载方式, 移除[DslAdapterItem]
              * */
             this - DslAdapterItem() - DslAdapterItem() - DslAdapterItem() - DslAdapterItem()
+
+            DslWrapItem()() {
+                itemContentLayoutId = R.layout.item_text_layout
+                itemClick = {
+                    itemContentLayoutId = if (itemContentLayoutId == R.layout.item_text_layout) {
+                        R.layout.item_group_head
+                    } else {
+                        R.layout.item_text_layout
+                    }
+                }
+            }
 
             renderEmptyItem()
 
