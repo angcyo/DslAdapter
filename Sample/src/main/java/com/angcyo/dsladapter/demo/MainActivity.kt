@@ -187,6 +187,7 @@ class MainActivity : BaseRecyclerActivity() {
 
             DslWrapItem()() {
                 itemContentLayoutId = R.layout.item_text_layout
+                itemText = "点击演示动态 add/remove view"
                 itemClick = {
                     itemContentLayoutId = if (itemContentLayoutId == R.layout.item_text_layout) {
                         R.layout.item_group_head

@@ -21,6 +21,8 @@ class DslWrapItem : DslAdapterItem() {
             updateAdapterItem()
         }
 
+    var itemText: CharSequence? = null
+
     init {
         itemLayoutId = R.layout.item_wrap_layout
     }
@@ -31,6 +33,8 @@ class DslWrapItem : DslAdapterItem() {
         adapterItem: DslAdapterItem,
         payloads: List<Any>
     ) {
+        itemHolder.clear()
+
         super.onItemBind(itemHolder, itemPosition, adapterItem, payloads)
         itemHolder.group(R.id.item_wrap_layout)?.apply {
             removeAllViews()
@@ -38,5 +42,6 @@ class DslWrapItem : DslAdapterItem() {
                 View.inflate(itemHolder.content, it, this)
             }
         }
+        itemHolder.tv(R.id.text_view)?.text = itemText
     }
 }
