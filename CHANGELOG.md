@@ -1,3 +1,11 @@
+# 2021-7-14
+
+`3.0.0-binding`
+
+支持`DataBinding`的版本, 请在版本后面带上`-binding`, 否则将不支持`DataBinding`
+
+- 支持`DataBinding`
+
 # 2021-6-29
 
 `2.6.2`
