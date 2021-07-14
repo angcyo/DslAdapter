@@ -6,10 +6,7 @@ import android.graphics.Color
 import android.view.Gravity
 import android.widget.TextView
 import com.angcyo.dsladapter.*
-import com.angcyo.dsladapter.dsl.DslDemoItem
-import com.angcyo.dsladapter.dsl.DslWrapItem
-import com.angcyo.dsladapter.dsl.dslImageItem
-import com.angcyo.dsladapter.dsl.dslTextItem
+import com.angcyo.dsladapter.dsl.*
 import com.angcyo.dsladapter.filter.batchLoad
 
 /**
@@ -193,6 +190,19 @@ class MainActivity : BaseRecyclerActivity() {
                         R.layout.item_group_head
                     } else {
                         R.layout.item_text_layout
+                    }
+                }
+            }
+
+            //DataBinding测试
+            DslBindingTextItem()() {
+                itemData = BindingData().apply {
+                    text = "DataBinding演示"
+                }
+
+                itemClick = {
+                    itemData = BindingData().apply {
+                        text = "Click...${nowTime()}"
                     }
                 }
             }
