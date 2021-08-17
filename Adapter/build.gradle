@@ -1,14 +1,11 @@
 apply plugin: 'com.android.library'
-
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 31
     defaultConfig {
         minSdkVersion 12
-        targetSdkVersion 30
-        versionCode 1
-        versionName "1.0"
+        targetSdkVersion 31
     }
     buildTypes {
         release {
@@ -16,12 +13,21 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    //https://developer.android.google.cn/topic/libraries/data-binding/start
+    dataBinding {
+        enabled = false
+    }
+
+    //https://developer.android.google.cn/topic/libraries/view-binding
+    viewBinding {
+        enabled = true
+    }
 }
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'androidx.recyclerview:recyclerview:1.1.0'
+    implementation 'androidx.recyclerview:recyclerview:1.2.0'
 
-    def lifecycle_version = "2.2.0"
+    def lifecycle_version = "2.3.1"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
 }
