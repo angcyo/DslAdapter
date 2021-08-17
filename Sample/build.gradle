@@ -21,6 +21,16 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    //https://developer.android.google.cn/topic/libraries/data-binding/start
+    dataBinding {
+        enabled = false
+    }
+
+    //https://developer.android.google.cn/topic/libraries/view-binding
+    viewBinding {
+        enabled = true
+    }
 }
 
 dependencies {
