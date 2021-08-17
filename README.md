@@ -72,6 +72,8 @@ renderAdapter{
 12. 支持`树结构`类似于`idea`中的文件列表目录结构
 13. 支持`左右侧滑菜单`(`2.4.0`后)
 14. 支持`DataBinding`(`3.0.0`后)
+14. 支持`ViewBinding`([参考示例](https://github.com/angcyo/DslAdapter/blob/master/Sample/src/main/java/com/angcyo/dsladapter/dsl/DslViewBindingItem.kt))
+
 
 # 功能展示
 
