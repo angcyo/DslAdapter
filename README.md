@@ -149,6 +149,10 @@ dependencies {
 
 ![](https://gitee.com/angcyo/DslAdapter/raw/master/png/qrcode1.png)
 
+# License
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fangcyo%2FDslAdapter.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fangcyo%2FDslAdapter?ref=badge_large)
+
 ---
 **群内有`各(pian)种(ni)各(jin)样(qun)`的大佬,等你来撩.**
 
