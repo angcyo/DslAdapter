@@ -166,3 +166,7 @@ dependencies {
 ![](https://gitee.com/angcyo/res/raw/master/code/all_in1.jpg)
 
 ![](https://gitee.com/angcyo/res/raw/master/code/all_in2.jpg)
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fangcyo%2FDslAdapter.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fangcyo%2FDslAdapter?ref=badge_large)
