@@ -1,7 +1,8 @@
 # DslAdapter
 
-[![](https://img.shields.io/badge/License-MIT-3A77AC)](https://github.com/angcyo/DslAdapter/blob/master/LICENSE) [![API](https://img.shields.io/badge/API-12%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=12) [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fangcyo%2FDslAdapter.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fangcyo%2FDslAdapter?ref=badge_shield)
-[![](https://img.shields.io/badge/JitPack-2.6.3-6590B7)](https://jitpack.io/#angcyo/DslAdapter) [![](https://img.shields.io/badge/androidx-yes-80B44D)](https://developer.android.google.cn/jetpack/androidx) [![](https://img.shields.io/badge/kotlin-yes-F48729)](https://www.kotlincn.net/docs/reference/android-overview.html)
+[![API](https://img.shields.io/badge/API-12%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=12) ![GitHub branch checks state](https://img.shields.io/github/checks-status/angcyo/DslAdapter/master) ![GitHub](https://img.shields.io/github/license/angcyo/DslAdapter) [![AndroidX](https://img.shields.io/badge/androidx-100%25-blue)](https://developer.android.google.cn/jetpack/androidx) ![GitHub top language](https://img.shields.io/github/languages/top/angcyo/DslAdapter) ![JitPack](https://img.shields.io/jitpack/v/github/angcyo/DslAdapter)
+
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/angcyo/DslAdapter) ![GitHub repo size](https://img.shields.io/github/repo-size/angcyo/DslAdapter) ![GitHub last commit](https://img.shields.io/github/last-commit/angcyo/DslAdapter) ![GitHub issues](https://img.shields.io/github/issues/angcyo/DslAdapter) ![GitHub Repo stars](https://img.shields.io/github/stars/angcyo/DslAdapter?style=social) ![GitHub forks](https://img.shields.io/github/forks/angcyo/DslAdapter?style=social)
 
 `Kotlin`时代的`Adapter`.
 
