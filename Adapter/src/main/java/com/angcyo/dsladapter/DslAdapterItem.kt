@@ -6,14 +6,17 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.os.Build
+import android.util.SparseArray
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.math.MathUtils.clamp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.angcyo.dsladapter.SwipeMenuHelper.Companion.SWIPE_MENU_TYPE_DEFAULT
 import com.angcyo.dsladapter.SwipeMenuHelper.Companion.SWIPE_MENU_TYPE_FLOWING
 import com.angcyo.dsladapter.internal.ThrottleClickListener
@@ -27,20 +30,41 @@ import kotlin.reflect.KProperty
  * @date 2019/05/07
  * Copyright (c) 2019 ShenZhen O&M Cloud Co., Ltd. All rights reserved.
  */
+
+typealias ItemAction = (DslAdapterItem) -> Unit
+
+typealias ItemBindAction = (
+    itemHolder: DslViewHolder,
+    itemPosition: Int,
+    adapterItem: DslAdapterItem,
+    payloads: List<Any>
+) -> Unit
+
+typealias HolderBindAction = (
+    itemHolder: DslViewHolder,
+    itemPosition: Int
+) -> Unit
+
 open class DslAdapterItem : LifecycleOwner {
 
     companion object {
         /**负载,请求刷新部分界面*/
-        const val PAYLOAD_UPDATE_PART = 0b0001
+        const val PAYLOAD_UPDATE_PART = 0x0001
 
         /**负载,强制更新媒体, 比如图片*/
-        const val PAYLOAD_UPDATE_MEDIA = 0b0011
+        const val PAYLOAD_UPDATE_MEDIA = 0x002
 
         /**负载,请求更新[itemGroupExtend]*/
-        const val PAYLOAD_UPDATE_EXTEND = 0b00101
+        const val PAYLOAD_UPDATE_EXTEND = 0x004
 
         /**负载,请求更新[itemHidden]*/
-        const val PAYLOAD_UPDATE_HIDDEN = 0b001001
+        const val PAYLOAD_UPDATE_HIDDEN = 0x008
+
+        /**负载,请求更新[itemIsSelected]*/
+        const val PAYLOAD_UPDATE_SELECT = 0x010
+
+        /**占满宽度的item*/
+        const val FULL_ITEM = -1
     }
 
     /**适配器, 自动赋值[com.angcyo.dsladapter.DslAdapter.onBindViewHolder]*/
@@ -55,9 +79,23 @@ open class DslAdapterItem : LifecycleOwner {
         }
     }
 
+    /**负载更新, 通常用于更新媒体item*/
+    open fun updateItemDependPayload(payload: Any? = mediaPayload()) {
+        updateItemDepend(
+            FilterParams(
+                fromDslAdapterItem = this,
+                updateDependItemWithEmpty = false,
+                payload = payload
+            )
+        )
+    }
+
     /**
      * 通过diff更新
      * @param notifyUpdate 是否需要触发 [Depend] 关系链.
+     *
+     * [isItemInUpdateList]
+     * [itemUpdateFrom]
      * */
     open fun updateItemDepend(
         filterParams: FilterParams = FilterParams(
@@ -86,23 +124,49 @@ open class DslAdapterItem : LifecycleOwner {
         }
     }
 
+    /**有依赖时, 才更新
+     * [updateItemDepend]*/
+    open fun updateItemOnHaveDepend(
+        filterParams: FilterParams = FilterParams(
+            fromDslAdapterItem = this,
+            updateDependItemWithEmpty = false,
+            payload = PAYLOAD_UPDATE_PART
+        )
+    ) {
+        val notifyChildFormItemList = mutableListOf<DslAdapterItem>()
+        itemDslAdapter?.getValidFilterDataList()?.forEachIndexed { index, dslAdapterItem ->
+            if (isItemInUpdateList(dslAdapterItem, index)) {
+                return@forEachIndexed
+            }
+        }
+
+        if (notifyChildFormItemList.isNotEmpty()) {
+            updateItemDepend(filterParams)
+        }
+    }
+
     //</editor-fold desc="update操作">
 
     //<editor-fold desc="Grid相关属性">
 
     /**
-     * 在 GridLayoutManager 中, 需要占多少个 span. -1表示满屏
+     * 在 GridLayoutManager 中, 需要占多少个 span. [FULL_ITEM]表示满屏
      * [itemIsGroupHead]
      * [com.angcyo.dsladapter.DslAdapter.onViewAttachedToWindow]
      * 需要[dslSpanSizeLookup]支持.
      *
      * 在[StaggeredGridLayoutManager]中, 会使用[layoutParams.isFullSpan]的方式满屏
+     *
      * */
     var itemSpanCount = 1
 
     //</editor-fold>
 
     //<editor-fold desc="标准属性">
+
+    /**item的布局类型, 当[itemLayoutId]一样, 只是内部的内容不一样时, 阔以使用.
+     * 比如im聊天界面*/
+    open var itemViewType: Int? = null
 
     /**布局的xml id, 必须设置.*/
     open var itemLayoutId: Int = -1
@@ -150,15 +214,20 @@ open class DslAdapterItem : LifecycleOwner {
     /**唯一标识此item的值*/
     var itemTag: String? = null
 
+    /**item存储数据使用*/
+    var itemTags: SparseArray<Any?>? = null
+
     /**
      * 界面绑定入口
      * [DslAdapter.onBindViewHolder(com.angcyo.widget.DslViewHolder, int, java.util.List<? extends java.lang.Object>)]
      * */
-    var itemBind: (itemHolder: DslViewHolder, itemPosition: Int, adapterItem: DslAdapterItem, payloads: List<Any>) -> Unit =
-        { itemHolder, itemPosition, adapterItem, payloads ->
-            onItemBind(itemHolder, itemPosition, adapterItem, payloads)
-            itemBindOverride(itemHolder, itemPosition, adapterItem, payloads)
-        }
+    var itemBind: ItemBindAction = { itemHolder, itemPosition, adapterItem, payloads ->
+        _itemGroupParamsCache = null //清空[ItemGroupParams]缓存
+        onItemBind(itemHolder, itemPosition, adapterItem, payloads)
+        itemBindOverride(itemHolder, itemPosition, adapterItem, payloads)
+        onItemBindAfter(itemHolder, itemPosition, adapterItem, payloads)
+        _itemGroupParamsCache = null //清空[ItemGroupParams]缓存
+    }
 
     /**
      * 点击事件和长按事件封装
@@ -187,48 +256,55 @@ open class DslAdapterItem : LifecycleOwner {
         _initItemSize(itemHolder)
         _initItemPadding(itemHolder)
         _initItemListener(itemHolder)
+        _initItemConfig(itemHolder, itemPosition, adapterItem, payloads)
+        _initItemStyle(itemHolder)
 
         onItemBind(itemHolder, itemPosition, adapterItem)
     }
 
+    @Deprecated("请使用4个参数的方法[onItemBind]")
     open fun onItemBind(
         itemHolder: DslViewHolder,
         itemPosition: Int,
         adapterItem: DslAdapterItem
+    ) {
+        //no op
+    }
+
+    open fun onItemBindAfter(
+        itemHolder: DslViewHolder,
+        itemPosition: Int,
+        adapterItem: DslAdapterItem,
+        payloads: List<Any>
     ) {
         //请注意缓存.
         //itemHolder.clear()
     }
 
     /**用于覆盖默认操作*/
-    var itemBindOverride: (itemHolder: DslViewHolder, itemPosition: Int, adapterItem: DslAdapterItem, payloads: List<Any>) -> Unit =
-        { _, _, _, _ ->
-
-        }
+    var itemBindOverride: ItemBindAction = { _, _, _, _ ->
+    }
 
     /**
      * [DslAdapter.onViewAttachedToWindow]
      * */
-    var itemViewAttachedToWindow: (itemHolder: DslViewHolder, itemPosition: Int) -> Unit =
-        { itemHolder, itemPosition ->
-            onItemViewAttachedToWindow(itemHolder, itemPosition)
-        }
+    var itemViewAttachedToWindow: HolderBindAction = { itemHolder, itemPosition ->
+        onItemViewAttachedToWindow(itemHolder, itemPosition)
+    }
 
     /**
      * [DslAdapter.onViewDetachedFromWindow]
      * */
-    var itemViewDetachedToWindow: (itemHolder: DslViewHolder, itemPosition: Int) -> Unit =
-        { itemHolder, itemPosition ->
-            onItemViewDetachedToWindow(itemHolder, itemPosition)
-        }
+    var itemViewDetachedToWindow: HolderBindAction = { itemHolder, itemPosition ->
+        onItemViewDetachedToWindow(itemHolder, itemPosition)
+    }
 
     /**
      * [DslAdapter.onViewRecycled]
      * */
-    var itemViewRecycled: (itemHolder: DslViewHolder, itemPosition: Int) -> Unit =
-        { itemHolder, itemPosition ->
-            onItemViewRecycled(itemHolder, itemPosition)
-        }
+    var itemViewRecycled: HolderBindAction = { itemHolder, itemPosition ->
+        onItemViewRecycled(itemHolder, itemPosition)
+    }
 
     //</editor-fold desc="标准属性">
 
@@ -290,6 +366,27 @@ open class DslAdapterItem : LifecycleOwner {
         }
     }
 
+    open fun _initItemConfig(
+        itemHolder: DslViewHolder,
+        itemPosition: Int,
+        adapterItem: DslAdapterItem,
+        payloads: List<Any>
+    ) {
+    }
+
+    open fun _initItemStyle(itemHolder: DslViewHolder) {
+        val showLine = itemShowLastLineView
+        if (showLine == null) {
+            if (itemAutoHideLastLineView) {
+                itemGroupParams.apply {
+                    itemHolder.gone(R.id.lib_item_line_view, isLastPosition())
+                }
+            }
+        } else {
+            itemHolder.visible(R.id.lib_item_line_view, showLine)
+        }
+    }
+
     //初始化padding
     open fun _initItemPadding(itemHolder: DslViewHolder) {
         if (itemPaddingLeft == undefined_size) {
@@ -327,17 +424,23 @@ open class DslAdapterItem : LifecycleOwner {
             if (value) {
                 itemIsHover = true
                 itemDragEnable = false
-                itemSpanCount = -1
+                itemSpanCount = FULL_ITEM
             }
         }
 
     /**
      * 当前分组是否[展开]
      * */
-    var itemGroupExtend: Boolean by UpdateDependProperty(true, PAYLOAD_UPDATE_EXTEND)
+    var itemGroupExtend: Boolean by UpdateDependProperty(
+        true,
+        listOf(PAYLOAD_UPDATE_PART, PAYLOAD_UPDATE_EXTEND)
+    )
 
     /**是否需要隐藏item*/
-    var itemHidden: Boolean by UpdateDependProperty(false, PAYLOAD_UPDATE_HIDDEN)
+    var itemHidden: Boolean by UpdateDependProperty(
+        false,
+        listOf(PAYLOAD_UPDATE_PART, PAYLOAD_UPDATE_HIDDEN)
+    )
 
     //</editor-fold>
 
@@ -361,6 +464,12 @@ open class DslAdapterItem : LifecycleOwner {
     var itemRightInsert = 0
     var itemBottomInsert = 0
 
+    /**是否绘制分割线*/
+    var itemDrawLeft: Boolean = true
+    var itemDrawTop: Boolean = true
+    var itemDrawRight: Boolean = true
+    var itemDrawBottom: Boolean = true
+
     var itemDecorationColor = Color.TRANSPARENT
 
     /**更强大的分割线自定义, 在color绘制后绘制*/
@@ -371,6 +480,15 @@ open class DslAdapterItem : LifecycleOwner {
      * */
     var onlyDrawOffsetArea = false
 
+    /**自动隐藏分组最后一个item的[R.id.lib_item_line_view]view*/
+    var itemAutoHideLastLineView: Boolean = true
+
+    /**是否强制隐藏/显示线*/
+    var itemShowLastLineView: Boolean? = null
+
+    /**不绘制分组最后一个item的底部分割线*/
+    var noDrawLastItemDecoration: Boolean = true
+
     /**
      * 分割线绘制时的偏移
      * */
@@ -380,12 +498,12 @@ open class DslAdapterItem : LifecycleOwner {
     var itemBottomOffset = 0
 
     /**可以覆盖设置分割线的边距*/
-    var onSetItemOffset: (outRect: Rect) -> Unit = {}
+    var onSetItemOffset: ((outRect: Rect) -> Unit)? = null
 
     /**分割线入口 [DslItemDecoration]*/
     fun setItemOffsets(outRect: Rect) {
         outRect.set(itemLeftInsert, itemTopInsert, itemRightInsert, itemBottomInsert)
-        onSetItemOffset(outRect)
+        onSetItemOffset?.invoke(outRect)
     }
 
     /**
@@ -429,7 +547,7 @@ open class DslAdapterItem : LifecycleOwner {
         eachDrawItemDecoration(0, itemTopInsert, 0, 0)
         paint.color = itemDecorationColor
         val drawOffsetArea = onlyDrawOffsetArea
-        if (itemTopInsert > 0) {
+        if (itemTopInsert > 0 && itemDrawTop) {
             if (onlyDrawOffsetArea) {
                 //绘制左右区域
                 if (itemLeftOffset > 0) {
@@ -467,7 +585,7 @@ open class DslAdapterItem : LifecycleOwner {
         onlyDrawOffsetArea = drawOffsetArea
         eachDrawItemDecoration(0, 0, 0, itemBottomInsert)
         paint.color = itemDecorationColor
-        if (itemBottomInsert > 0) {
+        if (itemBottomInsert > 0 && itemDrawBottom && !(noDrawLastItemDecoration && itemGroupParams.isLastPosition())) {
             if (onlyDrawOffsetArea) {
                 //绘制左右区域
                 if (itemLeftOffset > 0) {
@@ -505,7 +623,7 @@ open class DslAdapterItem : LifecycleOwner {
         onlyDrawOffsetArea = drawOffsetArea
         eachDrawItemDecoration(itemLeftInsert, 0, 0, 0)
         paint.color = itemDecorationColor
-        if (itemLeftInsert > 0) {
+        if (itemLeftInsert > 0 && itemDrawLeft) {
             if (onlyDrawOffsetArea) {
                 //绘制上下区域
                 if (itemTopOffset > 0) {
@@ -543,7 +661,7 @@ open class DslAdapterItem : LifecycleOwner {
         onlyDrawOffsetArea = drawOffsetArea
         eachDrawItemDecoration(0, 0, itemRightInsert, 0)
         paint.color = itemDecorationColor
-        if (itemRightInsert > 0) {
+        if (itemRightInsert > 0 && itemDrawRight) {
             if (onlyDrawOffsetArea) {
                 //绘制上下区域
                 if (itemTopOffset > 0) {
@@ -591,6 +709,10 @@ open class DslAdapterItem : LifecycleOwner {
 
     //<editor-fold desc="Diff相关">
 
+    /**是否需要更新item
+     * 在[diffResult]之后会被重置*/
+    var itemUpdateFlag: Boolean = false
+
     /**
      * 决定
      * [RecyclerView.Adapter.notifyItemInserted]
@@ -612,20 +734,10 @@ open class DslAdapterItem : LifecycleOwner {
         var result = this == newItem
         if (!result) {
             val thisItemClassname = this.className()
-            if (thisItemClassname == newItem.className()) {
-                //类名相同的2个item
-                if (itemData != null || newItem.itemData != null) {
-                    //如果有数据, 则使用数据判断2个item是否一样
-                    result = itemData == newItem.itemData
-                } else {
-                    if (thisItemClassname == DslAdapterItem::class.java.className()) {
-                        //默认的DslAdapterItem
-                        result = itemLayoutId == newItem.itemLayoutId
-                    }
-                }
-            } else {
-                //不相同类名的2个item
-            }
+            val newItemClassName = newItem.className()
+            //相同类名, 且布局类型相同的2个item, 不进行insert/remove操作
+            result = thisItemClassname == newItemClassName &&
+                    itemViewType ?: itemLayoutId == newItem.itemViewType ?: newItem.itemLayoutId
         }
         result
     }
@@ -646,6 +758,7 @@ open class DslAdapterItem : LifecycleOwner {
         oldItemPosition: Int, newItemPosition: Int
     ) -> Boolean = { fromItem, newItem, _, _ ->
         when {
+            itemUpdateFlag -> false
             itemChanging -> false
             (newItem.itemData != null && itemData != null && newItem.itemData == itemData) -> true
             fromItem == null -> this == newItem
@@ -660,6 +773,12 @@ open class DslAdapterItem : LifecycleOwner {
         filterPayload ?: PAYLOAD_UPDATE_PART
     }
 
+    /**Diff计算完成之后的回调
+     * [com.angcyo.dsladapter.DslDataFilter.UpdateTaskRunnable.onDiffResult]*/
+    open fun diffResult(filterParams: FilterParams?, result: DiffUtil.DiffResult) {
+        itemChanging = false
+    }
+
     //</editor-fold desc="Diff相关">
 
     //<editor-fold desc="定向更新">
@@ -670,6 +789,7 @@ open class DslAdapterItem : LifecycleOwner {
             field = value
             if (value) {
                 itemChangeListener(this)
+                itemChangeListenerList.forEach { it(this) }
             }
         }
 
@@ -696,6 +816,18 @@ open class DslAdapterItem : LifecycleOwner {
         updateItemDepend()
     }
 
+    /**[itemChangeListener]*/
+    val itemChangeListenerList = mutableSetOf<ItemAction>()
+
+    fun observeItemChange(action: ItemAction): ItemAction {
+        itemChangeListenerList.add(action)
+        return action
+    }
+
+    fun removeItemChangeObserver(action: ItemAction): Boolean {
+        return itemChangeListenerList.remove(action)
+    }
+
     /**
      * [checkItem] 是否需要关联到处理列表
      * [itemIndex] 分组折叠之后数据列表中的index
@@ -706,20 +838,39 @@ open class DslAdapterItem : LifecycleOwner {
         { _, _ -> false }
 
     /**
+     * [checkItem]是否是在自己更新后, 通知的item列表里面, 如果是:那么[checkItem]的会触发[itemUpdateFrom]
+     *
      * [itemIndex] 最终过滤之后数据列表中的index
      * 返回 true 时, [checkItem] 会收到 来自 [this] 的 [itemUpdateFrom] 触发的回调
+     *
+     * [itemUpdateFrom]
      * */
     var isItemInUpdateList: (checkItem: DslAdapterItem, itemIndex: Int) -> Boolean =
         { _, _ -> false }
 
-    /**入口方法*/
-    var itemUpdateFrom: (fromItem: DslAdapterItem) -> Unit = {
+    /**入口方法
+     * [isItemInUpdateList]
+     * 返回值表示, 是否需要更新自己
+     * [com.angcyo.dsladapter.DslDataFilter.UpdateTaskRunnable.notifyUpdateDependItem]*/
+    var itemUpdateFrom: (fromItem: DslAdapterItem) -> Boolean = {
         onItemUpdateFrom(it)
     }
 
     /**覆盖方法 [itemUpdateFrom]*/
-    open fun onItemUpdateFrom(fromItem: DslAdapterItem) {
+    open fun onItemUpdateFrom(fromItem: DslAdapterItem): Boolean {
+        return true
+    }
 
+    /**[itemUpdateFrom]*/
+    val itemUpdateFromListenerList = mutableSetOf<ItemAction>()
+
+    fun observeItemUpdateFrom(action: ItemAction): ItemAction {
+        itemUpdateFromListenerList.add(action)
+        return action
+    }
+
+    fun removeItemUpdateFromObserver(action: ItemAction): Boolean {
+        return itemUpdateFromListenerList.remove(action)
     }
 
     //</editor-fold desc="定向更新">
@@ -739,7 +890,8 @@ open class DslAdapterItem : LifecycleOwner {
         }
     }
 
-    /**选中变化后触发*/
+    /**选中变化后触发
+     * [com.angcyo.dsladapter.ItemSelectorHelper._selectorInner]*/
     open fun _itemSelectorChange(selectorParams: SelectorParams) {
         onItemSelectorChange(selectorParams)
     }
@@ -750,13 +902,14 @@ open class DslAdapterItem : LifecycleOwner {
 
     /**动态计算的属性*/
     val itemGroupParams: ItemGroupParams
-        get() = itemDslAdapter?.findItemGroupParams(this) ?: ItemGroupParams(
-            0,
-            this,
-            mutableListOf(this)
-        ).apply {
+        get() = _itemGroupParamsCache ?: itemDslAdapter?.findItemGroupParams(this)?.apply {
+            _itemGroupParamsCache = this
+        } ?: createItemGroupParams().apply {
             L.w("注意获取[itemGroupParams]时[itemDslAdapter]为null")
         }
+
+    /**缓存, 一个bind周期内, 只计算一次*/
+    var _itemGroupParamsCache: ItemGroupParams? = null
 
     /**所在的分组名, 只用来做快捷变量存储*/
     var itemGroups: List<String> = listOf()
@@ -950,7 +1103,11 @@ open class DslAdapterItem : LifecycleOwner {
 
 }
 
-class UpdateDependProperty<T>(var value: T, val payload: Int = DslAdapterItem.PAYLOAD_UPDATE_PART) :
+/**属性改变时, 通过diff更新列表*/
+class UpdateDependProperty<T>(
+    var value: T,
+    val payload: Any? = DslAdapterItem.PAYLOAD_UPDATE_PART
+) :
     ReadWriteProperty<DslAdapterItem, T> {
     override fun getValue(thisRef: DslAdapterItem, property: KProperty<*>): T = value
 
@@ -958,9 +1115,38 @@ class UpdateDependProperty<T>(var value: T, val payload: Int = DslAdapterItem.PA
         val old = this.value
         this.value = value
         if (old != value) {
+            thisRef.itemUpdateFlag = true
             thisRef.updateItemDepend(
                 FilterParams(thisRef, updateDependItemWithEmpty = true, payload = payload)
             )
         }
     }
 }
+
+/**属性改变时, 通过[notifyItemChangedPayload]更新列表*/
+class UpdateAdapterProperty<T>(
+    var value: T,
+    val payload: Any? = DslAdapterItem.PAYLOAD_UPDATE_PART
+) :
+    ReadWriteProperty<DslAdapterItem, T> {
+    override fun getValue(thisRef: DslAdapterItem, property: KProperty<*>): T = value
+
+    override fun setValue(thisRef: DslAdapterItem, property: KProperty<*>, value: T) {
+        val old = this.value
+        this.value = value
+        if (old != value) {
+            thisRef.itemUpdateFlag = true
+            thisRef.updateAdapterItem(payload)
+        }
+    }
+}
+
+/**存储tag数据*/
+fun DslAdapterItem.putTag(key: Int, value: Any?) {
+    val tags = itemTags ?: SparseArray()
+    tags.put(key, value)
+    itemTags = tags
+}
+
+/**获取tag数据*/
+fun DslAdapterItem.getTag(key: Int): Any? = itemTags?.get(key)
