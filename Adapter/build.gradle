@@ -27,8 +27,8 @@ android {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'androidx.recyclerview:recyclerview:1.2.0'
+    implementation 'androidx.recyclerview:recyclerview:1.2.1'
 
-    def lifecycle_version = "2.3.1"
+    def lifecycle_version = "2.4.0"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
 }
