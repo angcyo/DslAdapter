@@ -30,6 +30,7 @@ class UpdateDataConfig {
             DslAdapterItem.PAYLOAD_UPDATE_PART,
             DslAdapterItem.PAYLOAD_UPDATE_MEDIA
         )
+        important = true
     }
 
     /**本次更新, 需要更新的数据量*/
@@ -71,8 +72,8 @@ class UpdateDataConfig {
      *
      * @return 返回null, 则会删除对应的[oldItem], 返回与[oldItem]不一样的item, 则会替换原来的[oldItem]
      * */
-    var updateOrCreateItem: (oldItem: DslAdapterItem?, data: Any?, index: Int) -> DslAdapterItem? =
-        { oldItem, data, index ->
+    var updateOrCreateItem: (oldItem: DslAdapterItem?, data: Any?, itemIndex: Int) -> DslAdapterItem? =
+        { oldItem, data, itemIndex ->
             oldItem
         }
 

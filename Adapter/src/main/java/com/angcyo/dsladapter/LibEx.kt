@@ -330,6 +330,8 @@ fun List<Any?>?.isListEmpty(): Boolean {
     } ?: true
 }
 
+fun List<*>?.size() = this?.size ?: 0
+
 fun View?.mH(def: Int = 0): Int {
     return this?.measuredHeight ?: def
 }
