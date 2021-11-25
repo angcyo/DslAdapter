@@ -1,3 +1,17 @@
+# 2021-11-25
+
+`3.0.0`
+
+- `DslViewHolder` 新增一些`View`的常用操作
+- 新增`View/ViewGroup`的一些扩展操作
+- 支持自定义的`ItemType`值, 而非一定是`itemLayoutId`
+- `DslAdapterItem`提供一些默认的操作和配置
+- 支持观察`ItemBind`
+- 支持观察`ItemUpdate`
+- 修改`Item`的`thisAreItemsTheSame`判断
+- 新增`Item`更新操作`DslAdapter.updateAdapter`
+- 等
+
 # 2021-7-14
 
 `3.0.0-binding`
