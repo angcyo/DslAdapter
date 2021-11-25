@@ -46,6 +46,11 @@ renderAdapter{
 //普通界面和列表界面 如出一辙, 一点也不用惊讶,后面还有更刺激的.
 
 //and so on
+
+open fun renderAdapter(render: DslAdapter.() -> Unit) {
+    dslAdapter.render()
+}
+
 ```
 
 你没有看错, 就是这么`简单`, 就是这么`高效`. 一个字`...爽 爽 爽...`
