@@ -25,15 +25,73 @@ fun DslAdapter.findItemGroupParams(
     useFilterList: Boolean = true,
     lm: RecyclerView.LayoutManager? = null
 ): ItemGroupParams {
-    val params = ItemGroupParams()
-    params.currentAdapterItem = dslAdapterItem
-
     val allItemList = getDataList(useFilterList)
-    var interruptGroup = false
-    var findAnchor = false
+    val groupList = mutableListOf<ItemGroupParams>()
+
+    //目标分组信息, 需要返回的数据
+    var anchorParams: ItemGroupParams? = null
+
+    var nextItem: DslAdapterItem? = null
+    var nextParams: ItemGroupParams? = null
+    var nextGroupItems = mutableListOf<DslAdapterItem>()
+
+    for (i in allItemList.indices) {
+        val item = allItemList[i]
+        if (i == 0 || nextItem == item) {
+            //保存之前
+            nextParams?.apply {
+                indexInGroup = nextGroupItems.indexOf(dslAdapterItem)
+                groupIndex = groupList.indexOf(this)
+                //edgeGridParams, 暂不初始化
+            }
+
+            //新建组
+            nextParams = ItemGroupParams().apply {
+                nextGroupItems = mutableListOf()
+                nextGroupItems.add(item)
+
+                groupList.add(this)
+
+                this.groupList = groupList
+                this.groupItems = nextGroupItems
+                currentAdapterItem = item
+            }
+
+            //目标
+            if (item == dslAdapterItem) {
+                anchorParams = nextParams
+            }
+
+            for (j in i + 1 until allItemList.count()) {
+                val otherItem = allItemList.getOrNull(j)
+                if (otherItem != null) {
+                    //目标
+                    if (otherItem == dslAdapterItem) {
+                        anchorParams = nextParams
+                    }
+
+                    if (item.isInGroupItem(otherItem)) {
+                        nextGroupItems.add(otherItem)
+                    } else {
+                        nextItem = otherItem
+                        break
+                    }
+                }
+            }
+        }
+    }
+    anchorParams?.currentAdapterItem = dslAdapterItem
+    //最后一个
+    nextParams?.apply {
+        indexInGroup = nextGroupItems.indexOf(currentAdapterItem!!)
+        groupIndex = groupList.indexOf(this)
+    }
+
+    /*var interruptGroup = false
+    var findAnchor = false*/
 
     //分组数据计算
-    for (i in allItemList.indices) {
+    /*for (i in allItemList.indices) {
         val targetItem = allItemList[i]
 
         if (!interruptGroup) {
@@ -53,22 +111,22 @@ fun DslAdapter.findItemGroupParams(
         }
     }
 
-    params.indexInGroup = params.groupItems.indexOf(dslAdapterItem)
+    anchorParams.indexInGroup = anchorParams.groupItems.indexOf(dslAdapterItem)*/
 
     //网格边界计算
     val layoutManager = lm ?: _recyclerView?.layoutManager
 
-    if (layoutManager is GridLayoutManager) {
+    if (anchorParams != null && layoutManager is GridLayoutManager) {
         layoutManager.apply {
             val itemPosition = allItemList.indexOf(dslAdapterItem)
 
-            val groupItemList = params.groupItems
+            val groupItemList = anchorParams.groupItems
 
             val spanSizeLookup = spanSizeLookup ?: GridLayoutManager.DefaultSpanSizeLookup()
 
             //当前位置
             val currentSpanParams =
-                getSpanParams(spanSizeLookup, itemPosition, spanCount, params.indexInGroup)
+                getSpanParams(spanSizeLookup, itemPosition, spanCount, anchorParams.indexInGroup)
 
             //下一个的信息
             val nextItemPosition: Int = itemPosition + 1
@@ -135,7 +193,7 @@ fun DslAdapter.findItemGroupParams(
                 )
             }
 
-            params.edgeGridParams = EdgeGridParams(
+            anchorParams.edgeGridParams = EdgeGridParams(
                 currentSpanParams, nextSpanParams,
                 firstSpanParams, lastSpanParams,
                 firstParams, lastParams
@@ -147,7 +205,7 @@ fun DslAdapter.findItemGroupParams(
         L.w("layoutManager is null")
     }
 
-    return params
+    return anchorParams ?: dslAdapterItem.createItemGroupParams()
 }
 
 fun getSpanParams(
@@ -169,14 +227,40 @@ fun getSpanParams(
 
 /**[DslAdapterItem]分组信息. 分组依据[DslAdapterItem.isItemInGroups]*/
 data class ItemGroupParams(
+
+    /**所有分组的信息*/
+    var groupList: List<ItemGroupParams> = listOf(),
+
+    /**在第几组中*/
+    var groupIndex: Int = RecyclerView.NO_POSITION,
+
     /**当前[item]在一组中的索引值[index]*/
     var indexInGroup: Int = RecyclerView.NO_POSITION,
-    var currentAdapterItem: DslAdapterItem? = null,
-    /**一组中的所有[item]*/
-    var groupItems: MutableList<DslAdapterItem> = mutableListOf(),
 
+    var currentAdapterItem: DslAdapterItem? = null,
+
+    /**一组中的所有[item]*/
+    var groupItems: List<DslAdapterItem> = listOf(),
+
+    /**网格系统中的edge信息*/
     var edgeGridParams: EdgeGridParams = EdgeGridParams()
 )
+
+fun DslAdapterItem.createItemGroupParams(): ItemGroupParams {
+    val params = ItemGroupParams()
+    val groupList = mutableListOf<ItemGroupParams>()
+    val groupItemList = mutableListOf<DslAdapterItem>()
+
+    params.currentAdapterItem = this
+
+    params.groupList = groupList
+    params.groupItems = groupItemList
+
+    params.indexInGroup = groupItemList.indexOf(this)
+    params.groupIndex = groupList.indexOf(params)
+
+    return params
+}
 
 /**网格分组边界[Edge]信息*/
 data class EdgeGridParams(
@@ -233,6 +317,13 @@ fun ItemGroupParams.isFirstPosition(): Boolean = indexInGroup == 0 && currentAda
 fun ItemGroupParams.isLastPosition(): Boolean =
     currentAdapterItem != null && indexInGroup == groupItems.lastIndex
 
+/**在第一组中*/
+fun ItemGroupParams.isFirstGroup(): Boolean = groupList.count() > 0 && groupIndex == 0
+
+/**在最后一组中*/
+fun ItemGroupParams.isLastGroup(): Boolean =
+    groupList.count() > 0 && groupIndex == groupList.lastIndex
+
 //</editor-fold desc="线性布局中的分组信息扩展方法">
 
 //<editor-fold desc="网格布局中的边界扩展方法">
@@ -253,7 +344,8 @@ fun ItemGroupParams.isEdgeTop(): Boolean = edgeGridParams.currentSpanParams.span
 
 /**在网格的下边*/
 fun ItemGroupParams.isEdgeBottom(): Boolean = edgeGridParams.run {
-    lastParams.spanGroupIndex == currentSpanParams.spanGroupIndex
+    currentSpanParams.spanGroupIndex != RecyclerView.NO_POSITION &&
+            lastParams.spanGroupIndex == currentSpanParams.spanGroupIndex
 }
 
 /**全屏占满网格整个一行*/
@@ -293,12 +385,14 @@ fun ItemGroupParams.isEdgeGroupRightBottom(): Boolean = edgeGridParams.run {
 
 /**在一组中的第一行中*/
 fun ItemGroupParams.isEdgeGroupTop(): Boolean = edgeGridParams.run {
-    currentSpanParams.spanGroupIndex == firstSpanParams.spanGroupIndex
+    currentSpanParams.spanGroupIndex != RecyclerView.NO_POSITION &&
+            currentSpanParams.spanGroupIndex == firstSpanParams.spanGroupIndex
 }
 
 /**在一组中的最后一行中*/
 fun ItemGroupParams.isEdgeGroupBottom(): Boolean = edgeGridParams.run {
-    currentSpanParams.spanGroupIndex == lastSpanParams.spanGroupIndex
+    currentSpanParams.spanGroupIndex != RecyclerView.NO_POSITION &&
+            currentSpanParams.spanGroupIndex == lastSpanParams.spanGroupIndex
 }
 
 /**占满整个一行(允许非全屏)*/
@@ -321,12 +415,14 @@ fun ItemGroupParams.isGroupLastColumn(): Boolean = edgeGridParams.run {
 
 /**在一组中的第一行上, 支持横竖布局*/
 fun ItemGroupParams.isGroupFirstRow(): Boolean = edgeGridParams.run {
-    currentSpanParams.spanGroupIndex == firstSpanParams.spanGroupIndex
+    currentSpanParams.spanGroupIndex != RecyclerView.NO_POSITION &&
+            currentSpanParams.spanGroupIndex == firstSpanParams.spanGroupIndex
 }
 
 /**在一组中的最后一行上, 支持横竖布局*/
 fun ItemGroupParams.isGroupLastRow(): Boolean = edgeGridParams.run {
-    currentSpanParams.spanGroupIndex == lastSpanParams.spanGroupIndex
+    currentSpanParams.spanGroupIndex != RecyclerView.NO_POSITION &&
+            currentSpanParams.spanGroupIndex == lastSpanParams.spanGroupIndex
 }
 
 //</editor-fold desc="细粒度 分组边界扩展">

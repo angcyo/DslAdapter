@@ -2,6 +2,7 @@
 <resources>
     <item name="tag" type="id"/>
     <item name="base_retry_button" type="id"/>
+    <item name="lib_item_line_view" type="id"/>
 
     <!--将DslViewHolder, 放在View的tag中-->
     <item name="lib_tag_dsl_view_holder" type="id" />

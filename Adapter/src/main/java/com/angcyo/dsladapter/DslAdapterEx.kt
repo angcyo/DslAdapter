@@ -33,6 +33,15 @@ fun DslAdapter.findItem(
     return getDataList(useFilterList).find(predicate)
 }
 
+fun <Item : DslAdapterItem> DslAdapter.findItem(
+    itemClass: Class<Item>,
+    useFilterList: Boolean = true
+): Item? {
+    return findItem(useFilterList) {
+        it.className() == itemClass.className()
+    } as? Item
+}
+
 inline fun <reified Item : DslAdapterItem> DslAdapter.find(
     tag: String? = null,
     useFilterList: Boolean = true,
@@ -294,6 +303,16 @@ fun DslAdapter.eachItem(
     getDataList(useFilterList).forEachIndexed(action)
 }
 
+/**是否有item发生过改变*/
+fun DslAdapter.haveItemChanged(useFilterList: Boolean = true): Boolean {
+    for (item in getDataList(useFilterList)) {
+        if (item.itemChanged) {
+            return true
+        }
+    }
+    return false
+}
+
 //</editor-fold desc="Item操作">
 
 //<editor-fold desc="payload">
@@ -325,9 +344,17 @@ fun Iterable<*>.isUpdateMedia(): Boolean {
     return count() <= 0 || containsPayload(DslAdapterItem.PAYLOAD_UPDATE_MEDIA)
 }
 
+fun payload(vararg payload: Int): List<Int> {
+    return if (payload.isEmpty()) {
+        listOf(DslAdapterItem.PAYLOAD_UPDATE_PART)
+    } else {
+        payload.toList()
+    }
+}
+
 /**需要更新媒体的负载*/
 fun mediaPayload(): List<Int> =
-    listOf(DslAdapterItem.PAYLOAD_UPDATE_PART, DslAdapterItem.PAYLOAD_UPDATE_MEDIA)
+    payload(DslAdapterItem.PAYLOAD_UPDATE_PART, DslAdapterItem.PAYLOAD_UPDATE_MEDIA)
 
 //</editor-fold desc="payload">
 
@@ -402,37 +429,59 @@ fun DslAdapter.delayNotify(filterParams: FilterParams = FilterParams(notifyDiffD
 
 //</editor-fold desc="Update">
 
-val RecyclerView._dslAdapter: DslAdapter? get() = adapter as? DslAdapter?
+//<editor-fold desc="操作扩展">
 
-fun View.getChildOrNull(index: Int): View? {
-    return if (this is ViewGroup) {
-        this.getChildOrNull(index)
-    } else {
-        this
-    }
-}
+/**查找符合条件的item集合*/
+fun DslAdapter.findItemList(
+    useFilterList: Boolean = true,
+    predicate: (DslAdapterItem) -> Boolean
+): List<DslAdapterItem> {
+    val list = getDataList(useFilterList)
+    val result = mutableListOf<DslAdapterItem>()
 
-/**获取指定位置[index]的[child], 如果有.*/
-fun ViewGroup.getChildOrNull(index: Int): View? {
-    return if (index in 0 until childCount) {
-        getChildAt(index)
-    } else {
-        null
-    }
-}
-
-fun ViewGroup.forEach(recursively: Boolean = false, map: (index: Int, child: View) -> Unit) {
-    eachChild(recursively, map)
-}
-
-/**枚举所有child view
- * [recursively] 递归所有子view*/
-fun ViewGroup.eachChild(recursively: Boolean = false, map: (index: Int, child: View) -> Unit) {
-    for (index in 0 until childCount) {
-        val childAt = getChildAt(index)
-        map.invoke(index, childAt)
-        if (recursively && childAt is ViewGroup) {
-            childAt.eachChild(recursively, map)
+    for (it in list) {
+        if (predicate(it)) {
+            result.add(it)
         }
     }
+
+    return result
 }
+
+/**查找相同类名的item
+ * [continuous]连续or不连续*/
+fun <T : DslAdapterItem> DslAdapter.findSameClassItem(
+    item: T,
+    useFilterList: Boolean = true,
+    continuous: Boolean = true
+): List<T> {
+    val list = getDataList(useFilterList)
+    val result = mutableListOf<T>()
+
+    if (continuous) {
+        var findAnchor = false /*是否找到锚点*/
+        for (it in list) {
+            findAnchor = it == item
+            if (it.className() == item.className()) {
+                result.add(it as T)
+            } else {
+                if (findAnchor) {
+                    break
+                } else {
+                    result.clear()
+                }
+            }
+        }
+    } else {
+        for (it in list) {
+            if (it.className() == item.className()) {
+                result.add(it as T)
+            }
+        }
+    }
+
+    return result
+}
+
+//</editor-fold desc="操作扩展">
+

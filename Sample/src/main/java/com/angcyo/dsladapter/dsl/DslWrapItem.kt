@@ -39,7 +39,7 @@ class DslWrapItem : DslAdapterItem() {
         itemHolder.group(R.id.item_wrap_layout)?.apply {
             removeAllViews()
             itemContentLayoutId?.let {
-                View.inflate(itemHolder.content, it, this)
+                View.inflate(itemHolder.context, it, this)
             }
         }
         itemHolder.tv(R.id.text_view)?.text = itemText

@@ -10,12 +10,11 @@ import com.angcyo.dsladapter.internal.ThrottleClickListener.Companion.DEFAULT_TH
  * @date 2020/01/06
  */
 open class ThrottleClickListener(
+    val throttleInterval: Long = DEFAULT_THROTTLE_INTERVAL,
     val throttle: (lastTime: Long, nowTime: Long, view: View) -> Boolean = { lastTime, nowTime, _ ->
-        (nowTime - lastTime) < DEFAULT_THROTTLE_INTERVAL
+        (nowTime - lastTime) < throttleInterval
     },
-    val action: (View) -> Unit = {
-
-    }
+    val action: (View) -> Unit
 ) : View.OnClickListener {
 
     companion object {
@@ -38,15 +37,15 @@ open class ThrottleClickListener(
 }
 
 /**全局节流事件处理*/
+fun View.throttleClick(interval: Long = DEFAULT_THROTTLE_INTERVAL, action: (View) -> Unit) {
+    setOnClickListener(ThrottleClickListener(interval, action = action))
+}
+
+/**全局节流事件处理*/
 fun throttleClick(interval: Long = DEFAULT_THROTTLE_INTERVAL, action: () -> Unit) {
     val nowTime = System.currentTimeMillis()
     if (nowTime - ThrottleClickListener._lastThrottleClickTime > interval) {
         ThrottleClickListener._lastThrottleClickTime = nowTime
         action()
     }
-}
-
-/**点击事件节流处理*/
-fun View?.throttleClickIt(action: (View) -> Unit) {
-    this?.setOnClickListener(ThrottleClickListener(action = action))
 }
