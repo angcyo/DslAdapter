@@ -1,6 +1,6 @@
 # 2021-11-25
 
-`3.0.0`
+`3.0.2`
 
 - `DslViewHolder` 新增一些`View`的常用操作
 - 新增`View/ViewGroup`的一些扩展操作
