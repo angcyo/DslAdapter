@@ -55,16 +55,18 @@ abstract class BaseRecyclerActivity : AppCompatActivity() {
             addItemDecoration(baseDslItemDecoration)
             hoverItemDecoration.attachToRecyclerView(this)
 
-            //防止在折叠/展开 即 itemAdd/itemRemove 的时候, 自动滚动到顶部.
-            //这个属性决定了, adapter 中的item 改变, 不会影响 RecyclerView 自身的宽高属性.
-            //如果设置了true, 并且又想影响RecyclerView 自身的宽高属性. 调用 notifyDataSetChanged(),
-            //否则统一 使用notifyItemXXX 变种方法
-            setHasFixedSize(true)
-            layoutManager = LinearLayoutManager(
-                context,
-                LinearLayoutManager.VERTICAL,
-                false
-            )
+            layoutManager = object : LinearLayoutManager(context, VERTICAL, false) {
+                override fun onLayoutChildren(
+                    recycler: RecyclerView.Recycler?,
+                    state: RecyclerView.State?
+                ) {
+                    try {
+                        super.onLayoutChildren(recycler, state)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
             adapter = dslAdapter
         }
 
