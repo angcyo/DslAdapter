@@ -83,8 +83,14 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
      * */
     var onDispatchUpdatesAfterOnce: DispatchUpdates? = null
 
+    val dispatchUpdatesBeforeList = mutableListOf<DispatchUpdates>()
     val dispatchUpdatesAfterList = mutableListOf<DispatchUpdates>()
     val dispatchUpdatesAfterOnceList = mutableListOf<DispatchUpdates>()
+
+    val itemBindObserver = mutableSetOf<ItemBindAction>()
+
+    //关联item type和item layout id
+    val _itemLayoutHold = hashMapOf<Int, Int>()
 
     init {
         dslDataFilter = DslDataFilter(this)
@@ -100,16 +106,22 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     //<editor-fold desc="生命周期方法">
 
     override fun getItemViewType(position: Int): Int {
-        return getItemData(position)?.itemLayoutId ?: 0
+        var type = 0
+        getItemData(position)?.apply {
+            type = itemViewType ?: itemLayoutId
+            _itemLayoutHold[type] = itemLayoutId
+        }
+        return type
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DslViewHolder {
-        if (viewType <= 0) {
+        val layoutId = _itemLayoutHold[viewType] ?: 0
+        if (layoutId <= 0) {
             throw IllegalStateException("请检查是否未指定[itemLayoutId]")
         }
         //viewType, 就是布局的 Id, 这是设计核心原则.
         val dslViewHolder: DslViewHolder
-        val itemView: View = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
+        val itemView: View = LayoutInflater.from(parent.context).inflate(layoutId, parent, false)
         dslViewHolder = DslViewHolder(itemView)
         return dslViewHolder
     }
@@ -125,9 +137,18 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     ) {
         super.onBindViewHolder(holder, position, payloads)
 
+        //核心, 开始绑定界面
         val dslItem = getItemData(position)
-        dslItem?.itemDslAdapter = this
-        dslItem?.itemBind?.invoke(holder, position, dslItem, payloads)
+        dslItem?.let {
+            dslItem.itemDslAdapter = this
+            dslItem.itemBind(holder, position, dslItem, payloads)
+            holder.isBindView = true
+
+            //绑定监听
+            itemBindObserver.forEach {
+                it(holder, position, dslItem, payloads)
+            }
+        }
     }
 
     override fun onBindViewHolder(holder: DslViewHolder, position: Int) {
@@ -149,7 +170,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     override fun onViewAttachedToWindow(holder: DslViewHolder) {
         super.onViewAttachedToWindow(holder)
         holder.getDslAdapterItem()?.apply {
-            holder.itemView.fullSpan(itemSpanCount == -1)
+            holder.itemView.fullSpan(itemSpanCount == DslAdapterItem.FULL_ITEM)
             itemViewAttachedToWindow.invoke(holder, holder.adapterPosition)
         }
     }
@@ -186,6 +207,12 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
 
     //<editor-fold desc="其他方法">
 
+    override fun onDispatchUpdatesBefore(dslAdapter: DslAdapter) {
+        dispatchUpdatesBeforeList.forEach {
+            it.invoke(dslAdapter)
+        }
+    }
+
     /**
      * [Diff]操作结束之后的通知事件
      * */
@@ -208,8 +235,25 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         dispatchUpdatesAfterList.add(action)
     }
 
+    fun onDispatchUpdatesAfter(action: DispatchUpdates) {
+        dispatchUpdatesAfterList.add(action)
+    }
+
+    fun onDispatchUpdatesBefore(action: DispatchUpdates) {
+        dispatchUpdatesBeforeList.add(action)
+    }
+
     fun onDispatchUpdatesOnce(action: DispatchUpdates) {
         dispatchUpdatesAfterOnceList.add(action)
+    }
+
+    /**观察[onBindViewHolder]*/
+    fun observeItemBind(itemBindAction: ItemBindAction) {
+        itemBindObserver.add(itemBindAction)
+    }
+
+    fun removeItemBind(itemBindAction: ItemBindAction) {
+        itemBindObserver.remove(itemBindAction)
     }
 
     //</editor-fold>
@@ -549,6 +593,14 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         if (indexOf in list.indices) {
             notifyItemChangedPayload(indexOf, payload)
         }
+    }
+
+    /**[notifyDataSetChanged]*/
+    fun notifyDataChanged() {
+        dslDataFilter?.clearTask()
+        dslDataFilter?.filterDataList?.clear()
+        dslDataFilter?.filterDataList?.addAll(adapterItems)
+        notifyDataSetChanged()
     }
 
     /**更新界面上所有[DslAdapterItem]*/
