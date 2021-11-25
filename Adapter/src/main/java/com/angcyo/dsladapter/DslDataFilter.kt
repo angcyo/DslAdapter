@@ -88,6 +88,18 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
         lock.withLock {
             val nowTime = System.currentTimeMillis()
 
+            if (!params.important) {
+                //非重要的操作
+                val importantTask =
+                    _updateTaskLit.find { !it.taskCancel.get() && it._params?.important == true }
+
+                if (importantTask != null) {
+                    //有主要的任务还未处理
+                    L.w("来自[${params.fromDslAdapterItem?.simpleHash()}]的Diff被忽略,原因[important]")
+                    return
+                }
+            }
+
             if (handle.hasCallbacks()) {
                 //立即触发一次, 子项依赖的更新, 防止部分状态丢失.
                 _updateTaskLit.lastOrNull()?.notifyUpdateDependItem()
@@ -100,6 +112,7 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
                     if (it._params?.justRun == true) {
                         //此任务需要立即执行, 跳过取消
                     } else {
+                        L.w("来自[${it._params?.fromDslAdapterItem?.simpleHash()}]的Diff被忽略,原因[justRun:${params.justRun}][debounce:${params.shakeType == OnceHandler.SHAKE_TYPE_DEBOUNCE}]")
                         it.taskCancel.set(true)
                     }
                 } else if (params.shakeType == OnceHandler.SHAKE_TYPE_THROTTLE) {
@@ -111,6 +124,7 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
                             if (it._params?.justRun == true) {
                                 //此任务需要立即执行, 跳过取消
                             } else {
+                                L.w("来自[${it._params?.fromDslAdapterItem?.simpleHash()}]的Diff被忽略,原因[throttle]")
                                 it.taskCancel.set(true)
                             }
                         }
@@ -139,6 +153,14 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
                 mainHandler.postDelayed(taskRunnable, params.shakeDelay)
             }
         }
+    }
+
+    /**取消所有任务*/
+    fun clearTask() {
+        _updateTaskLit.forEach {
+            it.taskCancel.set(true)
+        }
+        _updateTaskLit.clear()
     }
 
     /**Diff之后的数据过滤*/
@@ -216,6 +238,17 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
         _dispatchUpdatesSet.remove(listener)
     }
 
+    /**添加一个数据过滤器*/
+    fun addFilterInterceptor(intercept: (chain: FilterChain) -> List<DslAdapterItem>): IFilterInterceptor {
+        val obj = object : BaseFilterInterceptor() {
+            override fun intercept(chain: FilterChain): List<DslAdapterItem> {
+                return intercept(chain)
+            }
+        }
+        filterInterceptorList.add(obj)
+        return obj
+    }
+
     /**Diff更新任务*/
     internal inner class UpdateTaskRunnable : Runnable {
 
@@ -257,24 +290,38 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
             val resultList = mutableListOf<DslAdapterItem>()
 
             val startTime = nowTime()
-            L.v("${hash()} 开始计算Diff:$startTime")
+            L.v("${dslAdapter.hash()}:${hash()} 开始计算Diff:$startTime")
             val diffResult = calculateDiff(resultList)
             val nowTime = nowTime()
             val s = (nowTime - startTime) / 1000
             //val ms = ((nowTime - startTime) % 1000) * 1f / 1000
             val ms = (nowTime - startTime) % 1000
             //L.v("${hash()} Diff计算耗时:${String.format("%.3f", s + ms)}s")
-            L.v("${hash()} Diff计算耗时:${s}s${ms}ms")
+            L.v("${dslAdapter.hash()}:${hash()} Diff计算耗时:${s}s${ms}ms")
+
+            val oldSize = filterDataList.size
+            //因为是异步操作, 所以在延迟前, 就要覆盖 filterDataList 数据源
+            resultList.let {
+                filterDataList.clear()
+                filterDataList.addAll(it)
+            }
 
             //回调到主线程
             val notifyDelay = _params?.notifyDiffDelay ?: -1
             when {
+                //延迟通知
                 notifyDelay >= 0 -> mainHandler.postDelayed({
-                    onDiffResult(diffResult, resultList)
+                    onDiffResult(diffResult, resultList, oldSize)
                 }, notifyDelay)
-                Looper.getMainLooper() == Looper.myLooper() -> onDiffResult(diffResult, resultList)
+                //主线程通知
+                Looper.getMainLooper() == Looper.myLooper() -> onDiffResult(
+                    diffResult,
+                    resultList,
+                    oldSize
+                )
+                //主线程通知
                 else -> mainHandler.post {
-                    onDiffResult(diffResult, resultList)
+                    onDiffResult(diffResult, resultList, oldSize)
                 }
             }
         }
@@ -290,7 +337,7 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
 
             resultList.addAll(_newList)
 
-            L.v("${this.hash()} 数据列表->原:${oldList.size} 后:${newList.size} 终:${_newList.size}")
+            L.v("${dslAdapter.hash()}:${this.hash()} 数据列表->原:${oldList.size} 后:${newList.size} 终:${_newList.size}")
 
             //开始计算diff
             val diffResult = DiffUtil.calculateDiff(
@@ -341,28 +388,26 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
         /**Diff返回后, 通知界面更新*/
         private fun onDiffResult(
             diffResult: DiffUtil.DiffResult,
-            diffList: MutableList<DslAdapterItem>
+            diffList: MutableList<DslAdapterItem>,
+            oldSize: Int
         ) {
-            //因为是异步操作, 所以在 [dispatchUpdatesTo] 时, 才覆盖 filterDataList 数据源
-
-            val oldSize = filterDataList.size
-            var newSize = 0
-
-            diffList.let {
-                newSize = it.size
-                filterDataList.clear()
-                filterDataList.addAll(it)
+            if (taskCancel.get()) {
+                return
             }
 
+            val newSize = diffList.size
+
             diffList.forEach {
-                //清空标志
-                it.itemChanging = false
+                it.diffResult(_params, diffResult)
             }
 
             val updateDependItemList = getUpdateDependItemList()
 
             //是否调用了[Dispatch]
             var isDispatchUpdatesTo = false
+
+            val updatesSet = mutableSetOf<OnDispatchUpdatesListener>()
+            updatesSet.addAll(_dispatchUpdatesSet)
 
             if (_params?.justFilter == true) {
                 //仅过滤数据源,不更新界面
@@ -380,8 +425,20 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
                         true
                     )
                 } else {
-                    //更新界面
-                    diffResult.dispatchUpdatesTo(dslAdapter)
+
+                    //回调
+                    updatesSet.forEach {
+                        it.onDispatchUpdatesBefore(dslAdapter)
+                    }
+
+                    //派发更新界面
+                    val updateTo = _params?.onDispatchUpdatesTo
+                    if (updateTo == null) {
+                        diffResult.dispatchUpdatesTo(RBatchingListUpdateCallback(dslAdapter))
+                    } else {
+                        updateTo(diffResult, diffList)
+                    }
+
                     isDispatchUpdatesTo = true
                 }
             }
@@ -389,9 +446,7 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
             notifyUpdateDependItem(updateDependItemList)
 
             //DispatchUpdates结束回调通知
-            if (isDispatchUpdatesTo && _dispatchUpdatesSet.isNotEmpty()) {
-                val updatesSet = mutableSetOf<OnDispatchUpdatesListener>()
-                updatesSet.addAll(_dispatchUpdatesSet)
+            if (isDispatchUpdatesTo && updatesSet.isNotEmpty()) {
                 updatesSet.forEach {
                     it.onDispatchUpdatesAfter(dslAdapter)
                 }
@@ -399,7 +454,7 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
 
             //任务结束
             val nowTime = System.currentTimeMillis()
-            L.d("${hash()} 界面更新结束, 总耗时${LTime.time(_taskStartTime, nowTime)}")
+            L.d("${dslAdapter.hash()}:${hash()} 界面更新结束, 总耗时${LTime.time(_taskStartTime, nowTime)}")
             _updateTaskLit.remove(this)
             taskCancel.set(true)
         }
@@ -420,24 +475,25 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
         }
 
         /**通知依赖的子项, 更新界面*/
-        private fun notifyUpdateDependItem(itemList: List<DslAdapterItem>) {
+        private fun notifyUpdateDependItem(dependItemList: List<DslAdapterItem>) {
             if (_params?.fromDslAdapterItem == null || taskCancel.get()) {
                 return
             }
 
             val fromItem = _params!!.fromDslAdapterItem!!
 
-            if (itemList.isNotEmpty()) {
+            if (dependItemList.isNotEmpty()) {
                 L.v("来自:${fromItem.simpleHash()} tag:${fromItem.itemTag}的更新↓")
             }
 
-            itemList.forEachIndexed { index, dslAdapterItem ->
-                dslAdapterItem.apply {
-                    itemUpdateFrom(fromItem)
-                    dslAdapterItem.updateAdapterItem(true)
+            dependItemList.forEachIndexed { index, dependItem ->
+                dependItem.apply {
+                    if (itemUpdateFrom(fromItem)) {
+                        dependItem.updateAdapterItem(true)
+                    }
+                    itemUpdateFromListenerList.forEach { it(fromItem) }
                 }
-
-                L.v("$index->通知更新:${dslAdapterItem.simpleHash()} tag:${dslAdapterItem.itemTag}")
+                L.v("$index->通知更新:${dependItem.simpleHash()} tag:${dependItem.itemTag}")
             }
         }
 
@@ -456,25 +512,22 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
 }
 
 data class FilterParams(
-    /**
-     * 触发更新的来源, 定向更新其子项.
-     * */
+    /** 触发更新的来源, 定向更新其子项. */
     val fromDslAdapterItem: DslAdapterItem? = null,
-    /**
-     * 异步计算Diff
-     * */
+
+    /** 异步计算Diff */
     var asyncDiff: Boolean = true,
-    /**
-     * 立即执行, 不检查抖动
-     * */
+
+    /** 立即执行, 不检查抖动 */
     var justRun: Boolean = false,
-    /**
-     * 只过滤列表数据, 不通知界面操作, 但是会通过子项更新. 开启此属性会:[async=true] [just=true]
-     * */
+
+    /** 只过滤列表数据, 不通知界面操作, 但是会通过子项更新. 开启此属性会:[async=true] [just=true] */
     var justFilter: Boolean = false,
-    /**
-     * 前提, Diff 之后, 2个数据列表的大小要一致.
-     *
+
+    /**重要的, 确保本次diff一定会执行, 再次操作后续的非[important]操作都将被忽略*/
+    var important: Boolean = false,
+
+    /** 前提, Diff 之后, 2个数据列表的大小要一致.
      * 当依赖的[DslAdapterItem] [isItemInUpdateList]列表为空时, 是否要调用[dispatchUpdatesTo]更新界面
      * */
     var updateDependItemWithEmpty: Boolean = true,
@@ -492,14 +545,27 @@ data class FilterParams(
     var shakeDelay: Long = DEFAULT_SHAKE_DELAY,
 
     /**计算完diff之后, 延迟多久通知界面*/
-    var notifyDiffDelay: Long = -1
+    var notifyDiffDelay: Long = -1,
+
+    /**实现此方法, 拦截库中的[dispatchUpdatesTo]界面更新*/
+    var onDispatchUpdatesTo: ((DiffUtil.DiffResult, List<DslAdapterItem>) -> Unit)? = null
 )
 
 typealias DispatchUpdates = (dslAdapter: DslAdapter) -> Unit
 
 interface OnDispatchUpdatesListener {
+
+    /**
+     * 触发[dispatchUpdatesTo]前回调
+     * */
+    fun onDispatchUpdatesBefore(dslAdapter: DslAdapter) {
+
+    }
+
     /**
      * 当触发了[dispatchUpdatesTo]后回调
      * */
-    fun onDispatchUpdatesAfter(dslAdapter: DslAdapter)
+    fun onDispatchUpdatesAfter(dslAdapter: DslAdapter) {
+
+    }
 }
