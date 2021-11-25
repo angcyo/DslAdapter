@@ -50,10 +50,29 @@ open class DslViewHolder(
     //<editor-fold desc="事件处理">
 
     /**
-     * 单击某个View
+     * 单击某个View, 有音效
      */
     fun clickView(view: View?) {
         view?.performClick()
+    }
+
+    fun clickView(@IdRes id: Int) {
+        view(id)?.performClick()
+    }
+
+    /**
+     * 单击某个View, 无音效
+     */
+    fun clickCallView(view: View?) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
+            view?.callOnClick()
+        }
+    }
+
+    fun clickCallView(@IdRes id: Int) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
+            view(id)?.callOnClick()
+        }
     }
 
     fun click(@IdRes id: Int, listener: View.OnClickListener?) {
@@ -65,9 +84,40 @@ open class DslViewHolder(
         click(id, View.OnClickListener { listener.invoke(it) })
     }
 
+    fun selectorClick(
+        @IdRes id: Int,
+        listener: (selected: Boolean) -> Boolean = { false /*不拦截默认处理*/ }
+    ) {
+        click(id) {
+            val old = it.isSelected
+            val new = !old
+            if (listener(new)) {
+                //no op
+            } else {
+                it.isSelected = new
+            }
+        }
+    }
+
     /**节流点击事件*/
-    fun throttleClick(@IdRes id: Int, action: (View) -> Unit) {
-        click(id, ThrottleClickListener(action = action))
+    fun throttleClick(
+        @IdRes id: Int,
+        throttleInterval: Long = ThrottleClickListener.DEFAULT_THROTTLE_INTERVAL,
+        action: (View) -> Unit
+    ) {
+        click(id, ThrottleClickListener(throttleInterval = throttleInterval, action = action))
+    }
+
+    /**节流点击一组事件*/
+    fun throttleClick(
+        vararg ids: Int,
+        throttleInterval: Long = ThrottleClickListener.DEFAULT_THROTTLE_INTERVAL,
+        action: (View) -> Unit
+    ) {
+        val listener = ThrottleClickListener(throttleInterval = throttleInterval, action = action)
+        ids.forEach {
+            click(it, listener)
+        }
     }
 
     fun clickItem(listener: View.OnClickListener?) {
@@ -82,12 +132,62 @@ open class DslViewHolder(
         click(itemView, ThrottleClickListener(action = action))
     }
 
+    fun throttleClickItem(vararg ids: Int, action: (View) -> Unit) {
+        val listener = ThrottleClickListener(action = action)
+        click(itemView, listener)
+        ids.forEach {
+            click(it, listener)
+        }
+    }
+
     fun click(view: View?, listener: View.OnClickListener?) {
         view?.setOnClickListener(listener)
     }
 
     fun click(view: View?, listener: (View) -> Unit) {
         view?.setOnClickListener { listener.invoke(it) }
+    }
+
+    fun longClickItem(listener: (View) -> Unit) {
+        itemView.setOnLongClickListener { v ->
+            listener(v)
+            true
+        }
+    }
+
+    fun longClick(@IdRes id: Int, listener: (View) -> Unit) {
+        view(id)?.setOnLongClickListener { v ->
+            listener(v)
+            true
+        }
+    }
+
+    fun longClick(@IdRes id: Int, listener: View.OnLongClickListener?) {
+        view(id)?.setOnLongClickListener(listener)
+    }
+
+    fun longClick(view: View?, listener: View.OnClickListener?) {
+        view?.setOnLongClickListener { v ->
+            listener?.onClick(v)
+            true
+        }
+    }
+
+    fun longClick(view: View?, listener: View.OnLongClickListener?) {
+        view?.setOnLongClickListener(listener)
+    }
+
+    fun check(
+        @IdRes resId: Int,
+        checked: Boolean,
+        listener: (buttonView: CompoundButton, isChecked: Boolean) -> Unit
+    ): CompoundButton? {
+        val compoundButton: CompoundButton? = v(resId)
+        if (compoundButton != null) {
+            compoundButton.setOnCheckedChangeListener(listener)
+            compoundButton.isChecked = checked
+        }
+        return compoundButton
     }
 
     //</editor-fold desc="事件处理">
@@ -157,36 +257,54 @@ open class DslViewHolder(
 
     //<editor-fold desc="可见性控制">
 
+    fun focusView(@IdRes resId: Int) {
+        focus<View>(resId)
+    }
+
+    fun focused(@IdRes resId: Int) {
+        focusView(resId)
+    }
+
+    /**获取焦点*/
+    fun focused(view: View?) {
+        view?.isFocusable = true
+        view?.isFocusableInTouchMode = true
+        view?.requestFocus()
+    }
+
     fun <T : View?> focus(@IdRes resId: Int): T? {
         val v = v<View>(resId)
         if (v != null) {
-            v.isFocusable = true
-            v.isFocusableInTouchMode = true
-            v.requestFocus()
+            focused(v)
             return v as? T
         }
         return null
     }
 
-    fun enable(@IdRes resId: Int, enable: Boolean = true): DslViewHolder {
+    fun enable(
+        @IdRes resId: Int,
+        enable: Boolean = true,
+        recursive: Boolean = true
+    ): DslViewHolder {
         val view = v<View>(resId)
-        enable(view, enable)
+        enable(view, enable, recursive)
         return this
     }
 
-    private fun enable(view: View?, enable: Boolean) {
+    private fun enable(view: View?, enable: Boolean, recursive: Boolean = true) {
         if (view == null) {
             return
         }
-        if (view is ViewGroup) {
+        if (view is ViewGroup && recursive) {
             for (i in 0 until view.childCount) {
-                enable(view.getChildAt(i), enable)
+                enable(view.getChildAt(i), enable, recursive)
             }
-        } else {
-            if (view.isEnabled != enable) {
-                view.isEnabled = enable
-            }
-            (view as? EditText)?.clearFocus()
+        }
+        if (view.isEnabled != enable) {
+            view.isEnabled = enable
+        }
+        if (view is EditText) {
+            view.clearFocus()
         }
     }
 
@@ -196,17 +314,17 @@ open class DslViewHolder(
         return this
     }
 
+    /**选中当前的view, 以及其所有的子view*/
     private fun selected(view: View?, selected: Boolean) {
         if (view == null) {
             return
         }
+        if (view.isSelected != selected) {
+            view.isSelected = selected
+        }
         if (view is ViewGroup) {
             for (i in 0 until view.childCount) {
                 selected(view.getChildAt(i), selected)
-            }
-        } else {
-            if (view.isSelected != selected) {
-                view.isSelected = selected
             }
         }
     }
@@ -229,12 +347,12 @@ open class DslViewHolder(
         return this
     }
 
-    fun invisible(@IdRes resId: Int, visible: Boolean): DslViewHolder {
+    fun invisible(@IdRes resId: Int, invisible: Boolean): DslViewHolder {
         val view = v<View>(resId)!!
-        if (visible) {
-            visible(view)
-        } else {
+        if (invisible) {
             invisible(view)
+        } else {
+            visible(view)
         }
         return this
     }
@@ -289,8 +407,7 @@ open class DslViewHolder(
     //<editor-fold desc="findViewById">
 
     fun <T : View?> v(@IdRes resId: Int): T? {
-        val viewWeakReference =
-            sparseArray[resId]
+        val viewWeakReference = sparseArray[resId]
         var view: View?
         if (viewWeakReference == null) {
             view = itemView.findViewById(resId)
@@ -302,7 +419,12 @@ open class DslViewHolder(
                 sparseArray.put(resId, WeakReference(view))
             }
         }
-        return view as? T
+        return try {
+            view as? T?
+        } catch (e: Exception) {
+            L.w(e)
+            null
+        }
     }
 
     fun tv(@IdRes resId: Int): TextView? {
@@ -342,5 +464,28 @@ open class DslViewHolder(
     }
 
     //</editor-fold desc="findViewById">
+
+    //<editor-fold desc="属性控制">
+
+    fun tag(@IdRes resId: Int, key: Int, value: Any?): Any? {
+        val view = view(resId)
+        val old = view?.getTag(key)
+        view?.setTag(key, value)
+        return old
+    }
+
+    fun isChecked(@IdRes resId: Int): Boolean {
+        return cb(resId)?.isChecked == true
+    }
+
+    fun isSelected(@IdRes resId: Int): Boolean {
+        return view(resId)?.isSelected == true
+    }
+
+    fun isEnabled(@IdRes resId: Int): Boolean {
+        return view(resId)?.isEnabled == true
+    }
+
+    //</editor-fold desc="属性控制">
 
 }
