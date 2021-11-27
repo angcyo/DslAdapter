@@ -108,6 +108,16 @@ open fun renderAdapter(render: DslAdapter.() -> Unit) {
 --|--
 ![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_swipe_menu.gif)|--
 
+# 实战案例
+
+多类型可复用内嵌`Item`|支持上下`Item`流的逻辑关联
+---|---
+![](https://gitee.com/angcyo/DslAdapter/raw/master/png/sample_detail_1.png)|![](https://gitee.com/angcyo/DslAdapter/raw/master/png/sample_detail_2.png)
+
+IM界面也能完美胜任|可动态控制`Item`的表单界面
+---|---
+![](https://gitee.com/angcyo/DslAdapter/raw/master/png/sample_detail_3.png)|![](https://gitee.com/angcyo/DslAdapter/raw/master/png/sample_form_1.png)
+
 # 使用`JitPack`的方式, 引入库.
 
 ## 根目录中的 `build.gradle`
