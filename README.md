@@ -104,9 +104,9 @@ open fun renderAdapter(render: DslAdapter.() -> Unit) {
 :---:|:---:
 ![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_slide.gif)|![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_tree.gif)
 
-[侧滑菜单](https://github.com/angcyo/DslAdapter/wiki/%E4%BE%A7%E6%BB%91%E8%8F%9C%E5%8D%95)|常规操作
+[侧滑菜单](https://github.com/angcyo/DslAdapter/wiki/%E4%BE%A7%E6%BB%91%E8%8F%9C%E5%8D%95)|[DslItem](https://github.com/angcyo/DslItem)
 :---:|:---:
-![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_swipe_menu.gif)|![](https://gitee.com/angcyo/DslAdapter/raw/master/png/sample_detail_4.png)
+![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_swipe_menu.gif)|![](https://gitee.com/angcyo/DslItem/raw/master/png/item.png)
 
 # 实战案例
 
