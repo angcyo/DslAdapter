@@ -118,6 +118,12 @@ IM界面也能完美胜任|可动态控制`Item`的表单界面
 :---:|:---:
 ![](https://gitee.com/angcyo/DslAdapter/raw/master/png/sample_detail_3.png)|![](https://gitee.com/angcyo/DslAdapter/raw/master/png/sample_form_1.png)
 
+# 疑问
+
+## 如何实现最后一个`Item`撑满`RecycleView`底部的剩余空间(如果有)?
+
+需要自定义`ViewGroup`, 在`onLayout`方法中, 计算出`RecycleView`底部的剩余空间, 赋值给`LayoutParams`即可.
+
 # 使用`JitPack`的方式, 引入库.
 
 ## 根目录中的 `build.gradle`
