@@ -85,37 +85,37 @@ open fun renderAdapter(render: DslAdapter.() -> Unit) {
 # 功能展示
 
 [情感图切换](https://github.com/angcyo/DslAdapter/wiki/%E6%83%85%E6%84%9F%E5%9B%BE%E7%8A%B6%E6%80%81%E5%88%87%E6%8D%A2)|[加载更多](https://github.com/angcyo/DslAdapter/wiki/%E5%8A%A0%E8%BD%BD%E6%9B%B4%E5%A4%9A%E5%8A%9F%E8%83%BD)
---|--
+:---:|:---:
 ![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_adapter_status.gif)|![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_load_more.gif)
 
 [折叠展开](https://github.com/angcyo/DslAdapter/wiki/%E6%8A%98%E5%8F%A0%E5%92%8C%E5%B1%95%E5%BC%80) | [群组功能](https://github.com/angcyo/DslAdapter/wiki/%E7%BE%A4%E7%BB%84%E5%8A%9F%E8%83%BD)
---|--
+:---:|:---:
 ![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_linear_group.gif)|![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_grid_group.gif)
 
 [单选](https://github.com/angcyo/DslAdapter/wiki/%E5%8D%95%E9%80%89-%E5%A4%9A%E9%80%89-%E6%BB%91%E5%8A%A8%E9%80%89%E6%8B%A9)|[多选](https://github.com/angcyo/DslAdapter/wiki/%E6%8B%96%E6%8B%BD%E6%8E%92%E5%BA%8F%E5%92%8C%E4%BE%A7%E6%BB%91%E5%88%A0%E9%99%A4)
---|--
+:---:|:---:
 ![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_single_selector.gif)|![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_multi_selector.gif)
 
 [滑动选择](https://github.com/angcyo/DslAdapter/wiki/%E5%8D%95%E9%80%89-%E5%A4%9A%E9%80%89-%E6%BB%91%E5%8A%A8%E9%80%89%E6%8B%A9)|[拖拽排序](https://github.com/angcyo/DslAdapter/wiki/%E6%8B%96%E6%8B%BD%E6%8E%92%E5%BA%8F%E5%92%8C%E4%BE%A7%E6%BB%91%E5%88%A0%E9%99%A4)
---|--
+:---:|:---:
 ![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_slide_selector.gif)|![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_drag.gif)
 
 [侧滑删除](https://github.com/angcyo/DslAdapter/wiki/%E6%8B%96%E6%8B%BD%E6%8E%92%E5%BA%8F%E5%92%8C%E4%BE%A7%E6%BB%91%E5%88%A0%E9%99%A4)|[树结构](https://github.com/angcyo/DslAdapter/wiki/%E6%A0%91%E7%BB%93%E6%9E%84)
---|--
+:---:|:---:
 ![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_slide.gif)|![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_tree.gif)
 
-[侧滑菜单](https://github.com/angcyo/DslAdapter/wiki/%E4%BE%A7%E6%BB%91%E8%8F%9C%E5%8D%95)|--
---|--
-![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_swipe_menu.gif)|--
+[侧滑菜单](https://github.com/angcyo/DslAdapter/wiki/%E4%BE%A7%E6%BB%91%E8%8F%9C%E5%8D%95)|常规操作
+:---:|:---:
+![](https://gitee.com/angcyo/DslAdapter/raw/master/png/gif_swipe_menu.gif)|![](https://gitee.com/angcyo/DslAdapter/raw/master/png/sample_detail_4.png)
 
 # 实战案例
 
 多类型可复用内嵌`Item`|支持上下`Item`流的逻辑关联
----|---
+:---:|:---:
 ![](https://gitee.com/angcyo/DslAdapter/raw/master/png/sample_detail_1.png)|![](https://gitee.com/angcyo/DslAdapter/raw/master/png/sample_detail_2.png)
 
 IM界面也能完美胜任|可动态控制`Item`的表单界面
----|---
+:---:|:---:
 ![](https://gitee.com/angcyo/DslAdapter/raw/master/png/sample_detail_3.png)|![](https://gitee.com/angcyo/DslAdapter/raw/master/png/sample_form_1.png)
 
 # 使用`JitPack`的方式, 引入库.
