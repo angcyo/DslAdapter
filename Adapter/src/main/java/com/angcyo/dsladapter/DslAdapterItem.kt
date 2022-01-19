@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.angcyo.dsladapter.SwipeMenuHelper.Companion.SWIPE_MENU_TYPE_DEFAULT
 import com.angcyo.dsladapter.SwipeMenuHelper.Companion.SWIPE_MENU_TYPE_FLOWING
 import com.angcyo.dsladapter.internal.ThrottleClickListener
+import java.lang.ref.WeakReference
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -32,6 +33,8 @@ import kotlin.reflect.KProperty
  */
 
 typealias ItemAction = (DslAdapterItem) -> Unit
+
+typealias ItemUpdateDependAction = (FilterParams) -> Unit
 
 typealias ItemBindAction = (
     itemHolder: DslViewHolder,
@@ -72,9 +75,20 @@ open class DslAdapterItem : LifecycleOwner {
 
     //<editor-fold desc="update操作">
 
-    /**[notifyItemChanged]*/
+    /**[com.angcyo.dsladapter.DslAdapter.notifyItemChanged]*/
     open fun updateAdapterItem(payload: Any? = PAYLOAD_UPDATE_PART, useFilterList: Boolean = true) {
         itemDslAdapter?.notifyItemChanged(this, payload, useFilterList).elseNull {
+            L.w("跳过操作! updateAdapterItem需要[itemDslAdapter],请赋值.")
+        }
+    }
+
+    /**移除[item]*/
+    open fun removeAdapterItem() {
+        itemDslAdapter?.apply {
+            removeHeaderItem(this@DslAdapterItem)
+            removeItem(this@DslAdapterItem)
+            removeFooterItem(this@DslAdapterItem)
+        }.elseNull {
             L.w("跳过操作! updateAdapterItem需要[itemDslAdapter],请赋值.")
         }
     }
@@ -142,6 +156,9 @@ open class DslAdapterItem : LifecycleOwner {
 
         if (notifyChildFormItemList.isNotEmpty()) {
             updateItemDepend(filterParams)
+        } else {
+            //否则更新自己
+            updateAdapterItem(filterParams.payload)
         }
     }
 
@@ -208,7 +225,10 @@ open class DslAdapterItem : LifecycleOwner {
 
     /**[itemEnable]*/
     open fun onSetItemEnable(enable: Boolean) {
-
+        itemViewHolder()?.let {
+            it.enable(it.itemView, enable, true)
+            _initItemListener(it)
+        }
     }
 
     /**唯一标识此item的值*/
@@ -305,6 +325,11 @@ open class DslAdapterItem : LifecycleOwner {
     var itemViewRecycled: HolderBindAction = { itemHolder, itemPosition ->
         onItemViewRecycled(itemHolder, itemPosition)
     }
+
+    /**
+     * 如果当前的[DslAdapterItem]在另一个[DslAdapterItem]内, 此属性用来保存父[DslAdapterItem]标识
+     * [INestedRecyclerItem]*/
+    var itemParentRef: WeakReference<DslAdapterItem>? = null
 
     //</editor-fold desc="标准属性">
 
@@ -709,9 +734,10 @@ open class DslAdapterItem : LifecycleOwner {
 
     //<editor-fold desc="Diff相关">
 
-    /**是否需要更新item
-     * 在[diffResult]之后会被重置*/
-    var itemUpdateFlag: Boolean = false
+    /**是否需要更新item,等同于[itemChanging], 但不会触发[itemChanged]
+     * 在[diffResult]之后会被重置为[false]
+     * * 默认为[true], 确保每次new的[DslAdapterItem]有机会更新数据*/
+    var itemUpdateFlag: Boolean = true
 
     /**
      * 决定
@@ -736,8 +762,21 @@ open class DslAdapterItem : LifecycleOwner {
             val thisItemClassname = this.className()
             val newItemClassName = newItem.className()
             //相同类名, 且布局类型相同的2个item, 不进行insert/remove操作
-            result = thisItemClassname == newItemClassName &&
-                    itemViewType ?: itemLayoutId == newItem.itemViewType ?: newItem.itemLayoutId
+            result = if (thisItemClassname == newItemClassName) {
+                if (itemViewType ?: itemLayoutId == newItem.itemViewType ?: newItem.itemLayoutId) {
+                    //布局一样
+                    if (itemData == null && newItem.itemData == null) {
+                        //未设置itemData时, 默认认为item是一样的
+                        true
+                    } else {
+                        itemData == newItem.itemData
+                    }
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
         }
         result
     }
@@ -758,11 +797,14 @@ open class DslAdapterItem : LifecycleOwner {
         oldItemPosition: Int, newItemPosition: Int
     ) -> Boolean = { fromItem, newItem, _, _ ->
         when {
-            itemUpdateFlag -> false
-            itemChanging -> false
-            (newItem.itemData != null && itemData != null && newItem.itemData == itemData) -> true
-            fromItem == null -> this == newItem
-            else -> this != fromItem && this == newItem
+            itemUpdateFlag || newItem.itemUpdateFlag -> false
+            itemChanging || newItem.itemChanging -> false
+            else -> if (itemData == null && newItem.itemData == null) {
+                //未设置itemData时, 需要刷新界面的情况
+                this == newItem
+            } else {
+                itemData == newItem.itemData
+            }
         }
     }
 
@@ -774,9 +816,15 @@ open class DslAdapterItem : LifecycleOwner {
     }
 
     /**Diff计算完成之后的回调
-     * [com.angcyo.dsladapter.DslDataFilter.UpdateTaskRunnable.onDiffResult]*/
-    open fun diffResult(filterParams: FilterParams?, result: DiffUtil.DiffResult) {
+     * [com.angcyo.dsladapter.DslDataFilter.UpdateTaskRunnable.onDiffResult]
+     * [com.angcyo.dsladapter.DslAdapter.notifyItemChanged]
+     * [com.angcyo.dsladapter.DslAdapter.notifyDataChanged]
+     * [com.angcyo.dsladapter.DslAdapter.updateAllItem]
+     * [com.angcyo.dsladapter.DslAdapter.updateItems]
+     * */
+    open fun diffResult(filterParams: FilterParams?, result: DiffUtil.DiffResult?) {
         itemChanging = false
+        itemUpdateFlag = false
     }
 
     //</editor-fold desc="Diff相关">
@@ -793,7 +841,7 @@ open class DslAdapterItem : LifecycleOwner {
             }
         }
 
-    /**[Item]是否正在改变, 会影响[thisAreContentsTheSame]的判断, 并且会在[Diff]计算完之后, 设置为`false`*/
+    /**[Item]是否正在改变, 会影响[thisAreContentsTheSame]的判断, 并且会在[Diff]计算完之后, 重置为[false]*/
     var itemChanging = false
         set(value) {
             field = value
@@ -1107,8 +1155,7 @@ open class DslAdapterItem : LifecycleOwner {
 class UpdateDependProperty<T>(
     var value: T,
     val payload: Any? = DslAdapterItem.PAYLOAD_UPDATE_PART
-) :
-    ReadWriteProperty<DslAdapterItem, T> {
+) : ReadWriteProperty<DslAdapterItem, T> {
     override fun getValue(thisRef: DslAdapterItem, property: KProperty<*>): T = value
 
     override fun setValue(thisRef: DslAdapterItem, property: KProperty<*>, value: T) {
@@ -1127,8 +1174,8 @@ class UpdateDependProperty<T>(
 class UpdateAdapterProperty<T>(
     var value: T,
     val payload: Any? = DslAdapterItem.PAYLOAD_UPDATE_PART
-) :
-    ReadWriteProperty<DslAdapterItem, T> {
+) : ReadWriteProperty<DslAdapterItem, T> {
+
     override fun getValue(thisRef: DslAdapterItem, property: KProperty<*>): T = value
 
     override fun setValue(thisRef: DslAdapterItem, property: KProperty<*>, value: T) {

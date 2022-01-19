@@ -291,7 +291,7 @@ open class DslViewHolder(
         return this
     }
 
-    private fun enable(view: View?, enable: Boolean, recursive: Boolean = true) {
+    fun enable(view: View?, enable: Boolean, recursive: Boolean = true) {
         if (view == null) {
             return
         }
@@ -400,6 +400,48 @@ open class DslViewHolder(
             }
         }
         return this
+    }
+
+    fun check(@IdRes resId: Int, check: Boolean = true, notify: Boolean = true): CompoundButton? {
+        return v<CompoundButton>(resId)?.apply {
+            if (notify) {
+                isChecked = check
+            } else {
+                try {
+                    val mOnCheckedChangeListener =
+                        getMember(CompoundButton::class.java, "mOnCheckedChangeListener")
+                    setOnCheckedChangeListener(null)
+                    isChecked = check
+                    setOnCheckedChangeListener(mOnCheckedChangeListener as CompoundButton.OnCheckedChangeListener?)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+
+    fun check(
+        @IdRes resId: Int,
+        check: Boolean = true,
+        notify: Boolean = true,
+        onCheckedChanged: (buttonView: CompoundButton, isChecked: Boolean) -> Unit
+    ): CompoundButton? {
+        return v<CompoundButton>(resId)?.apply {
+            setOnCheckedChangeListener(onCheckedChanged)
+            if (notify) {
+                isChecked = check
+            } else {
+                try {
+                    val mOnCheckedChangeListener =
+                        getMember(CompoundButton::class.java, "mOnCheckedChangeListener")
+                    setOnCheckedChangeListener(null)
+                    isChecked = check
+                    setOnCheckedChangeListener(mOnCheckedChangeListener as CompoundButton.OnCheckedChangeListener?)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
     }
 
     //</editor-fold desc="可见性控制">

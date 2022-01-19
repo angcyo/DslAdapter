@@ -89,6 +89,8 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
 
     val itemBindObserver = mutableSetOf<ItemBindAction>()
 
+    val itemUpdateDependObserver = mutableSetOf<ItemUpdateDependAction>()
+
     //关联item type和item layout id
     val _itemLayoutHold = hashMapOf<Int, Int>()
 
@@ -256,6 +258,15 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         itemBindObserver.remove(itemBindAction)
     }
 
+    /**观察[updateItemDepend]*/
+    fun observeItemUpdateDepend(action: ItemUpdateDependAction) {
+        itemUpdateDependObserver.add(action)
+    }
+
+    fun removeItemUpdateDepend(action: ItemUpdateDependAction) {
+        itemUpdateDependObserver.remove(action)
+    }
+
     //</editor-fold>
 
     //<editor-fold desc="辅助方法">
@@ -368,6 +379,15 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         insertItem(-1, item, init)
     }
 
+    /**支持指定数据源[list]*/
+    fun <T : DslAdapterItem> addLastItem(
+        list: MutableList<DslAdapterItem>,
+        item: T,
+        init: T.() -> Unit = {}
+    ) {
+        insertItem(list, -1, item, init)
+    }
+
     fun addLastItem(item: List<DslAdapterItem>) {
         insertItem(-1, item)
     }
@@ -392,15 +412,53 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     /**插入数据列表*/
-    fun insertItem(index: Int, item: DslAdapterItem) {
+    fun insertItem(index: Int, item: DslAdapterItem, checkExist: Boolean = false) {
+        if (checkExist && dataItems.contains(item)) {
+            return
+        }
         dataItems.add(_validIndex(dataItems, index), item)
         _updateAdapterItems()
         updateItemDepend()
     }
 
+    fun insertItem(item: DslAdapterItem, index: Int = -1, checkExist: Boolean = true) {
+        insertItem(index, item, checkExist)
+    }
+
+    fun insertHeaderItem(item: DslAdapterItem, index: Int = -1, checkExist: Boolean = true) {
+        if (checkExist && headerItems.contains(item)) {
+            return
+        }
+        headerItems.add(_validIndex(headerItems, index), item)
+        _updateAdapterItems()
+        updateItemDepend()
+    }
+
+    fun insertFooterItem(item: DslAdapterItem, index: Int = -1, checkExist: Boolean = true) {
+        if (checkExist && footerItems.contains(item)) {
+            return
+        }
+        footerItems.add(_validIndex(footerItems, index), item)
+        _updateAdapterItems()
+        updateItemDepend()
+    }
+
     /**先插入数据, 再初始化*/
-    fun <T : DslAdapterItem> insertItem(index: Int, item: T, init: T.() -> Unit) {
+    fun <T : DslAdapterItem> insertItem(index: Int, item: T, init: T.() -> Unit = {}) {
         dataItems.add(_validIndex(dataItems, index), item)
+        _updateAdapterItems()
+        item.init()
+        updateItemDepend()
+    }
+
+    /**支持指定数据源[list]*/
+    fun <T : DslAdapterItem> insertItem(
+        list: MutableList<DslAdapterItem>,
+        index: Int,
+        item: T,
+        init: T.() -> Unit
+    ) {
+        list.add(_validIndex(list, index), item)
         _updateAdapterItems()
         item.init()
         updateItemDepend()
@@ -421,10 +479,36 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     /**移除数据*/
-    fun removeItem(item: DslAdapterItem) {
-        if (dataItems.remove(item)) {
-            _updateAdapterItems()
-            updateItemDepend()
+    fun removeItem(item: DslAdapterItem, updateOther: Boolean = true) {
+        removeItemFrom(dataItems, item, updateOther)
+    }
+
+    /**移除数据*/
+    fun removeHeaderItem(item: DslAdapterItem, updateOther: Boolean = true) {
+        removeItemFrom(headerItems, item, updateOther)
+    }
+
+    fun removeFooterItem(item: DslAdapterItem, updateOther: Boolean = true) {
+        removeItemFrom(footerItems, item, updateOther)
+    }
+
+    fun removeItemFrom(
+        list: MutableList<DslAdapterItem>,
+        item: DslAdapterItem,
+        updateOther: Boolean
+    ) {
+        val index = adapterItems.indexOf(item)
+        if (index != -1) {
+            if (list.remove(item)) {
+                if (updateOther) {
+                    for (i in (index + 1) until adapterItems.size) {
+                        //更新之后的item
+                        adapterItems.getOrNull(i)?.itemUpdateFlag = true
+                    }
+                }
+                _updateAdapterItems()
+                updateItemDepend()
+            }
         }
     }
 
@@ -569,6 +653,11 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
 
     /**调用[DiffUtil]更新界面*/
     fun updateItemDepend(filterParams: FilterParams = defaultFilterParams!!) {
+
+        itemUpdateDependObserver.forEach {
+            it(filterParams)
+        }
+
         dslDataFilter?.let {
             it.updateFilterItemDepend(filterParams)
 
@@ -591,20 +680,28 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         val indexOf = list.indexOf(item)
 
         if (indexOf in list.indices) {
+            item.diffResult(null, null)
             notifyItemChangedPayload(indexOf, payload)
         }
     }
 
     /**[notifyDataSetChanged]*/
     fun notifyDataChanged() {
+        _updateAdapterItems()
         dslDataFilter?.clearTask()
         dslDataFilter?.filterDataList?.clear()
         dslDataFilter?.filterDataList?.addAll(adapterItems)
+        adapterItems.forEach {
+            it.diffResult(null, null)
+        }
         notifyDataSetChanged()
     }
 
     /**更新界面上所有[DslAdapterItem]*/
     fun updateAllItem(payload: Any? = DslAdapterItem.PAYLOAD_UPDATE_PART) {
+        adapterItems.forEach {
+            it.diffResult(null, null)
+        }
         notifyItemRangeChanged(0, itemCount, payload)
     }
 
@@ -619,6 +716,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
                 val indexOf = indexOf(item)
 
                 if (indexOf in this.indices) {
+                    item.diffResult(null, null)
                     notifyItemChangedPayload(indexOf, payload)
                 }
             }
@@ -648,6 +746,13 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
      * */
     operator fun <T : DslAdapterItem> T.invoke(config: T.() -> Unit = {}) {
         addLastItem(this, config)
+    }
+
+    operator fun <T : DslAdapterItem> T.invoke(
+        list: MutableList<DslAdapterItem>,
+        config: T.() -> Unit = {}
+    ) {
+        addLastItem(list, this, config)
     }
 
     /**

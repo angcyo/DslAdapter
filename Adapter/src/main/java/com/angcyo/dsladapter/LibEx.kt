@@ -20,6 +20,8 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.angcyo.dsladapter.internal.DslHierarchyChangeListenerWrap
+import java.lang.reflect.Field
+import java.lang.reflect.Modifier
 import kotlin.math.min
 
 /**
@@ -567,3 +569,36 @@ fun ViewGroup.resetDslItem(items: List<DslAdapterItem>) {
     }
 }
 //<editor-fold desc="DslAdapterItem操作">
+
+internal fun Any?.getMember(
+    cls: Class<*>,
+    member: String
+): Any? {
+    var result: Any? = null
+    try {
+        var cl: Class<*>? = cls
+        while (cl != null) {
+            try {
+                val memberField = cls.getDeclaredField(member)
+                //memberField.isAccessible = true
+                makeAccessible(memberField)
+                result = memberField[this]
+                return result
+            } catch (e: NoSuchFieldException) {
+                cl = cl.superclass
+            }
+        }
+    } catch (e: Exception) {
+        //L.i("错误:" + cls.getSimpleName() + " ->" + e.getMessage());
+    }
+    return result
+}
+
+internal fun makeAccessible(field: Field) {
+    if ((!Modifier.isPublic(field.modifiers) ||
+                !Modifier.isPublic(field.declaringClass.modifiers) ||
+                Modifier.isFinal(field.modifiers)) && !field.isAccessible
+    ) {
+        field.isAccessible = true
+    }
+}
