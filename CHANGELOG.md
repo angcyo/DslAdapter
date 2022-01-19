@@ -1,3 +1,14 @@
+# 2022-1-19
+
+`3.1.0`
+
+- 新增 `DslAdapter#observeItemUpdateDepend()` 用于观察触发`depend`的回调
+- 新增 `DslAdapterItem#observeItemChange()`用于观察自己改变的回调
+- 新增 `DslAdapterItem#removeAdapterItem()`用于移除自己
+- 新增 `DslAdapterItem#itemUpdateFlag` 用于标识自己需要更新, 在Diff计算时
+- 调整默认的`thisAreItemsTheSame` `thisAreContentsTheSame` 判断逻辑
+- 修改已知问题
+
 # 2021-11-25
 
 `3.0.2`
