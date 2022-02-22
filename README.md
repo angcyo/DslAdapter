@@ -8,6 +8,8 @@
 
 `Dsl` 的形式使用 `RecyclerView.Adapter`, 支持情感图状态切换, 加载更多, 多类型`Item`等
 
+[Gitee仓库地址](https://gitee.com/angcyo/DslAdapter)
+
 [文档地址](https://angcyo.gitee.io/doc)
 
 # 有何用?
