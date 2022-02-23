@@ -364,15 +364,17 @@ fun <T> DslAdapter.resetRender(
     page: Page,
     render: DslAdapter.(data: T) -> Unit
 ) {
-
-    updateAdapterErrorState(error)
-
     if (error != null) {
+        render {
+            updateAdapterErrorState(error)
+        }
         return
     }
 
     if (data == null) {
-        setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY)
+        render {
+            setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY)
+        }
         return
     }
 
