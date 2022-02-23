@@ -9,8 +9,6 @@ import com.angcyo.dsladapter.internal.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 
 /**
  *
@@ -25,7 +23,7 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
     companion object {
 
         /**默认抖动检查时长, 毫秒. 如果多次连续调用时长小于此时间, 则跳过处理*/
-        var DEFAULT_SHAKE_DELAY = 16L
+        var DEFAULT_SHAKE_DELAY = 6L
 
         //异步调度器
         private val asyncExecutor: ExecutorService by lazy {
@@ -66,92 +64,37 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
         HideItemFilterInterceptor()
     )
 
+    //更新操作
+    private var _updateTaskLit: MutableList<UpdateTaskRunnable> = mutableListOf()
+
     /**后置过滤器*/
     val afterFilterInterceptorList: MutableList<IFilterInterceptor> =
         mutableListOf()
-
-    //更新操作
-    private var _updateTaskLit: MutableList<UpdateTaskRunnable> = mutableListOf()
 
     private val mainHandler: Handler by lazy {
         Handler(Looper.getMainLooper())
     }
 
-    private val handle: OnceHandler by lazy {
-        OnceHandler()
-    }
-
-    private val lock = ReentrantLock()
-
     /**更新过滤后的数据源, 采用的是[DiffUtil]*/
     open fun updateFilterItemDepend(params: FilterParams) {
-        lock.withLock {
-            val nowTime = System.currentTimeMillis()
+        val nowTime = System.currentTimeMillis()
 
-            if (!params.important) {
-                //非重要的操作
-                val importantTask =
-                    _updateTaskLit.find { !it.taskCancel.get() && it._params?.important == true }
+        clearTask()
 
-                if (importantTask != null) {
-                    //有主要的任务还未处理
-                    L.w("来自[${params.fromDslAdapterItem?.simpleHash()}]的Diff被忽略,原因[important]")
-                    return
-                }
-            }
+        var filterParams = params
 
-            if (handle.hasCallbacks()) {
-                //立即触发一次, 子项依赖的更新, 防止部分状态丢失.
-                _updateTaskLit.lastOrNull()?.notifyUpdateDependItem()
-            }
+        if (params.justFilter) {
+            filterParams = params.copy(justRun = true, asyncDiff = false)
+        }
 
-            var firstTime = -1L
-            _updateTaskLit.forEach {
-                if (params.justRun || params.shakeType == OnceHandler.SHAKE_TYPE_DEBOUNCE) {
-                    //立即执行 or 抖动
-                    if (it._params?.justRun == true) {
-                        //此任务需要立即执行, 跳过取消
-                    } else {
-                        L.w("来自[${it._params?.fromDslAdapterItem?.simpleHash()}]的Diff被忽略,原因[justRun:${params.justRun}][debounce:${params.shakeType == OnceHandler.SHAKE_TYPE_DEBOUNCE}]")
-                        it.taskCancel.set(true)
-                    }
-                } else if (params.shakeType == OnceHandler.SHAKE_TYPE_THROTTLE) {
-                    //节流
-                    if (firstTime < 0L) {
-                        firstTime = it._taskStartTime
-                    } else {
-                        if (it._taskStartTime - firstTime < params.shakeDelay) {
-                            if (it._params?.justRun == true) {
-                                //此任务需要立即执行, 跳过取消
-                            } else {
-                                L.w("来自[${it._params?.fromDslAdapterItem?.simpleHash()}]的Diff被忽略,原因[throttle]")
-                                it.taskCancel.set(true)
-                            }
-                        }
-                    }
-                }
-            }
+        val taskRunnable = UpdateTaskRunnable()
+        taskRunnable._params = filterParams
+        taskRunnable._taskStartTime = nowTime
 
-            if (firstTime < 0L) {
-                _updateTaskLit.clear()
-            }
-
-            var filterParams = params
-
-            if (params.justFilter) {
-                filterParams = params.copy(justRun = true, asyncDiff = false)
-            }
-
-            val taskRunnable = UpdateTaskRunnable()
-            taskRunnable._params = filterParams
-            taskRunnable._taskStartTime = nowTime
-            _updateTaskLit.add(taskRunnable)
-
-            if (params.justRun) {
-                taskRunnable.run()
-            } else {
-                mainHandler.postDelayed(taskRunnable, params.shakeDelay)
-            }
+        if (params.justRun) {
+            taskRunnable.run()
+        } else {
+            mainHandler.postDelayed(taskRunnable, params.shakeDelay)
         }
     }
 
@@ -259,8 +202,11 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
 
         var _taskStartTime = 0L
 
+        val taskIsCancel: Boolean
+            get() = taskCancel.get() || _params?.skip == true
+
         override fun run() {
-            if (taskCancel.get()) {
+            if (taskIsCancel) {
                 return
             }
 
@@ -283,7 +229,7 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
         }
 
         private fun doInner() {
-            if (taskCancel.get()) {
+            if (taskIsCancel) {
                 return
             }
 
@@ -391,7 +337,7 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
             diffList: MutableList<DslAdapterItem>,
             oldSize: Int
         ) {
-            if (taskCancel.get()) {
+            if (taskIsCancel) {
                 return
             }
 
@@ -515,17 +461,17 @@ data class FilterParams(
     /** 触发更新的来源, 定向更新其子项. */
     val fromDslAdapterItem: DslAdapterItem? = null,
 
+    /** 是否跳过当前的Filter操作 */
+    var skip: Boolean = false,
+
     /** 异步计算Diff */
-    var asyncDiff: Boolean = true,
+    var asyncDiff: Boolean = false,
 
     /** 立即执行, 不检查抖动 */
-    var justRun: Boolean = false,
+    var justRun: Boolean = true,
 
-    /** 只过滤列表数据, 不通知界面操作, 但是会通过子项更新. 开启此属性会:[async=true] [just=true] */
+    /** 只过滤列表数据, 不通知界面操作, 但是会通过子项更新. 开启此属性会默认设置:[asyncDiff=false] [justRun=true] */
     var justFilter: Boolean = false,
-
-    /**重要的, 确保本次diff一定会执行, 再次操作后续的非[important]操作都将被忽略*/
-    var important: Boolean = false,
 
     /** 前提, Diff 之后, 2个数据列表的大小要一致.
      * 当依赖的[DslAdapterItem] [isItemInUpdateList]列表为空时, 是否要调用[dispatchUpdatesTo]更新界面
@@ -535,11 +481,8 @@ data class FilterParams(
     /**局部更新标识参数*/
     var payload: Any? = null,
 
-    /**自定义的扩展数据传递*/
+    /**自定义的扩展数据传递, 自行处理*/
     var filterData: Any? = null,
-
-    /**默认是节流模式*/
-    var shakeType: Int = OnceHandler.SHAKE_TYPE_DEBOUNCE,
 
     /**抖动检查延迟时长*/
     var shakeDelay: Long = DEFAULT_SHAKE_DELAY,

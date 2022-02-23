@@ -30,7 +30,6 @@ class UpdateDataConfig {
             DslAdapterItem.PAYLOAD_UPDATE_PART,
             DslAdapterItem.PAYLOAD_UPDATE_MEDIA
         )
-        important = true
     }
 
     /**本次更新, 需要更新的数据量*/
@@ -284,6 +283,26 @@ fun DslAdapter.updateAdapterErrorState(error: Throwable?) {
             isAdapterStatusLoading() -> toNone()
             else -> toLoadMoreError()
         }
+    }
+}
+
+/**更新[DslAdapter]情感图状态*/
+fun DslAdapter.updateAdapterState(list: List<*>?, error: Throwable?, page: Page = singlePage()) {
+    updateAdapterErrorState(error)
+    if (error == null) {
+        val isDataEmpty: Boolean = if (page.isFirstPage()) {
+            list.isNullOrEmpty()
+        } else {
+            dataItems.isEmpty()
+        }
+
+        if (isDataEmpty && headerItems.isEmpty() && footerItems.isEmpty()) {
+            //空数据
+            setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY)
+        } else {
+            setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
+        }
+        updateLoadMore(page.requestPageIndex, list.size(), page.requestPageSize, false)
     }
 }
 

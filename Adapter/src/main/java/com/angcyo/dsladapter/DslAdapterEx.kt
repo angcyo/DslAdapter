@@ -5,10 +5,7 @@ import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Looper
-import android.view.View
-import android.view.ViewGroup
 import androidx.annotation.LayoutRes
-import androidx.recyclerview.widget.RecyclerView
 
 
 /**
@@ -230,14 +227,16 @@ fun <T : DslAdapterItem> DslAdapter.dslCustomItem(
 fun DslAdapter.renderEmptyItem(
     height: Int = 120 * dpi,
     backgroundColor: Int = Color.TRANSPARENT,
+    list: MutableList<DslAdapterItem> = dataItems,
     action: DslAdapterItem.() -> Unit = {}
 ) {
-    renderEmptyItem(height, ColorDrawable(backgroundColor), action)
+    renderEmptyItem(height, ColorDrawable(backgroundColor), list, action)
 }
 
 fun DslAdapter.renderEmptyItem(
     height: Int = 120 * dpi,
     background: Drawable?,
+    list: MutableList<DslAdapterItem> = dataItems,
     action: DslAdapterItem.() -> Unit = {}
 ) {
     val adapterItem = DslAdapterItem()
@@ -247,7 +246,7 @@ fun DslAdapter.renderEmptyItem(
         itemHolder.itemView.setWidthHeight(-1, height)
     }
     adapterItem.action()
-    addLastItem(adapterItem)
+    addLastItem(list, adapterItem)
 }
 
 /**换个贴切的名字*/
@@ -371,23 +370,23 @@ fun DslAdapter.justRunFilterParams() = defaultFilterParams!!.apply {
 }
 
 /**显示情感图[加载中]*/
-fun DslAdapter.toLoading(filterParams: FilterParams = justRunFilterParams()) {
-    setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING, filterParams)
+fun DslAdapter.toLoading() {
+    setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
 }
 
 /**显示情感图[空数据]*/
-fun DslAdapter.toEmpty(filterParams: FilterParams = justRunFilterParams()) {
-    setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY, filterParams)
+fun DslAdapter.toEmpty() {
+    setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY)
 }
 
 /**显示情感图[错误]*/
-fun DslAdapter.toError(filterParams: FilterParams = justRunFilterParams()) {
-    setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_ERROR, filterParams)
+fun DslAdapter.toError() {
+    setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_ERROR)
 }
 
 /**显示情感图[正常]*/
-fun DslAdapter.toNone(filterParams: FilterParams = defaultFilterParams!!) {
-    setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE, filterParams)
+fun DslAdapter.toNone() {
+    setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
 }
 
 fun DslAdapter.toLoadMoreError() {
@@ -453,7 +452,7 @@ fun DslAdapter.findItemList(
 fun <T : DslAdapterItem> DslAdapter.findSameClassItem(
     item: T,
     useFilterList: Boolean = true,
-    continuous: Boolean = true
+    continuous: Boolean = true //需要连续的item
 ): List<T> {
     val list = getDataList(useFilterList)
     val result = mutableListOf<T>()
@@ -461,7 +460,6 @@ fun <T : DslAdapterItem> DslAdapter.findSameClassItem(
     if (continuous) {
         var findAnchor = false /*是否找到锚点*/
         for (it in list) {
-            findAnchor = it == item
             if (it.className() == item.className()) {
                 result.add(it as T)
             } else {
@@ -471,6 +469,7 @@ fun <T : DslAdapterItem> DslAdapter.findSameClassItem(
                     result.clear()
                 }
             }
+            findAnchor = findAnchor || it == item
         }
     } else {
         for (it in list) {
