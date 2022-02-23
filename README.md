@@ -26,23 +26,25 @@
 
 ```kotlin
 //普通界面渲染
-renderAdapter{
-    普通1Item()
-    普通2Item()
-    普通3Item()
+dslAdapter.render {
+    this + 普通1Item()
+    this + 普通2Item()
+    this + 普通3Item()
     ...
+    底部普通Item()()
 }
 
 //列表界面渲染
-renderAdapter{
-    头部Item()
-    轮播图Item()
-    列表Item()
-    列表Item()
-    列表Item()
+dslAdapter.render {
+    刷新指示器Item()()
+    头部Item()()
+    轮播图Item()()
+    列表Item()()
+    列表Item()()
+    列表Item()()
     ...
-    尾部Item()
-    加载更多Item()
+    尾部Item()()
+    加载更多Item()()
 }
 
 //普通界面和列表界面 如出一辙, 一点也不用惊讶,后面还有更刺激的.
@@ -82,7 +84,6 @@ open fun renderAdapter(render: DslAdapter.() -> Unit) {
 13. 支持`左右侧滑菜单`(`2.4.0`后)
 14. 支持`DataBinding`(`3.0.0`后)
 14. 支持`ViewBinding`([参考示例](https://github.com/angcyo/DslAdapter/blob/master/Sample/src/main/java/com/angcyo/dsladapter/dsl/DslViewBindingItem.kt))
-
 
 # 功能展示
 
@@ -144,7 +145,7 @@ allprojects {
 ```kotlin
 dependencies {
     //androidx(推荐)
-    implementation 'com.github.angcyo:DslAdapter:3.1.0'
+    implementation 'com.github.angcyo:DslAdapter:4.0.0'
     //支持DataBinding
     implementation 'com.github.angcyo:DslAdapter:3.0.0-binding'
 

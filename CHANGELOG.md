@@ -1,3 +1,12 @@
+# 2022-2-23
+
+`4.0.0`
+
+此版本后, 所有更新操作必须主动调用`DslAdapter#updateItemDepend`方法.
+
+- 移除了 `FilterParams#shakeType`, 所以库不具备`抖动/节流`处理, 需要外部处理.
+- 新增`DslAdapter#render`方法, 用于包装`updateItemDepend`
+
 # 2022-1-19
 
 `3.1.0`
