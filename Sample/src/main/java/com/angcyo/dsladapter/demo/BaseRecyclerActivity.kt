@@ -91,6 +91,6 @@ abstract class BaseRecyclerActivity : AppCompatActivity() {
     }
 
     open fun renderAdapter(render: DslAdapter.() -> Unit) {
-        dslAdapter.render()
+        dslAdapter.render(action = render)
     }
 }

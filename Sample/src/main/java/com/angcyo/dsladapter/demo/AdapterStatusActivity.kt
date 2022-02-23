@@ -1,7 +1,6 @@
 package com.angcyo.dsladapter.demo
 
 import com.angcyo.dsladapter.DslAdapterStatusItem
-import com.angcyo.dsladapter.demo.R
 
 /**
  *
@@ -19,11 +18,15 @@ class AdapterStatusActivity : BaseRecyclerActivity() {
     override fun onInitBaseLayoutAfter() {
         super.onInitBaseLayoutAfter()
 
-        dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
+        dslAdapter.render {
+            setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
+        }
 
         dslViewHolder.postDelay(1000) {
-            dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
-            dslAdapter.来点数据()
+            dslAdapter.render {
+                setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
+                来点数据()
+            }
         }
 
         initAdapterStatus()
@@ -31,22 +34,33 @@ class AdapterStatusActivity : BaseRecyclerActivity() {
 
     private fun initAdapterStatus() {
         dslViewHolder.click(R.id.normal) {
-            dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
+            dslAdapter.render {
+                dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
+            }
         }
         dslViewHolder.click(R.id.empty) {
-            dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY)
+            dslAdapter.render {
+                dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY)
+            }
         }
         dslViewHolder.click(R.id.loading) {
-            dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
+            dslAdapter.render {
+                dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
+            }
         }
         dslViewHolder.click(R.id.error) {
-            dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_ERROR)
+            dslAdapter.render {
+                dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_ERROR)
+            }
         }
     }
 
     override fun onRefresh() {
         super.onRefresh()
-        dslAdapter.resetItem(listOf())
-        dslAdapter.来点数据()
+
+        dslAdapter.render {
+            resetItem(listOf())
+            来点数据()
+        }
     }
 }

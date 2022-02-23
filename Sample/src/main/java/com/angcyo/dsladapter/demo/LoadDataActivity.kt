@@ -33,7 +33,9 @@ class LoadDataActivity : BaseRecyclerActivity() {
             onRefresh()
         }
 
-        dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
+        dslAdapter.render {
+            setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
+        }
     }
 
     override fun onRefresh() {

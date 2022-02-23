@@ -18,7 +18,9 @@ class GroupDemoActivity : BaseRecyclerActivity() {
 
         recyclerView.setPadding(10 * dpi, 0, 10 * dpi, 0)
 
-        dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
+        dslAdapter.render {
+            setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
+        }
 
         dslViewHolder.postDelay(1000) {
             dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)

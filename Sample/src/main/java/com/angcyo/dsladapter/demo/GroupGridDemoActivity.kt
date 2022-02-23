@@ -23,7 +23,9 @@ class GroupGridDemoActivity : BaseRecyclerActivity() {
             spanSizeLookup = dslSpanSizeLookup(dslAdapter)
         }
 
-        dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
+        dslAdapter.render {
+            setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
+        }
 
         dslViewHolder.postDelay(1000) {
             dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)

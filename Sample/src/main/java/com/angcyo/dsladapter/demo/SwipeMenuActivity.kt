@@ -27,15 +27,19 @@ open class SwipeMenuActivity : BaseRecyclerActivity() {
         dslAdapter.dslAdapterStatusItem.onRefresh = {
             onRefresh()
         }
-        dslAdapter.setLoadMoreEnable(false)
-        dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
+        dslAdapter.render {
+            setLoadMoreEnable(false)
+            setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
+        }
         swipeMenuHelper = SwipeMenuHelper.install(dslViewHolder.v(R.id.base_recycler_view))
     }
 
     override fun onRefresh() {
         super.onRefresh()
-        dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
-        dslAdapter.apply {
+
+        dslAdapter.render {
+            dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
+
             clearItems()
 
             DslTextItem()() {

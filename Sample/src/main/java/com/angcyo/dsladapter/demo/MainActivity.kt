@@ -204,7 +204,9 @@ class MainActivity : BaseRecyclerActivity() {
             //模拟网络延迟
             dslViewHolder.postDelay(1000) {
                 //设置情感图状态, 正常
-                setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
+                render {
+                    setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
+                }
             }
         }
     }

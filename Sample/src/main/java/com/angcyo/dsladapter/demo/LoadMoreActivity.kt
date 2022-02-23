@@ -20,12 +20,16 @@ class LoadMoreActivity : BaseRecyclerActivity() {
     override fun onInitBaseLayoutAfter() {
         super.onInitBaseLayoutAfter()
 
-        dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
+        dslAdapter.render {
+            setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
+        }
 
         dslViewHolder.postDelay(1000) {
-            dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
-            dslAdapter.来点数据()
-            dslAdapter.setLoadMoreEnable(true)
+            dslAdapter.render {
+                setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
+                来点数据()
+                setLoadMoreEnable(true)
+            }
         }
 
         initLoadMore()
@@ -33,8 +37,11 @@ class LoadMoreActivity : BaseRecyclerActivity() {
 
     override fun onRefresh() {
         super.onRefresh()
-        dslAdapter.resetItem(listOf())
-        dslAdapter.来点数据()
+
+        dslAdapter.render {
+            resetItem(listOf())
+            来点数据()
+        }
     }
 
     var loadPage = 0
@@ -43,15 +50,17 @@ class LoadMoreActivity : BaseRecyclerActivity() {
             Toast.makeText(this, "加载更多", Toast.LENGTH_SHORT).show()
 
             it.postDelay(300L) {
-                loadPage++
-                if (loadPage == 2) {
-                    //模拟加载失败
-                    dslAdapter.setLoadMore(DslLoadMoreItem.LOAD_MORE_ERROR)
-                } else if (loadPage > 3) {
-                    //模拟没有更多
-                    dslAdapter.setLoadMore(DslLoadMoreItem.LOAD_MORE_NO_MORE)
-                } else {
-                    dslAdapter.来点数据()
+                dslAdapter.render {
+
+                    loadPage++
+                    if (loadPage == 2) {
+                        //模拟加载失败
+                        setLoadMore(DslLoadMoreItem.LOAD_MORE_ERROR)
+                    } else if (loadPage > 3) {
+                        //模拟没有更多
+                        setLoadMore(DslLoadMoreItem.LOAD_MORE_NO_MORE)
+                    } else {
+                        来点数据()
 
 //                    for (i in 0..0) {
 //                        dslAdapter.dslItem(R.layout.item_text_layout) {
@@ -62,22 +71,29 @@ class LoadMoreActivity : BaseRecyclerActivity() {
 //                        }
 //                    }
 
-                    dslAdapter.setLoadMore(DslLoadMoreItem.LOAD_MORE_NORMAL)
+                        setLoadMore(DslLoadMoreItem.LOAD_MORE_NORMAL)
+                    }
                 }
             }
         }
         dslViewHolder.click(R.id.load_more_enable) {
             loadPage = 0
-            dslAdapter.setLoadMoreEnable(it.isSelected)
+            dslAdapter.render {
+                setLoadMoreEnable(it.isSelected)
+            }
             it.isSelected = !it.isSelected
         }
         dslViewHolder.click(R.id.load_more_error) {
             loadPage = 0
-            dslAdapter.setLoadMore(DslLoadMoreItem.LOAD_MORE_ERROR)
+            dslAdapter.render {
+                setLoadMore(DslLoadMoreItem.LOAD_MORE_ERROR)
+            }
         }
         dslViewHolder.click(R.id.load_more_no) {
             loadPage = 0
-            dslAdapter.setLoadMore(DslLoadMoreItem.LOAD_MORE_NO_MORE)
+            dslAdapter.render {
+                setLoadMore(DslLoadMoreItem.LOAD_MORE_NO_MORE)
+            }
         }
     }
 }
