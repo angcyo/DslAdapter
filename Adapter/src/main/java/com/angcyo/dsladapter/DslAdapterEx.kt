@@ -249,11 +249,6 @@ fun DslAdapter.renderEmptyItem(
     addLastItem(list, adapterItem)
 }
 
-/**换个贴切的名字*/
-fun DslAdapter.render(action: DslAdapter.() -> Unit) {
-    this.action()
-}
-
 fun DslAdapter.renderItem(count: Int = 1, init: DslAdapterItem.(index: Int) -> Unit) {
     for (i in 0 until count) {
         val adapterItem = DslAdapterItem()
