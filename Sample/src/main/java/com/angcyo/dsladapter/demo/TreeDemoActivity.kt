@@ -32,49 +32,47 @@ class TreeDemoActivity : BaseRecyclerActivity() {
         }
     }
 
-    fun loadSubList(treeItem: DslTreeItem): () -> Unit {
-        return {
-            treeItem.itemIsLoadSub = true
-            if (treeItem.itemSubList.isEmpty()) {
-                //加载中
-                treeItem.itemSubList.add(DslTreeLoadItem())
+    fun loadSubList(treeItem: DslTreeItem): () -> Unit = {
+        treeItem.itemIsLoadSub = true
+        if (treeItem.itemSubList.isEmpty()) {
+            //加载中
+            treeItem.itemSubList.add(DslTreeLoadItem())
 
-                //模拟延迟
-                dslViewHolder.postDelay(1000) {
-                    treeItem.updateSubItem {
+            //模拟延迟
+            dslViewHolder.postDelay(1000) {
+                treeItem.updateSubItem {
 
-                        //更新数据源
-                        val dataList = mutableListOf<String>()
-                        for (i in 0..nextInt(0, 10)) {
-                            dataList.add("子目录$i")
-                        }
-                        updateDataList = dataList
+                    //更新数据源
+                    val dataList = mutableListOf<String>()
+                    for (i in 0..nextInt(0, 10)) {
+                        dataList.add("子目录$i")
+                    }
+                    updateDataList = dataList
 
-                        //轻量差分更新
-                        updateOrCreateItem = { oldItem, data, index ->
-                            updateOrCreateItemByClass(DslTreeItem::class.java, oldItem) {
-                                itemText = data.toString()
+                    //轻量差分更新
+                    updateOrCreateItem = { oldItem, data, index ->
+                        updateOrCreateItemByClass(DslTreeItem::class.java, oldItem) {
+                            itemText = data.toString()
 
-                                //到达一定数量数, 模拟无子目录的情况
-                                if (itemParentList.size > 0 && index > 4) {
-                                    itemLoadSubList = {
-                                        if (!itemIsLoadSub && itemSubList.isEmpty()) {
-                                            //加载中
-                                            itemSubList.add(DslTreeLoadItem())
+                            //到达一定数量数, 模拟无子目录的情况
+                            if (itemParentList.size > 0 && index > 4) {
+                                itemLoadSubList = {
+                                    if (!itemIsLoadSub && itemSubList.isEmpty()) {
+                                        //加载中
+                                        itemSubList.add(DslTreeLoadItem())
 
-                                            dslViewHolder.postDelay(1000) {
-                                                itemSubList.clear()
-                                                updateItemDepend()
-                                            }
+                                        dslViewHolder.postDelay(1000) {
+                                            itemSubList.clear()
+                                            updateItemDepend()
                                         }
-
-                                        itemIsLoadSub = true
                                     }
-                                } else if (itemParentList.size > 0 && index > 2) {
+
                                     itemIsLoadSub = true
-                                } else {
-                                    itemLoadSubList = this@TreeDemoActivity.loadSubList(this)
                                 }
+                            } else if (itemParentList.size > 0 && index > 2) {
+                                itemIsLoadSub = true
+                            } else {
+                                itemLoadSubList = this@TreeDemoActivity.loadSubList(this)
                             }
                         }
                     }
@@ -90,6 +88,10 @@ class DslTreeItem : DslAdapterItem() {
         itemGroupExtend = false
         itemBottomInsert = 1 * dpi
         itemDecorationColor = Color.parseColor("#D5D5D5")
+
+        thisAreItemsTheSame = { fromItem, newItem, oldItemPosition, newItemPosition ->
+            newItem.itemParentList == itemParentList && newItem.itemData == itemData
+        }
 
         itemClick = {
             itemGroupExtend = !itemGroupExtend
