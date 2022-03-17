@@ -34,6 +34,8 @@ import kotlin.reflect.KProperty
 
 typealias ItemAction = (DslAdapterItem) -> Unit
 
+typealias ItemSelectAction = (selectorParams: SelectorParams) -> Unit
+
 typealias ItemUpdateDependAction = (FilterParams) -> Unit
 
 typealias ItemBindAction = (
@@ -77,6 +79,10 @@ open class DslAdapterItem : LifecycleOwner {
 
     /**[com.angcyo.dsladapter.DslAdapter.notifyItemChanged]*/
     open fun updateAdapterItem(payload: Any? = PAYLOAD_UPDATE_PART, useFilterList: Boolean = true) {
+        if (itemDslAdapter?._recyclerView?.isComputingLayout == true) {
+            L.w("跳过操作! [RecyclerView]正在计算布局.")
+            return
+        }
         itemDslAdapter?.notifyItemChanged(this, payload, useFilterList).elseNull {
             L.w("跳过操作! updateAdapterItem需要[itemDslAdapter],请赋值.")
         }
@@ -736,7 +742,8 @@ open class DslAdapterItem : LifecycleOwner {
 
     /**是否需要更新item,等同于[itemChanging], 但不会触发[itemChanged]
      * 在[diffResult]之后会被重置为[false]
-     * * 默认为[true], 确保每次new的[DslAdapterItem]有机会更新数据*/
+     * * 默认为[true], 确保每次new的[DslAdapterItem]有机会更新数据
+     * [itemChanging]*/
     var itemUpdateFlag: Boolean = true
 
     /**
@@ -841,7 +848,8 @@ open class DslAdapterItem : LifecycleOwner {
             }
         }
 
-    /**[Item]是否正在改变, 会影响[thisAreContentsTheSame]的判断, 并且会在[Diff]计算完之后, 重置为[false]*/
+    /**[Item]是否正在改变, 会影响[thisAreContentsTheSame]的判断, 并且会在[Diff]计算完之后, 重置为[false]
+     * [itemUpdateFlag]*/
     var itemChanging = false
         set(value) {
             field = value
@@ -909,7 +917,8 @@ open class DslAdapterItem : LifecycleOwner {
         return true
     }
 
-    /**[itemUpdateFrom]*/
+    /**[itemUpdateFrom]
+     * [com.angcyo.dsladapter.DslDataFilter.UpdateTaskRunnable.notifyUpdateDependItem]*/
     val itemUpdateFromListenerList = mutableSetOf<ItemAction>()
 
     fun observeItemUpdateFrom(action: ItemAction): ItemAction {
@@ -932,7 +941,8 @@ open class DslAdapterItem : LifecycleOwner {
     var isItemCanSelected: (fromSelector: Boolean, toSelector: Boolean) -> Boolean =
         { from, to -> from != to }
 
-    var onItemSelectorChange: (selectorParams: SelectorParams) -> Unit = {
+    /**监听item select改变事件*/
+    var onItemSelectorChange: ItemSelectAction = {
         if (it.updateItemDepend) {
             updateItemDepend()
         }
@@ -942,6 +952,18 @@ open class DslAdapterItem : LifecycleOwner {
      * [com.angcyo.dsladapter.ItemSelectorHelper._selectorInner]*/
     open fun _itemSelectorChange(selectorParams: SelectorParams) {
         onItemSelectorChange(selectorParams)
+        itemSelectListener.forEach { it(selectorParams) }
+    }
+
+    val itemSelectListener = mutableSetOf<ItemSelectAction>()
+
+    fun observeItemSelect(action: ItemSelectAction): ItemSelectAction {
+        itemSelectListener.add(action)
+        return action
+    }
+
+    fun removeItemSelectObserver(action: ItemSelectAction): Boolean {
+        return itemSelectListener.remove(action)
     }
 
     //</editor-fold desc="单选/多选相关">

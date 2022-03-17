@@ -191,7 +191,7 @@ class SingleDataUpdate(val adapter: DslAdapter) {
                     adapterItems.remove(op.item)
                 }
                 Op.UPDATE -> {
-                    op.item?.itemChanging = true
+                    op.item?.itemUpdateFlag = true
                 }
                 Op.REPLACE -> {
                     val index = adapterItems.indexOfFirst {
@@ -249,7 +249,7 @@ fun <Item : DslAdapterItem> DslAdapter.updateItem(
     initItem: Item.() -> Unit = { }
 ) {
     findItem(itemClass, true)?.apply {
-        itemChanging = true
+        itemUpdateFlag = true
         (this as? Item)?.initItem()
 
         //触发更新

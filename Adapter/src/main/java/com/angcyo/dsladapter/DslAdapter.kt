@@ -306,11 +306,22 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         if (dslAdapterStatusItem.itemState == status) {
             return
         }
-        dslAdapterStatusItem.itemChanging = true
         dslAdapterStatusItem.itemState = status
+        dslAdapterStatusItem.itemUpdateFlag = true
     }
 
-    /**自动设置状态*/
+    /**设置[Adapter]需要显示情感图的状态, 并触发Diff更新界面
+     * */
+    fun updateAdapterStatus(status: Int) {
+        if (dslAdapterStatusItem.itemState == status) {
+            return
+        }
+        dslAdapterStatusItem.itemState = status
+        dslAdapterStatusItem.itemChanging = true
+    }
+
+    /**自动设置状态
+     * 根据[adapterItems]的数量, 智能切换[AdapterState]*/
     fun autoAdapterStatus() {
         if (isAdapterStatus()) {
             //no op
@@ -348,7 +359,6 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         if (dslLoadMoreItem.itemStateEnable && dslLoadMoreItem.itemState == status) {
             return
         }
-        dslLoadMoreItem.itemChanging = true
         dslLoadMoreItem.itemState = status
         if (notify) {
             notifyItemChanged(dslLoadMoreItem, payload)
@@ -635,6 +645,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     /**渲染[DslAdapter]中的item*/
     fun render(filterParams: FilterParams = defaultFilterParams!!, action: DslAdapter.() -> Unit) {
         action()
+        _updateAdapterItems()
         updateItemDepend(filterParams)
     }
 

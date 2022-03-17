@@ -46,7 +46,7 @@ inline fun <reified Item : DslAdapterItem> DslAdapter.loadSingleData(
             //重新旧数据
             it.forEachIndexed { index, dslAdapterItem ->
                 val data = list[index]
-                dslAdapterItem.itemChanging = dslAdapterItem.itemData != data
+                dslAdapterItem.itemUpdateFlag = dslAdapterItem.itemData != data
                 dslAdapterItem.itemData = data
                 initOrCreateDslItem(dslAdapterItem as Item, data)
             }
@@ -108,11 +108,6 @@ inline fun <reified Item : DslAdapterItem> DslAdapter.loadSingleData2(
             initItem(data)
         }
     }
-}
-
-/**根据[adapterItems]的数量, 智能切换[AdapterState]*/
-fun DslAdapter.updateAdapterState() {
-    autoAdapterStatus()
 }
 
 /**智能设置加载更多的状态和激活状态*/

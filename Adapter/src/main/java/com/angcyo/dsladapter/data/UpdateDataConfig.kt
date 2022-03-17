@@ -127,7 +127,7 @@ fun UpdateDataConfig.updateData(originList: List<DslAdapterItem>): List<DslAdapt
             val newItem = updateOrCreateItem(oldItem, data, index)
 
             if (newItem != null) {
-                newItem.itemChanging = true
+                newItem.itemUpdateFlag = true
                 newItem.itemData = data
             }
 
@@ -298,9 +298,9 @@ fun DslAdapter.updateAdapterState(list: List<*>?, error: Throwable?, page: Page 
 
         if (isDataEmpty && headerItems.isEmpty() && footerItems.isEmpty()) {
             //空数据
-            setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY)
+            updateAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY)
         } else {
-            setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
+            updateAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
         }
         updateLoadMore(page.requestPageIndex, list.size(), page.requestPageSize, false)
     }

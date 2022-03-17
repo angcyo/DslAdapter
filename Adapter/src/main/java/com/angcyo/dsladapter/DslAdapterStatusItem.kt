@@ -44,6 +44,8 @@ open class DslAdapterStatusItem : BaseDslStateItem() {
 
         itemState = ADAPTER_STATUS_NONE
 
+        itemUpdateFlag = false
+
         itemWidth = ViewGroup.LayoutParams.MATCH_PARENT
         itemHeight = ViewGroup.LayoutParams.MATCH_PARENT
     }
@@ -63,7 +65,7 @@ open class DslAdapterStatusItem : BaseDslStateItem() {
             itemHolder.clickItem {
                 if (itemState == ADAPTER_STATUS_ERROR) {
                     _notifyRefresh(itemHolder)
-                    itemDslAdapter?.setAdapterStatus(ADAPTER_STATUS_LOADING)
+                    itemDslAdapter?.updateAdapterStatus(ADAPTER_STATUS_LOADING)
                 }
             }
             itemHolder.click(R.id.base_retry_button) {

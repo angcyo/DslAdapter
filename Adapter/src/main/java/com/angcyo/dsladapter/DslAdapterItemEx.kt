@@ -558,7 +558,7 @@ inline fun <reified Item : DslAdapterItem> DslAdapter._updateOrInsertItem(
                 it.add(clamp(insertIndex, 0, it.size), newItem)
             } else {
                 //需要更新处理
-                findItem.itemChanging = true
+                findItem.itemUpdateFlag = true
                 val indexOf = it.indexOf(findItem)
                 if (indexOf != -1) {
                     it[indexOf] = newItem

@@ -366,22 +366,22 @@ fun DslAdapter.justRunFilterParams() = defaultFilterParams!!.apply {
 
 /**显示情感图[加载中]*/
 fun DslAdapter.toLoading() {
-    setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
+    updateAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
 }
 
 /**显示情感图[空数据]*/
 fun DslAdapter.toEmpty() {
-    setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY)
+    updateAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY)
 }
 
 /**显示情感图[错误]*/
 fun DslAdapter.toError() {
-    setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_ERROR)
+    updateAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_ERROR)
 }
 
 /**显示情感图[正常]*/
 fun DslAdapter.toNone() {
-    setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
+    updateAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
 }
 
 fun DslAdapter.toLoadMoreError() {

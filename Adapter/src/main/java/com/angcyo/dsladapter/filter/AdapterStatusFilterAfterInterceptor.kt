@@ -18,7 +18,11 @@ class AdapterStatusFilterAfterInterceptor : BaseFilterAfterInterceptor() {
             chain.interruptChain = true
 
             //切换到空布局
-            chain.dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY)
+            chain.dslAdapter.apply {
+                _recyclerView?.post {
+                    updateAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY)
+                }
+            }
         }
         return chain.requestList
     }
