@@ -68,10 +68,9 @@ class GridFillDemoActivity : BaseRecyclerActivity() {
             setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
         }
         dslViewHolder.postDelay(1000) {
-            dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
 
             renderAdapter {
-
+                setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
                 val groupSize = nextInt(1, 10)
                 for (groupIndex in 0 until groupSize) {
                     val group = listOf("group$groupIndex")

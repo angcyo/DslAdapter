@@ -28,10 +28,9 @@ class GroupGridDemoActivity : BaseRecyclerActivity() {
         }
 
         dslViewHolder.postDelay(1000) {
-            dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
 
             renderAdapter {
-
+                setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
                 for (i in 0..4) {
                     dslItem(R.layout.item_group_head) {
                         itemIsGroupHead = true //启动分组折叠

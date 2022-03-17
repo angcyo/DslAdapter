@@ -6,7 +6,6 @@ import com.angcyo.dsladapter.dpi
 import com.angcyo.dsladapter.dsl.DslImageItem
 import com.angcyo.dsladapter.dsl.DslTextItem
 import com.angcyo.dsladapter.nowTime
-import kotlin.random.Random.Default.nextInt
 
 /**
  *
@@ -57,8 +56,14 @@ class LoadDataActivity : BaseRecyclerActivity() {
         //模拟返回的数据
         val result = mutableListOf<String>()
 
-        for (i in 0..nextInt(10, 30)) {
+        /*for (i in 0..nextInt(18, 30)) {
             result.add("列表数据-> requestPage:$page data:$i")
+        }*/
+
+        if (page <= 2) {
+            for (i in 0..19) {
+                result.add("列表数据-> requestPage:$page data:$i")
+            }
         }
 
         if (page == 1) {
@@ -83,11 +88,11 @@ class LoadDataActivity : BaseRecyclerActivity() {
             }
         }
 
+        loadPage = requestPage
+
         dslAdapter.updateSingleData<DslTextItem>(result, page, 20) { data ->
             itemTopInsert = 2 * dpi
             itemText = data?.toString()
         }
-
-        requestPage = loadPage
     }
 }

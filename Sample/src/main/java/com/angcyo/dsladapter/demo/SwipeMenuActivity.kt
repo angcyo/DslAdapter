@@ -38,7 +38,7 @@ open class SwipeMenuActivity : BaseRecyclerActivity() {
         super.onRefresh()
 
         dslAdapter.render {
-            dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
+            setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
 
             clearItems()
 

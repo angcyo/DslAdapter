@@ -111,17 +111,6 @@ class StaggeredGridLayoutActivity : BaseRecyclerActivity() {
                     }
                 }
 
-                changeFooterItems {
-                    for (i in 0..2) {
-                        it.add(ColorItem().apply {
-                            itemText = "尾部:原位置$i"
-                            itemTag = itemText
-                            itemColor = randomColor(random)
-                            margin()
-                        })
-                    }
-                }
-
                 dslImageItem {
                     itemSpanCount = -1
                     margin()
@@ -138,6 +127,17 @@ class StaggeredGridLayoutActivity : BaseRecyclerActivity() {
                         itemTag = itemText
                         itemColor = randomColor(random)
                         margin()
+                    }
+                }
+
+                changeFooterItems {
+                    for (i in 0..2) {
+                        it.add(ColorItem().apply {
+                            itemText = "尾部:原位置$i"
+                            itemTag = itemText
+                            itemColor = randomColor(random)
+                            margin()
+                        })
                     }
                 }
 

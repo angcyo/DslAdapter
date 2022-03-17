@@ -34,24 +34,16 @@ class AdapterStatusActivity : BaseRecyclerActivity() {
 
     private fun initAdapterStatus() {
         dslViewHolder.click(R.id.normal) {
-            dslAdapter.render {
-                dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
-            }
+            dslAdapter.updateAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
         }
         dslViewHolder.click(R.id.empty) {
-            dslAdapter.render {
-                dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY)
-            }
+            dslAdapter.updateAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY)
         }
         dslViewHolder.click(R.id.loading) {
-            dslAdapter.render {
-                dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
-            }
+            dslAdapter.updateAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
         }
         dslViewHolder.click(R.id.error) {
-            dslAdapter.render {
-                dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_ERROR)
-            }
+            dslAdapter.updateAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_ERROR)
         }
     }
 

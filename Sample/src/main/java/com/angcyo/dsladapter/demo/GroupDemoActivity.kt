@@ -1,5 +1,6 @@
 package com.angcyo.dsladapter.demo
 
+import android.widget.Toast
 import com.angcyo.dsladapter.*
 import com.angcyo.dsladapter.dsl.DslDemoItem
 import kotlin.random.Random
@@ -23,9 +24,9 @@ class GroupDemoActivity : BaseRecyclerActivity() {
         }
 
         dslViewHolder.postDelay(1000) {
-            dslAdapter.setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
 
             renderAdapter {
+                setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
 
                 for (i in 0..Random.nextInt(2, 6)) {
                     dslItem(R.layout.item_group_head) {
@@ -81,4 +82,21 @@ class GroupDemoActivity : BaseRecyclerActivity() {
             }
         }
     }
+
+    /*var refreshCount = 0
+
+    override fun onRefresh() {
+        Toast.makeText(this, "刷新", Toast.LENGTH_SHORT).show()
+        dslViewHolder.postDelay(1000) {
+            if (refreshCount++ % 2 == 0) {
+                refreshLayout.isRefreshing = false
+            } else {
+                dslAdapter.render {
+                    clearItems()
+                    refreshLayout.isRefreshing = false
+                }
+                Toast.makeText(this, "请重试", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }*/
 }
