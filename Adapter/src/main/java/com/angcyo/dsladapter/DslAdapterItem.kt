@@ -9,6 +9,7 @@ import android.os.Build
 import android.util.SparseArray
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.CallSuper
 import androidx.core.math.MathUtils.clamp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -1154,18 +1155,23 @@ open class DslAdapterItem : LifecycleOwner {
     }
 
     /**请勿覆盖[itemViewAttachedToWindow]*/
+    @CallSuper
     open fun onItemViewAttachedToWindow(itemHolder: DslViewHolder, itemPosition: Int) {
-        lifecycleRegistry.currentState = Lifecycle.State.RESUMED
-    }
-
-    /**请勿覆盖[itemViewDetachedToWindow]*/
-    open fun onItemViewDetachedToWindow(itemHolder: DslViewHolder, itemPosition: Int) {
         lifecycleRegistry.currentState = Lifecycle.State.STARTED
     }
 
+    /**请勿覆盖[itemViewDetachedToWindow]*/
+    @CallSuper
+    open fun onItemViewDetachedToWindow(itemHolder: DslViewHolder, itemPosition: Int) {
+        lifecycleRegistry.currentState = Lifecycle.State.CREATED
+    }
+
     /**请勿覆盖[itemViewRecycled]*/
+    @CallSuper
     open fun onItemViewRecycled(itemHolder: DslViewHolder, itemPosition: Int) {
-        lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
+        if (lifecycleRegistry.currentState.isAtLeast(Lifecycle.State.CREATED)) {
+            lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
+        }
         itemHolder.clear()
     }
 
