@@ -217,7 +217,16 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
                         doInner()
                     }
                     //立即执行
-                    justRun -> doInner()
+                    justRun -> {
+                        //Cannot call this method while RecyclerView is computing a layout or scrolling
+                        if (dslAdapter._recyclerView?.isComputingLayout == true) {
+                            mainHandler.post {
+                                run()
+                            }
+                        } else {
+                            doInner()
+                        }
+                    }
                     //post, 抖动过滤
                     else -> mainHandler.post {
                         doInner()
