@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Looper
 import androidx.annotation.LayoutRes
+import com.angcyo.dsladapter.filter.IFilterInterceptor
 
 
 /**
@@ -478,4 +479,43 @@ fun <T : DslAdapterItem> DslAdapter.findSameClassItem(
 }
 
 //</editor-fold desc="操作扩展">
+
+//<editor-fold desc="Interceptor">
+
+/**添加一个前置过滤器*/
+fun DslAdapter.addBeforeInterceptor(interceptor: IFilterInterceptor): IFilterInterceptor {
+    dslDataFilter?.beforeFilterInterceptorList?.add(interceptor)
+    return interceptor
+}
+
+fun DslAdapter.removeBeforeInterceptor(interceptor: IFilterInterceptor): Boolean {
+    return dslDataFilter?.beforeFilterInterceptorList?.remove(interceptor) ?: false
+}
+
+/**添加一个后置过滤器*/
+fun DslAdapter.addAfterInterceptor(interceptor: IFilterInterceptor): IFilterInterceptor {
+    dslDataFilter?.afterFilterInterceptorList?.add(interceptor)
+    return interceptor
+}
+
+fun DslAdapter.removeAfterInterceptor(interceptor: IFilterInterceptor): Boolean {
+    return dslDataFilter?.afterFilterInterceptorList?.remove(interceptor) ?: false
+}
+
+fun IFilterInterceptor.addToAfter(adapter: DslAdapter, update: Boolean = true) {
+    adapter.addAfterInterceptor(this)
+    if (update) {
+        adapter.updateItemDepend()
+    }
+}
+
+fun IFilterInterceptor.removeFromAfter(adapter: DslAdapter, update: Boolean = true) {
+    adapter.removeAfterInterceptor(this)
+    if (update) {
+        adapter.updateItemDepend()
+    }
+}
+
+//</editor-fold desc="Interceptor">
+
 
