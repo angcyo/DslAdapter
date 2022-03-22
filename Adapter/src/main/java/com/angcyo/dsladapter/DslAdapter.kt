@@ -8,6 +8,7 @@ import com.angcyo.dsladapter.filter.IFilterInterceptor
 import com.angcyo.dsladapter.internal.AdapterStatusFilterInterceptor
 import com.angcyo.dsladapter.internal.LoadMoreFilterInterceptor
 import kotlin.math.min
+import kotlin.reflect.KClass
 
 /**
  * https://github.com/angcyo/DslAdapter
@@ -813,6 +814,47 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
      * */
     operator fun get(tag: String?, useFilterList: Boolean = true): DslAdapterItem? {
         return tag?.run { findItemByTag(tag, useFilterList) }
+    }
+
+    /**
+     * ```
+     * this[{ true }]
+     * this[{ true }, false]
+     * ```
+     * */
+    operator fun get(
+        predicate: (DslAdapterItem) -> Boolean,
+        useFilterList: Boolean = true
+    ): List<DslAdapterItem> {
+        return getDataList(useFilterList).filter(predicate)
+    }
+
+    /**
+     * ```
+     * this[DslAdapterItem::class.java]
+     * ```
+     * */
+    operator fun <Item : DslAdapterItem> get(
+        itemClass: Class<Item>,
+        useFilterList: Boolean = true
+    ): List<Item> {
+        return getDataList(useFilterList).filter {
+            it.className() == itemClass.className()
+        } as List<Item>
+    }
+
+    /**
+     * ```
+     * this[DslAdapterItem::class]
+     * ```
+     * */
+    operator fun <Item : DslAdapterItem> get(
+        itemClass: KClass<Item>,
+        useFilterList: Boolean = true
+    ): List<Item> {
+        return getDataList(useFilterList).filter {
+            it.className() == itemClass.java.className()
+        } as List<Item>
     }
 
     //</editor-fold desc="操作符重载">
