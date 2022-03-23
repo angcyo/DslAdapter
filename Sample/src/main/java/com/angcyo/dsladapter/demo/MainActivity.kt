@@ -194,8 +194,9 @@ class MainActivity : BaseRecyclerActivity() {
                 }
             }
 
-
             this + DslViewBindingItem()
+
+            this + DslUpdateParentItem() + DslUpdateChildItem() + DslUpdateChildItem()
 
             renderEmptyItem()
 
