@@ -339,6 +339,11 @@ fun Iterable<*>.isUpdateMedia(): Boolean {
     return count() <= 0 || containsPayload(DslAdapterItem.PAYLOAD_UPDATE_MEDIA)
 }
 
+/**是否局部更新*/
+fun Iterable<*>.isUpdatePart(): Boolean {
+    return containsPayload(DslAdapterItem.PAYLOAD_UPDATE_PART)
+}
+
 fun payload(vararg payload: Int): List<Int> {
     return if (payload.isEmpty()) {
         listOf(DslAdapterItem.PAYLOAD_UPDATE_PART)
