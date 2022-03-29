@@ -202,26 +202,42 @@ fun DslAdapter.getItemListPairByItem(item: DslAdapterItem?): Pair<MutableList<Ds
     }
 }
 
-fun DslAdapter.dslItem(@LayoutRes layoutId: Int, config: DslAdapterItem.() -> Unit = {}) {
+/**通过[layoutId]快速添加一个[DslAdapterItem]*/
+fun DslAdapter.dslItem(
+    @LayoutRes layoutId: Int,
+    config: DslAdapterItem.() -> Unit = {}
+): DslAdapterItem {
     val item = DslAdapterItem()
     item.itemLayoutId = layoutId
     addLastItem(item)
     item.config()
+    return item
+}
+
+/**通过[layoutId]和直接绑定,快速添加一个[DslAdapterItem]*/
+fun DslAdapter.bindItem(@LayoutRes layoutId: Int, bindAction: ItemBindAction): DslAdapterItem {
+    val item = DslAdapterItem()
+    item.itemLayoutId = layoutId
+    addLastItem(item)
+    item.itemBindOverride = bindAction
+    return item
 }
 
 fun <T : DslAdapterItem> DslAdapter.dslItem(
     dslItem: T,
     config: T.() -> Unit = {}
-) {
+): T {
     dslCustomItem(dslItem, config)
+    return dslItem
 }
 
 fun <T : DslAdapterItem> DslAdapter.dslCustomItem(
     dslItem: T,
     config: T.() -> Unit = {}
-) {
+): T {
     addLastItem(dslItem)
     dslItem.config()
+    return dslItem
 }
 
 /**空的占位item*/
