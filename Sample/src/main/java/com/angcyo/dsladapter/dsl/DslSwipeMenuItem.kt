@@ -18,6 +18,7 @@ import com.angcyo.item.base.LibInitProvider
  * Copyright (c) 2020 ShenZhen Wayto Ltd. All rights reserved.
  */
 class DslSwipeMenuItem : DslTextInfoItem() {
+
     init {
         itemLayoutId = R.layout.app_item_swipe_menu
     }

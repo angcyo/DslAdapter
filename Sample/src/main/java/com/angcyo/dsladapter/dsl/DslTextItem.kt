@@ -3,6 +3,7 @@ package com.angcyo.dsladapter.dsl
 import android.widget.TextView
 import com.angcyo.dsladapter.DslAdapterItem
 import com.angcyo.dsladapter.DslViewHolder
+import com.angcyo.dsladapter.className
 import com.angcyo.dsladapter.demo.R
 
 /**
@@ -26,6 +27,7 @@ class DslTextItem : DslAdapterItem() {
         adapterItem: DslAdapterItem
     ) {
         super.onItemBind(itemHolder, itemPosition, adapterItem)
-        itemHolder.v<TextView>(R.id.text_view)?.text = itemText ?: "文本位置:$itemPosition"
+        itemHolder.v<TextView>(R.id.text_view)?.text =
+            itemText ?: "文本位置:$itemPosition ${className()}"
     }
 }

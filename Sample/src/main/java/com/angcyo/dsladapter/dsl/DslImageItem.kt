@@ -3,6 +3,7 @@ package com.angcyo.dsladapter.dsl
 import android.widget.TextView
 import com.angcyo.dsladapter.DslAdapterItem
 import com.angcyo.dsladapter.DslViewHolder
+import com.angcyo.dsladapter.className
 import com.angcyo.dsladapter.demo.R
 
 /**
@@ -23,10 +24,12 @@ class DslImageItem : DslAdapterItem() {
     override fun onItemBind(
         itemHolder: DslViewHolder,
         itemPosition: Int,
-        adapterItem: DslAdapterItem
+        adapterItem: DslAdapterItem,
+        payloads: List<Any>
     ) {
-        super.onItemBind(itemHolder, itemPosition, adapterItem)
-        itemHolder.v<TextView>(R.id.text_view)?.text = itemText ?: "文本位置:$itemPosition"
+        super.onItemBind(itemHolder, itemPosition, adapterItem, payloads)
+        itemHolder.v<TextView>(R.id.text_view)?.text =
+            itemText ?: "文本位置:$itemPosition ${className()}"
     }
 
 }
