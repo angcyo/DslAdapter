@@ -92,9 +92,7 @@ open class DslAdapterItem : LifecycleOwner {
     /**移除[item]*/
     open fun removeAdapterItem() {
         itemDslAdapter?.apply {
-            removeHeaderItem(this@DslAdapterItem)
-            removeItem(this@DslAdapterItem)
-            removeFooterItem(this@DslAdapterItem)
+            removeItemFromAll(this@DslAdapterItem)
         }.elseNull {
             L.w("跳过操作! updateAdapterItem需要[itemDslAdapter],请赋值.")
         }
@@ -741,6 +739,9 @@ open class DslAdapterItem : LifecycleOwner {
 
     //<editor-fold desc="Diff相关">
 
+    /**标识当前的item是否被移除了, 被移除之后, 会影响[thisAreItemsTheSame]的比对*/
+    var itemRemoveFlag: Boolean = false
+
     /**是否需要更新item,等同于[itemChanging], 但不会触发[itemChanged]
      * 在[diffResult]之后会被重置为[false]
      * * 默认为[true], 确保每次new的[DslAdapterItem]有机会更新数据
@@ -766,7 +767,9 @@ open class DslAdapterItem : LifecycleOwner {
         oldItemPosition: Int, newItemPosition: Int
     ) -> Boolean = { fromItem, newItem, oldItemPosition, newItemPosition ->
         var result = this == newItem
-        if (!result) {
+        if (itemRemoveFlag) {
+            result = false
+        } else if (!result) {
             val thisItemClassname = this.className()
             val newItemClassName = newItem.className()
             //相同类名, 且布局类型相同的2个item, 不进行insert/remove操作
@@ -835,9 +838,9 @@ open class DslAdapterItem : LifecycleOwner {
         itemUpdateFlag = false
     }
 
-    //</editor-fold desc="Diff相关">
+//</editor-fold desc="Diff相关">
 
-    //<editor-fold desc="定向更新">
+//<editor-fold desc="定向更新">
 
     /**标识此[Item]是否发生过改变, 可用于实现退出界面提示是否保存内容.*/
     var itemChanged = false
@@ -931,9 +934,9 @@ open class DslAdapterItem : LifecycleOwner {
         return itemUpdateFromListenerList.remove(action)
     }
 
-    //</editor-fold desc="定向更新">
+//</editor-fold desc="定向更新">
 
-    //<editor-fold desc="单选/多选相关">
+//<editor-fold desc="单选/多选相关">
 
     /**是否选中, 需要 [ItemSelectorHelper.selectorModel] 的支持. */
     var itemIsSelected = false
@@ -967,9 +970,9 @@ open class DslAdapterItem : LifecycleOwner {
         return itemSelectListener.remove(action)
     }
 
-    //</editor-fold desc="单选/多选相关">
+//</editor-fold desc="单选/多选相关">
 
-    //<editor-fold desc="群组相关">
+//<editor-fold desc="群组相关">
 
     /**动态计算的属性*/
     val itemGroupParams: ItemGroupParams
@@ -1017,9 +1020,9 @@ open class DslAdapterItem : LifecycleOwner {
         result
     }
 
-    //</editor-fold>
+//</editor-fold>
 
-    //<editor-fold desc="拖拽相关">
+//<editor-fold desc="拖拽相关">
 
     /**
      * 当前[DslAdapterItem]是否可以被拖拽.需要[DragCallbackHelper]的支持
@@ -1052,9 +1055,9 @@ open class DslAdapterItem : LifecycleOwner {
         itemDragEnable
     }
 
-    //</editor-fold>
+//</editor-fold>
 
-    //<editor-fold desc="侧滑菜单相关">
+//<editor-fold desc="侧滑菜单相关">
 
     /**用于控制打开or关闭菜单*/
     var _itemSwipeMenuHelper: SwipeMenuHelper? = null
@@ -1119,9 +1122,9 @@ open class DslAdapterItem : LifecycleOwner {
         }
     }
 
-    //</editor-fold>
+//</editor-fold>
 
-    //<editor-fold desc="Tree 树结构相关">
+//<editor-fold desc="Tree 树结构相关">
 
     /**
      * 折叠/展开 依旧使用[itemGroupExtend]控制
@@ -1144,9 +1147,9 @@ open class DslAdapterItem : LifecycleOwner {
      * [com.angcyo.dsladapter.internal.SubItemFilterInterceptor.loadSubItemList]*/
     var itemParentList: MutableList<DslAdapterItem> = mutableListOf()
 
-    //</editor-fold>
+//</editor-fold>
 
-    //<editor-fold desc="Lifecycle支持">
+//<editor-fold desc="Lifecycle支持">
 
     val lifecycleRegistry = LifecycleRegistry(this)
 
@@ -1175,7 +1178,7 @@ open class DslAdapterItem : LifecycleOwner {
         itemHolder.clear()
     }
 
-    //</editor-fold desc="Lifecycle支持">
+//</editor-fold desc="Lifecycle支持">
 
 }
 

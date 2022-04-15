@@ -20,6 +20,7 @@ import java.util.*
 class DragCallbackHelper : ItemTouchHelper.Callback() {
 
     companion object {
+
         /**[Drag] 和 [Swipe] Flag*/
         const val FLAG_NO_INIT = -1
 
@@ -37,6 +38,9 @@ class DragCallbackHelper : ItemTouchHelper.Callback() {
 
         /**水平方向*/
         const val FLAG_HORIZONTAL = ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+
+        /**负载更新标识*/
+        const val PAYLOAD_UPDATE_PART_SWIPED = 0x1_000
 
         /**安装*/
         fun install(recyclerView: RecyclerView): DragCallbackHelper {
@@ -164,7 +168,17 @@ class DragCallbackHelper : ItemTouchHelper.Callback() {
         _swipeHappened = true
         _dslAdapter?.apply {
             getItemData(viewHolder.adapterPosition)?.apply {
-                removeItem(this)
+                removeItemFromAll(this)
+                updateItemDepend(
+                    FilterParams(
+                        fromDslAdapterItem = this,
+                        updateDependItemWithEmpty = false,
+                        payload = listOf(
+                            DslAdapterItem.PAYLOAD_UPDATE_PART,
+                            PAYLOAD_UPDATE_PART_SWIPED
+                        )
+                    )
+                )
                 onItemSwipeDeleted?.invoke(this)
             }
         }

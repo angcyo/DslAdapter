@@ -467,8 +467,47 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         }
 
         if (dataItems.removeAll(listInclude)) {
+            listInclude.forEach { it.itemRemoveFlag = true }
             _updateAdapterItems()
         }
+    }
+
+    fun removeHeaderItem(list: List<DslAdapterItem>) {
+        val listInclude = mutableListOf<DslAdapterItem>()
+
+        list.filterTo(listInclude) {
+            headerItems.contains(it)
+        }
+
+        if (headerItems.removeAll(listInclude)) {
+            listInclude.forEach { it.itemRemoveFlag = true }
+            _updateAdapterItems()
+        }
+    }
+
+    fun removeFooterItem(list: List<DslAdapterItem>) {
+        val listInclude = mutableListOf<DslAdapterItem>()
+
+        list.filterTo(listInclude) {
+            footerItems.contains(it)
+        }
+
+        if (footerItems.removeAll(listInclude)) {
+            listInclude.forEach { it.itemRemoveFlag = true }
+            _updateAdapterItems()
+        }
+    }
+
+    fun removeItemFromAll(item: DslAdapterItem, updateOther: Boolean = true) {
+        removeItemFrom(dataItems, item, updateOther)
+        removeItemFrom(headerItems, item, updateOther)
+        removeItemFrom(footerItems, item, updateOther)
+    }
+
+    fun removeItemFromAll(list: List<DslAdapterItem>) {
+        removeItem(list)
+        removeHeaderItem(list)
+        removeFooterItem(list)
     }
 
     /**移除数据*/
@@ -493,6 +532,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         val index = adapterItems.indexOf(item)
         if (index != -1) {
             if (list.remove(item)) {
+                item.itemRemoveFlag = true
                 if (updateOther) {
                     for (i in (index + 1) until adapterItems.size) {
                         //更新之后的item
@@ -775,12 +815,12 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
      * </pre>
      * */
     operator fun <T : DslAdapterItem> minus(item: T): DslAdapter {
-        removeItem(item)
+        removeItemFromAll(item)
         return this
     }
 
     operator fun <T : DslAdapterItem> minus(list: List<T>): DslAdapter {
-        removeItem(list)
+        removeItemFromAll(list)
         return this
     }
 
