@@ -14,10 +14,7 @@ import androidx.core.math.MathUtils.clamp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import androidx.recyclerview.widget.*
 import com.angcyo.dsladapter.SwipeMenuHelper.Companion.SWIPE_MENU_TYPE_DEFAULT
 import com.angcyo.dsladapter.SwipeMenuHelper.Companion.SWIPE_MENU_TYPE_FLOWING
 import com.angcyo.dsladapter.internal.ThrottleClickListener
@@ -247,11 +244,9 @@ open class DslAdapterItem : LifecycleOwner {
      * [DslAdapter.onBindViewHolder(com.angcyo.widget.DslViewHolder, int, java.util.List<? extends java.lang.Object>)]
      * */
     var itemBind: ItemBindAction = { itemHolder, itemPosition, adapterItem, payloads ->
-        _itemGroupParamsCache = null //清空[ItemGroupParams]缓存
         onItemBind(itemHolder, itemPosition, adapterItem, payloads)
         itemBindOverride(itemHolder, itemPosition, adapterItem, payloads)
         onItemBindAfter(itemHolder, itemPosition, adapterItem, payloads)
-        _itemGroupParamsCache = null //清空[ItemGroupParams]缓存
     }
 
     /**
@@ -405,15 +400,16 @@ open class DslAdapterItem : LifecycleOwner {
     }
 
     open fun _initItemStyle(itemHolder: DslViewHolder) {
-        val showLine = itemShowLastLineView
-        if (showLine == null) {
-            if (itemAutoHideLastLineView) {
-                itemGroupParams.apply {
-                    itemHolder.gone(R.id.lib_item_line_view, isLastPosition())
+        val lineView = itemHolder.view(R.id.lib_item_line_view)
+        if (lineView != null) {
+            val showLine = itemShowLastLineView
+            if (showLine == null) {
+                if (itemAutoHideLastLineView) {
+                    lineView.gone(isLastPositionInGroup())
                 }
+            } else {
+                lineView.visible(showLine)
             }
-        } else {
-            itemHolder.visible(R.id.lib_item_line_view, showLine)
         }
     }
 
@@ -471,6 +467,223 @@ open class DslAdapterItem : LifecycleOwner {
         false,
         listOf(PAYLOAD_UPDATE_PART, PAYLOAD_UPDATE_HIDDEN)
     )
+
+    /**查找与[dslAdapterItem]相同分组的所有[DslAdapterItem]
+     * [dslAdapterItem] 查询的目标
+     * [useFilterList] 数据源
+     * [lm] 指定外部的布局管理*/
+    open fun findItemGroupParams(
+        dslAdapter: DslAdapter,
+        useFilterList: Boolean = true,
+        lm: RecyclerView.LayoutManager? = null
+    ): ItemGroupParams {
+        val dslAdapterItem = this
+        val allItemList = dslAdapter.getDataList(useFilterList)
+        val groupList = mutableListOf<ItemGroupParams>()
+
+        //目标分组信息, 需要返回的数据
+        var anchorParams: ItemGroupParams? = null
+
+        var nextItem: DslAdapterItem? = null
+        var nextParams: ItemGroupParams? = null
+        var nextGroupItems = mutableListOf<DslAdapterItem>()
+
+        for (i in allItemList.indices) {
+            val item = allItemList[i]
+            if (i == 0 || nextItem == item) {
+                //保存之前
+                nextParams?.apply {
+                    indexInGroup = nextGroupItems.indexOf(dslAdapterItem)
+                    groupIndex = groupList.indexOf(this)
+                    //edgeGridParams, 暂不初始化
+                }
+
+                //新建组
+                nextParams = ItemGroupParams().apply {
+                    nextGroupItems = mutableListOf()
+                    nextGroupItems.add(item)
+
+                    groupList.add(this)
+
+                    this.groupList = groupList
+                    this.groupItems = nextGroupItems
+                    currentAdapterItem = item
+                }
+
+                //目标
+                if (item == dslAdapterItem) {
+                    anchorParams = nextParams
+                }
+
+                for (j in i + 1 until allItemList.count()) {
+                    val otherItem = allItemList.getOrNull(j)
+                    if (otherItem != null) {
+                        //目标
+                        if (otherItem == dslAdapterItem) {
+                            anchorParams = nextParams
+                        }
+
+                        if (item.isInGroupItem(otherItem)) {
+                            nextGroupItems.add(otherItem)
+                        } else {
+                            nextItem = otherItem
+                            break
+                        }
+                    }
+                }
+            }
+        }
+        anchorParams?.currentAdapterItem = dslAdapterItem
+        //最后一个
+        nextParams?.apply {
+            indexInGroup = nextGroupItems.indexOf(currentAdapterItem!!)
+            groupIndex = groupList.indexOf(this)
+        }
+
+        /*var interruptGroup = false
+        var findAnchor = false*/
+
+        //分组数据计算
+        /*for (i in allItemList.indices) {
+            val targetItem = allItemList[i]
+
+            if (!interruptGroup) {
+                when {
+                    targetItem == dslAdapterItem -> {
+                        params.groupItems.add(targetItem)
+                        findAnchor = true
+                    }
+                    dslAdapterItem.isItemInGroups(targetItem) -> params.groupItems.add(targetItem)
+                    //如果不是连续的, 则中断分组
+                    findAnchor -> interruptGroup = true
+                }
+            }
+
+            if (interruptGroup) {
+                break
+            }
+        }
+
+        anchorParams.indexInGroup = anchorParams.groupItems.indexOf(dslAdapterItem)*/
+
+        //网格边界计算
+        val layoutManager = lm ?: dslAdapter._recyclerView?.layoutManager
+
+        if (anchorParams != null && layoutManager is GridLayoutManager) {
+            layoutManager.apply {
+                val itemPosition = allItemList.indexOf(dslAdapterItem)
+
+                val groupItemList = anchorParams.groupItems
+
+                val spanSizeLookup = spanSizeLookup ?: GridLayoutManager.DefaultSpanSizeLookup()
+
+                //当前位置
+                val currentSpanParams =
+                    getSpanParams(
+                        spanSizeLookup,
+                        itemPosition,
+                        spanCount,
+                        anchorParams.indexInGroup
+                    )
+
+                //下一个的信息
+                val nextItemPosition: Int = itemPosition + 1
+                val nextSpanParams = if (allItemList.size > nextItemPosition) {
+                    getSpanParams(
+                        spanSizeLookup,
+                        nextItemPosition,
+                        spanCount,
+                        groupItemList.indexOf(allItemList[nextItemPosition])
+                    )
+                } else {
+                    SpanParams()
+                }
+
+                //分组第一个
+                val firstItemPosition = allItemList.indexOf(groupItemList.firstOrNull())
+                val firstSpanParams = if (firstItemPosition == -1) {
+                    SpanParams()
+                } else {
+                    getSpanParams(
+                        spanSizeLookup,
+                        firstItemPosition,
+                        spanCount,
+                        groupItemList.indexOf(allItemList[firstItemPosition])
+                    )
+                }
+
+                //分组最后一个
+                val lastItemPosition = allItemList.indexOf(groupItemList.lastOrNull())
+                val lastSpanParams = if (lastItemPosition == -1) {
+                    SpanParams()
+                } else {
+                    getSpanParams(
+                        spanSizeLookup,
+                        lastItemPosition,
+                        spanCount,
+                        groupItemList.indexOf(allItemList[lastItemPosition])
+                    )
+                }
+
+                //adapter第一个
+                val firstPosition = 0
+                val firstParams = if (allItemList.isEmpty()) {
+                    SpanParams()
+                } else {
+                    getSpanParams(
+                        spanSizeLookup,
+                        firstPosition,
+                        spanCount,
+                        groupItemList.indexOf(allItemList[firstPosition])
+                    )
+                }
+
+                //adapter最后一个
+                val lastPosition = allItemList.lastIndex
+                val lastParams = if (allItemList.isEmpty()) {
+                    SpanParams()
+                } else {
+                    getSpanParams(
+                        spanSizeLookup,
+                        lastPosition,
+                        spanCount,
+                        groupItemList.indexOf(allItemList[lastPosition])
+                    )
+                }
+
+                anchorParams.edgeGridParams = EdgeGridParams(
+                    currentSpanParams, nextSpanParams,
+                    firstSpanParams, lastSpanParams,
+                    firstParams, lastParams
+                )
+            }
+        } else if (layoutManager is LinearLayoutManager) {
+            //todo
+        } else if (layoutManager == null) {
+            L.w("layoutManager is null")
+        }
+
+        return anchorParams ?: dslAdapterItem.createItemGroupParams()
+    }
+
+    /**清理分组缓存
+     * [com.angcyo.dsladapter.DslAdapter._updateAdapterItems]*/
+    open fun clearItemGroupParamsCache() {
+        _itemGroupParamsCache = null
+    }
+
+    /**当前的[DslAdapterItem]是否在分组中的最后一个*/
+    open fun isLastPositionInGroup(useFilterList: Boolean = true): Boolean {
+        val adapter = itemDslAdapter ?: return false
+        return if (itemGroups.isEmpty()) {
+            //简单分组
+            val allItemList = adapter.getDataList(useFilterList)
+            val index = allItemList.indexOf(this)
+            allItemList.size - 1 == index
+        } else {
+            itemGroupParams.isLastPosition()
+        }
+    }
 
     //</editor-fold>
 
@@ -615,7 +828,7 @@ open class DslAdapterItem : LifecycleOwner {
         onlyDrawOffsetArea = drawOffsetArea
         eachDrawItemDecoration(0, 0, 0, itemBottomInsert)
         paint.color = itemDecorationColor
-        if (itemBottomInsert > 0 && itemDrawBottom && !(noDrawLastItemDecoration && itemGroupParams.isLastPosition())) {
+        if (itemBottomInsert > 0 && itemDrawBottom && !(noDrawLastItemDecoration && isLastPositionInGroup())) {
             if (onlyDrawOffsetArea) {
                 //绘制左右区域
                 if (itemLeftOffset > 0) {
@@ -838,9 +1051,9 @@ open class DslAdapterItem : LifecycleOwner {
         itemUpdateFlag = false
     }
 
-//</editor-fold desc="Diff相关">
+    //</editor-fold desc="Diff相关">
 
-//<editor-fold desc="定向更新">
+    //<editor-fold desc="定向更新">
 
     /**标识此[Item]是否发生过改变, 可用于实现退出界面提示是否保存内容.*/
     var itemChanged = false
@@ -934,9 +1147,9 @@ open class DslAdapterItem : LifecycleOwner {
         return itemUpdateFromListenerList.remove(action)
     }
 
-//</editor-fold desc="定向更新">
+    //</editor-fold desc="定向更新">
 
-//<editor-fold desc="单选/多选相关">
+    //<editor-fold desc="单选/多选相关">
 
     /**是否选中, 需要 [ItemSelectorHelper.selectorModel] 的支持. */
     var itemIsSelected = false
@@ -970,19 +1183,19 @@ open class DslAdapterItem : LifecycleOwner {
         return itemSelectListener.remove(action)
     }
 
-//</editor-fold desc="单选/多选相关">
+    //</editor-fold desc="单选/多选相关">
 
-//<editor-fold desc="群组相关">
+    //<editor-fold desc="群组相关">
 
-    /**动态计算的属性*/
+    /**动态计算的属性, 此属性会有性能消耗*/
     val itemGroupParams: ItemGroupParams
-        get() = _itemGroupParamsCache ?: itemDslAdapter?.findItemGroupParams(this)?.apply {
+        get() = _itemGroupParamsCache ?: itemDslAdapter?.run { findItemGroupParams(this) }?.apply {
             _itemGroupParamsCache = this
         } ?: createItemGroupParams().apply {
             L.w("注意获取[itemGroupParams]时[itemDslAdapter]为null")
         }
 
-    /**缓存, 一个bind周期内, 只计算一次*/
+    /**缓存*/
     var _itemGroupParamsCache: ItemGroupParams? = null
 
     /**所在的分组名, 只用来做快捷变量存储*/
@@ -1020,9 +1233,9 @@ open class DslAdapterItem : LifecycleOwner {
         result
     }
 
-//</editor-fold>
+    //</editor-fold>
 
-//<editor-fold desc="拖拽相关">
+    //<editor-fold desc="拖拽相关">
 
     /**
      * 当前[DslAdapterItem]是否可以被拖拽.需要[DragCallbackHelper]的支持
@@ -1055,9 +1268,9 @@ open class DslAdapterItem : LifecycleOwner {
         itemDragEnable
     }
 
-//</editor-fold>
+    //</editor-fold>
 
-//<editor-fold desc="侧滑菜单相关">
+    //<editor-fold desc="侧滑菜单相关">
 
     /**用于控制打开or关闭菜单*/
     var _itemSwipeMenuHelper: SwipeMenuHelper? = null
@@ -1122,9 +1335,9 @@ open class DslAdapterItem : LifecycleOwner {
         }
     }
 
-//</editor-fold>
+    //</editor-fold>
 
-//<editor-fold desc="Tree 树结构相关">
+    //<editor-fold desc="Tree 树结构相关">
 
     /**
      * 折叠/展开 依旧使用[itemGroupExtend]控制
@@ -1147,9 +1360,9 @@ open class DslAdapterItem : LifecycleOwner {
      * [com.angcyo.dsladapter.internal.SubItemFilterInterceptor.loadSubItemList]*/
     var itemParentList: MutableList<DslAdapterItem> = mutableListOf()
 
-//</editor-fold>
+    //</editor-fold>
 
-//<editor-fold desc="Lifecycle支持">
+    //<editor-fold desc="Lifecycle支持">
 
     val lifecycleRegistry = LifecycleRegistry(this)
 
@@ -1178,7 +1391,7 @@ open class DslAdapterItem : LifecycleOwner {
         itemHolder.clear()
     }
 
-//</editor-fold desc="Lifecycle支持">
+    //</editor-fold desc="Lifecycle支持">
 
 }
 

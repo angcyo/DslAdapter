@@ -279,6 +279,10 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         adapterItems.addAll(dataItems)
         adapterItems.addAll(footerItems)
 
+        adapterItems.forEach {
+            it.clearItemGroupParamsCache()
+        }
+
         /*//2021-6-25
         adapterItems.forEach {
             it.itemDslAdapter = this

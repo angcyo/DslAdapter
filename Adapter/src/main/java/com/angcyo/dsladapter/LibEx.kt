@@ -342,6 +342,18 @@ fun View?.mW(def: Int = 0): Int {
     return this?.measuredWidth ?: def
 }
 
+fun View?.visible(value: Boolean = true) {
+    this?.visibility = if (value) View.VISIBLE else View.GONE
+}
+
+fun View?.gone(value: Boolean = true) {
+    this?.visibility = if (value) View.GONE else View.VISIBLE
+}
+
+fun View?.invisible(value: Boolean = true) {
+    this?.visibility = if (value) View.INVISIBLE else View.VISIBLE
+}
+
 /**[androidx/core/animation/Animator.kt:82]*/
 inline fun Animator.addListener(
     crossinline onEnd: (animator: Animator) -> Unit = {},
