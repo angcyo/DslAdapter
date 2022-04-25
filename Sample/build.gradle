@@ -5,11 +5,12 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion Integer.parseInt(C_SDK)
     defaultConfig {
         applicationId "com.angcyo.dsladapter.demo"
         minSdkVersion 16
-        targetSdkVersion 32
+        targetSdkVersion Integer.parseInt(T_SDK)
+
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

@@ -104,7 +104,7 @@ class GridFillDemoActivity : BaseRecyclerActivity() {
                                         layoutParams = lm
                                     }
                                     text =
-                                        "$itemText (第${edgeGridParams.currentSpanParams.spanGroupIndex}行)"
+                                        "$itemText (第${edgeGridParams?.currentSpanParams?.spanGroupIndex}行)"
                                 }
 
                                 if (orientation.isHorizontal()) {
@@ -169,19 +169,19 @@ class GridFillDemoActivity : BaseRecyclerActivity() {
                                         append(itemTag)
                                         appendln()
                                         append("C:")
-                                        append(" 行:${edgeGridParams.currentSpanParams.spanGroupIndex}")
-                                        append(" 列:${edgeGridParams.currentSpanParams.spanIndex}")
-                                        append(" 占:${edgeGridParams.currentSpanParams.spanSize}")
+                                        append(" 行:${edgeGridParams?.currentSpanParams?.spanGroupIndex}")
+                                        append(" 列:${edgeGridParams?.currentSpanParams?.spanIndex}")
+                                        append(" 占:${edgeGridParams?.currentSpanParams?.spanSize}")
                                         appendln()
                                         append("F:")
-                                        append(" 行:${edgeGridParams.firstSpanParams.spanGroupIndex}")
-                                        append(" 列:${edgeGridParams.firstSpanParams.spanIndex}")
-                                        append(" 占:${edgeGridParams.firstSpanParams.spanSize}")
+                                        append(" 行:${edgeGridParams?.firstSpanParams?.spanGroupIndex}")
+                                        append(" 列:${edgeGridParams?.firstSpanParams?.spanIndex}")
+                                        append(" 占:${edgeGridParams?.firstSpanParams?.spanSize}")
                                         appendln()
                                         append("L:")
-                                        append(" 行:${edgeGridParams.lastSpanParams.spanGroupIndex}")
-                                        append(" 列:${edgeGridParams.lastSpanParams.spanIndex}")
-                                        append(" 占:${edgeGridParams.lastSpanParams.spanSize}")
+                                        append(" 行:${edgeGridParams?.lastSpanParams?.spanGroupIndex}")
+                                        append(" 列:${edgeGridParams?.lastSpanParams?.spanIndex}")
+                                        append(" 占:${edgeGridParams?.lastSpanParams?.spanSize}")
                                     }
                                 }
                             }
