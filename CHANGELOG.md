@@ -1,3 +1,10 @@
+# 2022-4-25
+
+`4.2.1`
+
+- 调整`itemGroupParams`缓存算法
+- compileSdkVersion 31
+
 # 2022-4-15
 
 `4.2.0`
