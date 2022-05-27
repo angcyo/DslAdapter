@@ -10,7 +10,7 @@ import com.angcyo.dsladapter.internal.ThrottleClickListener.Companion.DEFAULT_TH
  * @date 2020/01/06
  */
 open class ThrottleClickListener(
-    val throttleInterval: Long = DEFAULT_THROTTLE_INTERVAL,
+    var throttleInterval: Long = DEFAULT_THROTTLE_INTERVAL,
     val throttle: (lastTime: Long, nowTime: Long, view: View) -> Boolean = { lastTime, nowTime, _ ->
         (nowTime - lastTime) < throttleInterval
     },

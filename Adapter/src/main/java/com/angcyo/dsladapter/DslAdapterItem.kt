@@ -70,6 +70,9 @@ open class DslAdapterItem : LifecycleOwner {
 
         /**占满宽度的item*/
         const val FULL_ITEM = -1
+
+        /**节流间隔时长*/
+        var DEFAULT_THROTTLE_INTERVAL = ThrottleClickListener.DEFAULT_THROTTLE_INTERVAL
     }
 
     /**适配器, 自动赋值[com.angcyo.dsladapter.DslAdapter.onBindViewHolder]*/
@@ -80,7 +83,10 @@ open class DslAdapterItem : LifecycleOwner {
     /**[com.angcyo.dsladapter.DslAdapter.notifyItemChanged]*/
     open fun updateAdapterItem(payload: Any? = PAYLOAD_UPDATE_PART, useFilterList: Boolean = true) {
         if (itemDslAdapter?._recyclerView?.isComputingLayout == true) {
-            L.w("跳过操作! [RecyclerView]正在计算布局.")
+            //L.w("跳过操作! [RecyclerView]正在计算布局, 请不要在RecyclerView正在布局时, 更新Item. ")
+            itemDslAdapter?._recyclerView?.post {
+                updateAdapterItem(payload, useFilterList)
+            }
             return
         }
         itemDslAdapter?.notifyItemChanged(this, payload, useFilterList).elseNull {
@@ -258,6 +264,9 @@ open class DslAdapterItem : LifecycleOwner {
 
     var itemLongClick: ((View) -> Boolean)? = null
 
+    /**点击节流间隔时长*/
+    var itemClickThrottleInterval: Long = DEFAULT_THROTTLE_INTERVAL
+
     //使用节流方式处理点击事件
     var _clickListener: View.OnClickListener? = ThrottleClickListener(action = { view ->
         notNull(itemClick, view) {
@@ -418,10 +427,14 @@ open class DslAdapterItem : LifecycleOwner {
 
     //初始化事件
     open fun _initItemListener(itemHolder: DslViewHolder) {
-        if (itemClick == null || _clickListener == null || !itemEnable) {
+        val clickListener = _clickListener
+        if (itemClick == null || clickListener == null || !itemEnable) {
             itemHolder.itemView.isClickable = false
         } else {
-            itemHolder.clickItem(_clickListener)
+            if (clickListener is ThrottleClickListener) {
+                clickListener.throttleInterval = itemClickThrottleInterval
+            }
+            itemHolder.clickItem(clickListener)
         }
 
         if (itemLongClick == null || _longClickListener == null || !itemEnable) {
@@ -1193,6 +1206,27 @@ open class DslAdapterItem : LifecycleOwner {
 
     /**是否选中, 需要 [ItemSelectorHelper.selectorModel] 的支持. */
     var itemIsSelected = false
+        set(value) {
+            field = value
+            onSetItemSelected(value)
+        }
+
+    /**简单的互斥操作支持
+     * [onSetItemSelected]*/
+    var itemSingleSelectMutex: Boolean = false
+
+    /**选中状态改变回调*/
+    open fun onSetItemSelected(select: Boolean) {
+        if (select && itemSingleSelectMutex) {
+            itemDslAdapter?.eachItem { index, dslAdapterItem ->
+                if (dslAdapterItem.className() == this.className() && dslAdapterItem != this) {
+                    //互斥操作
+                    dslAdapterItem.itemIsSelected = false
+                    dslAdapterItem.updateAdapterItem()
+                }
+            }
+        }
+    }
 
     /**是否 允许被选中*/
     var isItemCanSelected: (fromSelector: Boolean, toSelector: Boolean) -> Boolean =
