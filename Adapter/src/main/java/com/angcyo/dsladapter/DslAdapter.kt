@@ -10,6 +10,7 @@ import com.angcyo.dsladapter.annotation.UpdateByNotify
 import com.angcyo.dsladapter.annotation.UpdateFlag
 import com.angcyo.dsladapter.filter.IFilterInterceptor
 import com.angcyo.dsladapter.internal.AdapterStatusFilterInterceptor
+import com.angcyo.dsladapter.internal.AnimateDelayHandler
 import com.angcyo.dsladapter.internal.LoadMoreFilterInterceptor
 import kotlin.math.min
 import kotlin.reflect.KClass
@@ -37,6 +38,9 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     var adapterStatusIFilterInterceptor: IFilterInterceptor = AdapterStatusFilterInterceptor()
     var loadMoreIFilterInterceptor: IFilterInterceptor = LoadMoreFilterInterceptor()
 
+    /**延迟计算器*/
+    var adapterItemAnimateDelayHandler: AnimateDelayHandler = AnimateDelayHandler()
+
     /**包含所有[DslAdapterItem], 包括 [headerItems] [dataItems] [footerItems]的数据源*/
     val adapterItems = mutableListOf<DslAdapterItem>()
 
@@ -55,12 +59,14 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
             if (field == value) {
                 return
             }
+            //remove
             field?.apply {
                 removeDispatchUpdatesListener(this@DslAdapter)
                 beforeFilterInterceptorList.remove(adapterStatusIFilterInterceptor)
                 afterFilterInterceptorList.remove(loadMoreIFilterInterceptor)
             }
             field = value
+            //add
             field?.apply {
                 addDispatchUpdatesListener(this@DslAdapter)
                 beforeFilterInterceptorList.add(0, adapterStatusIFilterInterceptor)

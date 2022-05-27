@@ -1,6 +1,7 @@
 package com.angcyo.dsladapter
 
 import android.animation.Animator
+import android.animation.AnimatorInflater
 import android.app.Activity
 import android.content.Context
 import android.content.res.Resources
@@ -12,7 +13,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 import android.widget.LinearLayout
+import androidx.annotation.AnimRes
+import androidx.annotation.AnimatorRes
 import androidx.annotation.LayoutRes
 import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.GridLayoutManager
@@ -149,6 +154,34 @@ fun notNull(vararg anys: Any?, doIt: (Array<Any>) -> Unit) {
 
     if (!haveNull) {
         doIt(anys as Array<Any>)
+    }
+}
+
+/**从指定资源id中, 加载动画[Animation]*/
+fun animationOf(context: Context, @AnimRes id: Int): Animation? {
+    try {
+        if (id == 0 || id == -1) {
+            return null
+        }
+        return AnimationUtils.loadAnimation(context, id)
+    } catch (e: Exception) {
+        //e.printStackTrace()
+        //L.w(e.message)
+        return null
+    }
+}
+
+/**从指定资源id中, 加载动画[Animator]*/
+fun animatorOf(context: Context, @AnimatorRes id: Int): Animator? {
+    try {
+        if (id == 0 || id == -1) {
+            return null
+        }
+        return AnimatorInflater.loadAnimator(context, id)
+    } catch (e: Exception) {
+        //e.printStackTrace()
+        //L.w(e.message)
+        return null
     }
 }
 

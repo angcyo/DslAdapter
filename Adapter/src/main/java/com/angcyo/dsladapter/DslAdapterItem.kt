@@ -9,6 +9,8 @@ import android.os.Build
 import android.util.SparseArray
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.AnimRes
+import androidx.annotation.AnimatorRes
 import androidx.annotation.CallSuper
 import androidx.core.math.MathUtils.clamp
 import androidx.lifecycle.Lifecycle
@@ -291,6 +293,11 @@ open class DslAdapterItem : LifecycleOwner {
         //no op
     }
 
+    /**动画支持, 不为0表示激活动画*/
+    @AnimRes
+    @AnimatorRes
+    var itemAnimateRes: Int = 0
+
     open fun onItemBindAfter(
         itemHolder: DslViewHolder,
         itemPosition: Int,
@@ -299,6 +306,39 @@ open class DslAdapterItem : LifecycleOwner {
     ) {
         //请注意缓存.
         //itemHolder.clear()
+        _initItemAnimate(itemHolder)
+    }
+
+    /**动画延迟的时间, 也是动画是否已经执行过的标识
+     * [com.angcyo.dsladapter.internal.AnimateDelayHandler]*/
+    var _itemAnimateDelay: Long = -1
+
+    /**
+     * [android.animation.Animator]
+     * [android.view.animation.Animation]*/
+    open fun _initItemAnimate(itemHolder: DslViewHolder) {
+        if (itemAnimateRes != 0) {
+            _itemAnimateDelay =
+                itemDslAdapter?.adapterItemAnimateDelayHandler?.computeAnimateDelay(this)
+                    ?: _itemAnimateDelay
+            L.w("_itemAnimateDelay:$_itemAnimateDelay")
+            if (_itemAnimateDelay >= 0) {
+                val animation = animationOf(itemHolder.context, itemAnimateRes)
+                if (animation != null) {
+                    animation.startOffset = _itemAnimateDelay
+                    itemHolder.itemView.startAnimation(animation)
+                    _itemAnimateDelay = -2 //动画已执行标识
+                } else {
+                    val animator = animatorOf(itemHolder.context, itemAnimateRes)
+                    if (animator != null) {
+                        animator.setTarget(itemHolder.itemView)
+                        animator.startDelay = _itemAnimateDelay
+                        animator.start()
+                        _itemAnimateDelay = -2 //动画已执行标识
+                    }
+                }
+            }
+        }
     }
 
     /**用于覆盖默认操作*/
