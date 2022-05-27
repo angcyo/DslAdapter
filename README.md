@@ -78,7 +78,8 @@ dslAdapter.render {
 12. 支持`树结构`类似于`idea`中的文件列表目录结构 (支持异步加载)
 13. 支持`左右侧滑菜单`(`2.4.0`后)
 14. 支持`DataBinding`(`3.0.0`后)
-14. 支持`ViewBinding`([参考示例](https://github.com/angcyo/DslAdapter/blob/master/Sample/src/main/java/com/angcyo/dsladapter/dsl/DslViewBindingItem.kt))
+15. 支持`ViewBinding`([参考示例](https://github.com/angcyo/DslAdapter/blob/master/Sample/src/main/java/com/angcyo/dsladapter/dsl/DslViewBindingItem.kt))
+16. 支持`Item动画`(`4.3.0`后)
 
 # 功能展示
 
@@ -140,7 +141,7 @@ allprojects {
 ```kotlin
 dependencies {
     //androidx(推荐)
-    implementation 'com.github.angcyo:DslAdapter:4.2.1'
+    implementation 'com.github.angcyo:DslAdapter:4.3.0'
     //支持DataBinding
     implementation 'com.github.angcyo:DslAdapter:3.0.0-binding'
 

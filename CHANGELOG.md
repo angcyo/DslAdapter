@@ -1,3 +1,10 @@
+# 2022-5-27
+
+`4.3.0`
+
+- 新增`adapter update flag`注释
+- 新增`itemAnimateRes`动画支持
+
 # 2022-4-25
 
 `4.2.1`
