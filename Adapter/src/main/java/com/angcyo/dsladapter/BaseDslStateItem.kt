@@ -25,6 +25,9 @@ abstract class BaseDslStateItem : DslAdapterItem() {
             _onItemStateChange(old, value)
         }
 
+    /**错误状态时, 需要显示的异常信息. null 则使用默认*/
+    var itemErrorThrowable: Throwable? = null
+
     /**是否将激活状态item*/
     open var itemStateEnable: Boolean = true
 

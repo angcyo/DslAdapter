@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="adapter_loading">加载中...</string>
+    <string name="adapter_error">加载失败, 点击重试</string>
+    <string name="adapter_no_data">暂无数据</string>
+</resources>

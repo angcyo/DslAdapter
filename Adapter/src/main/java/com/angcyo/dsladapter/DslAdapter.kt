@@ -3,7 +3,11 @@ package com.angcyo.dsladapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.NonNull
 import androidx.recyclerview.widget.RecyclerView
+import com.angcyo.dsladapter.annotation.UpdateByDiff
+import com.angcyo.dsladapter.annotation.UpdateByNotify
+import com.angcyo.dsladapter.annotation.UpdateFlag
 import com.angcyo.dsladapter.filter.IFilterInterceptor
 import com.angcyo.dsladapter.internal.AdapterStatusFilterInterceptor
 import com.angcyo.dsladapter.internal.LoadMoreFilterInterceptor
@@ -74,6 +78,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     var onceFilterParams: FilterParams? = null
 
     /**默认的[FilterParams]*/
+    @NonNull
     var defaultFilterParams: FilterParams? = null
         get() {
             return onceFilterParams ?: (field ?: _defaultFilterParams())
@@ -272,6 +277,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
 
     //<editor-fold desc="辅助方法">
 
+    @UpdateFlag
     fun _updateAdapterItems() {
         //整理数据
         adapterItems.clear()
@@ -301,12 +307,13 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     /**
-     * 设置[Adapter]需要显示情感图的状态
+     * 设置[Adapter]需要显示情感图的状态, 并不会触发diff只是状态的设置
      * [DslAdapterStatusItem.ADAPTER_STATUS_NONE]
      * [DslAdapterStatusItem.ADAPTER_STATUS_EMPTY]
      * [DslAdapterStatusItem.ADAPTER_STATUS_LOADING]
      * [DslAdapterStatusItem.ADAPTER_STATUS_ERROR]
      * */
+    @UpdateFlag
     fun setAdapterStatus(status: Int) {
         if (dslAdapterStatusItem.itemState == status) {
             return
@@ -316,7 +323,9 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     /**设置[Adapter]需要显示情感图的状态, 并触发Diff更新界面
+     * 注意: 此方法会触发Diff
      * */
+    @UpdateByDiff
     fun updateAdapterStatus(status: Int) {
         if (dslAdapterStatusItem.itemState == status) {
             return
@@ -327,19 +336,29 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
 
     /**自动设置状态
      * 根据[adapterItems]的数量, 智能切换[AdapterState]*/
-    fun autoAdapterStatus() {
+    @UpdateFlag
+    fun autoAdapterStatus(error: Throwable? = null) {
         if (isAdapterStatus()) {
-            //no op
-        } else {
-            val emptyCount = 0
-            if (adapterItems.size <= emptyCount) {
-                setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY)
+            if (error == null) {
+                val emptyCount = 0
+                if (adapterItems.size <= emptyCount) {
+                    setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY)
+                } else {
+                    setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
+                }
             } else {
-                setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
+                dslAdapterStatusItem.itemErrorThrowable = error
+                setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_ERROR)
+            }
+        } else {
+            if (error != null) {
+                dslAdapterStatusItem.itemErrorThrowable = error
+                setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_ERROR)
             }
         }
     }
 
+    @UpdateFlag
     fun setAdapterStatusEnable(enable: Boolean = true) {
         val old = dslAdapterStatusItem.itemStateEnable
         if (old == enable) {
@@ -348,6 +367,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         dslAdapterStatusItem.itemStateEnable = enable
     }
 
+    @UpdateFlag
     fun setLoadMoreEnable(enable: Boolean = true) {
         if (dslLoadMoreItem.itemStateEnable == enable) {
             return
@@ -360,6 +380,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
      * [DslLoadMoreItem.LOAD_MORE_NO_MORE]
      * [DslLoadMoreItem.LOAD_MORE_ERROR]
      * */
+    @UpdateByNotify
     fun setLoadMore(status: Int, payload: Any? = null, notify: Boolean = true) {
         if (dslLoadMoreItem.itemStateEnable && dslLoadMoreItem.itemState == status) {
             return
@@ -375,15 +396,18 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     /**
      * 在最后的位置插入数据
      */
+    @UpdateFlag
     fun addLastItem(item: DslAdapterItem) {
         insertItem(-1, item)
     }
 
+    @UpdateFlag
     fun <T : DslAdapterItem> addLastItem(item: T, init: T.() -> Unit) {
         insertItem(-1, item, init)
     }
 
     /**支持指定数据源[list]*/
+    @UpdateFlag
     fun <T : DslAdapterItem> addLastItem(
         list: MutableList<DslAdapterItem>,
         item: T,
@@ -392,6 +416,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         insertItem(list, -1, item, init)
     }
 
+    @UpdateFlag
     fun addLastItem(item: List<DslAdapterItem>) {
         insertItem(-1, item)
     }
@@ -406,6 +431,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     /**插入数据列表*/
+    @UpdateFlag
     fun insertItem(index: Int, list: List<DslAdapterItem>) {
         if (list.isEmpty()) {
             return
@@ -415,6 +441,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     /**插入数据列表*/
+    @UpdateFlag
     fun insertItem(index: Int, item: DslAdapterItem, checkExist: Boolean = false) {
         if (checkExist && dataItems.contains(item)) {
             return
@@ -423,10 +450,12 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         _updateAdapterItems()
     }
 
+    @UpdateFlag
     fun insertItem(item: DslAdapterItem, index: Int = -1, checkExist: Boolean = true) {
         insertItem(index, item, checkExist)
     }
 
+    @UpdateFlag
     fun insertHeaderItem(item: DslAdapterItem, index: Int = -1, checkExist: Boolean = true) {
         if (checkExist && headerItems.contains(item)) {
             return
@@ -435,6 +464,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         _updateAdapterItems()
     }
 
+    @UpdateFlag
     fun insertFooterItem(item: DslAdapterItem, index: Int = -1, checkExist: Boolean = true) {
         if (checkExist && footerItems.contains(item)) {
             return
@@ -444,6 +474,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     /**先插入数据, 再初始化*/
+    @UpdateFlag
     fun <T : DslAdapterItem> insertItem(index: Int, item: T, init: T.() -> Unit = {}) {
         dataItems.add(_validIndex(dataItems, index), item)
         _updateAdapterItems()
@@ -451,6 +482,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     /**支持指定数据源[list]*/
+    @UpdateFlag
     fun <T : DslAdapterItem> insertItem(
         list: MutableList<DslAdapterItem>,
         index: Int,
@@ -463,6 +495,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     /**移除一组数据*/
+    @UpdateFlag
     fun removeItem(list: List<DslAdapterItem>) {
         val listInclude = mutableListOf<DslAdapterItem>()
 
@@ -476,6 +509,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         }
     }
 
+    @UpdateFlag
     fun removeHeaderItem(list: List<DslAdapterItem>) {
         val listInclude = mutableListOf<DslAdapterItem>()
 
@@ -489,6 +523,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         }
     }
 
+    @UpdateFlag
     fun removeFooterItem(list: List<DslAdapterItem>) {
         val listInclude = mutableListOf<DslAdapterItem>()
 
@@ -502,12 +537,14 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         }
     }
 
+    @UpdateFlag
     fun removeItemFromAll(item: DslAdapterItem, updateOther: Boolean = true) {
         removeItemFrom(dataItems, item, updateOther)
         removeItemFrom(headerItems, item, updateOther)
         removeItemFrom(footerItems, item, updateOther)
     }
 
+    @UpdateFlag
     fun removeItemFromAll(list: List<DslAdapterItem>) {
         removeItem(list)
         removeHeaderItem(list)
@@ -515,19 +552,23 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     /**移除数据*/
+    @UpdateFlag
     fun removeItem(item: DslAdapterItem, updateOther: Boolean = true) {
         removeItemFrom(dataItems, item, updateOther)
     }
 
     /**移除数据*/
+    @UpdateFlag
     fun removeHeaderItem(item: DslAdapterItem, updateOther: Boolean = true) {
         removeItemFrom(headerItems, item, updateOther)
     }
 
+    @UpdateFlag
     fun removeFooterItem(item: DslAdapterItem, updateOther: Boolean = true) {
         removeItemFrom(footerItems, item, updateOther)
     }
 
+    @UpdateFlag
     fun removeItemFrom(
         list: MutableList<DslAdapterItem>,
         item: DslAdapterItem,
@@ -549,6 +590,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     /**重置数据列表*/
+    @UpdateFlag
     fun resetItem(list: List<DslAdapterItem>) {
         dataItems.clear()
         dataItems.addAll(list)
@@ -556,21 +598,25 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     /**清理数据列表, 但不刷新界面*/
+    @UpdateFlag
     fun clearItems() {
         dataItems.clear()
         _updateAdapterItems()
     }
 
+    @UpdateFlag
     fun clearHeaderItems() {
         headerItems.clear()
         _updateAdapterItems()
     }
 
+    @UpdateFlag
     fun clearFooterItems() {
         footerItems.clear()
         _updateAdapterItems()
     }
 
+    @UpdateFlag
     fun clearAllItems() {
         headerItems.clear()
         dataItems.clear()
@@ -579,6 +625,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     /**可以在回调中改变数据, 并且会自动刷新界面*/
+    @UpdateByDiff
     fun changeItems(filterParams: FilterParams = defaultFilterParams!!, change: () -> Unit) {
         render(filterParams) {
             change()
@@ -586,6 +633,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         }
     }
 
+    @UpdateByDiff
     fun changeDataItems(
         filterParams: FilterParams = defaultFilterParams!!,
         change: (dataItems: MutableList<DslAdapterItem>) -> Unit
@@ -595,6 +643,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         }
     }
 
+    @UpdateByDiff
     fun changeHeaderItems(
         filterParams: FilterParams = defaultFilterParams!!,
         change: (headerItems: MutableList<DslAdapterItem>) -> Unit
@@ -604,6 +653,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         }
     }
 
+    @UpdateByDiff
     fun changeFooterItems(
         filterParams: FilterParams = defaultFilterParams!!,
         change: (footerItems: MutableList<DslAdapterItem>) -> Unit
@@ -613,6 +663,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         }
     }
 
+    @UpdateByDiff
     fun renderHeader(
         reset: Boolean = false,
         filterParams: FilterParams = defaultFilterParams!!,
@@ -629,6 +680,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         }
     }
 
+    @UpdateByDiff
     fun renderData(
         reset: Boolean = false,
         filterParams: FilterParams = defaultFilterParams!!,
@@ -645,6 +697,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         }
     }
 
+    @UpdateByDiff
     fun renderFooter(
         reset: Boolean = false,
         filterParams: FilterParams = defaultFilterParams!!,
@@ -688,6 +741,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     /**渲染[DslAdapter]中的item*/
+    @UpdateByDiff
     fun render(filterParams: FilterParams = defaultFilterParams!!, action: DslAdapter.() -> Unit) {
         action()
         _updateAdapterItems()
@@ -695,6 +749,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     /**调用[DiffUtil]更新界面*/
+    @UpdateByDiff
     fun updateItemDepend(filterParams: FilterParams = defaultFilterParams!!) {
 
         itemUpdateDependObserver.forEach {
@@ -711,6 +766,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     /**刷新某一个item, 支持过滤数据源*/
+    @UpdateByNotify
     fun notifyItemChanged(
         item: DslAdapterItem?,
         payload: Any? = null,
@@ -729,6 +785,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     /**[notifyDataSetChanged]*/
+    @UpdateByNotify
     fun notifyDataChanged() {
         _updateAdapterItems()
         dslDataFilter?.clearTask()
@@ -741,6 +798,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     /**更新界面上所有[DslAdapterItem]*/
+    @UpdateByNotify
     fun updateAllItem(payload: Any? = DslAdapterItem.PAYLOAD_UPDATE_PART) {
         adapterItems.forEach {
             it.diffResult(null, null)
@@ -749,6 +807,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     }
 
     /**更新一批[DslAdapterItem]*/
+    @UpdateByNotify
     fun updateItems(
         list: Iterable<DslAdapterItem>,
         payload: Any? = null,
@@ -766,6 +825,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         }
     }
 
+    @UpdateByNotify
     fun notifyItemChangedPayload(position: Int, payloads: Any? = null) {
 //        if (payloads is Iterable<*>) {
 //            for (payload in payloads) {
@@ -787,10 +847,12 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
      *  DslDemoItem()(){}
      * </pre>
      * */
+    @UpdateFlag
     operator fun <T : DslAdapterItem> T.invoke(config: T.() -> Unit = {}) {
         addLastItem(this, config)
     }
 
+    @UpdateFlag
     operator fun <T : DslAdapterItem> T.invoke(
         list: MutableList<DslAdapterItem>,
         config: T.() -> Unit = {}
@@ -803,11 +865,13 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
      * this + DslAdapterItem()
      * </pre>
      * */
+    @UpdateFlag
     operator fun <T : DslAdapterItem> plus(item: T): DslAdapter {
         addLastItem(item)
         return this
     }
 
+    @UpdateFlag
     operator fun <T : DslAdapterItem> plus(list: List<T>): DslAdapter {
         addLastItem(list)
         return this
@@ -818,11 +882,13 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
      * this - DslAdapterItem()
      * </pre>
      * */
+    @UpdateFlag
     operator fun <T : DslAdapterItem> minus(item: T): DslAdapter {
         removeItemFromAll(item)
         return this
     }
 
+    @UpdateFlag
     operator fun <T : DslAdapterItem> minus(list: List<T>): DslAdapter {
         removeItemFromAll(list)
         return this

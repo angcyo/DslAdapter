@@ -6,6 +6,8 @@ import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Looper
 import androidx.annotation.LayoutRes
+import com.angcyo.dsladapter.annotation.UpdateByDiff
+import com.angcyo.dsladapter.annotation.UpdateByNotify
 import com.angcyo.dsladapter.filter.IFilterInterceptor
 
 
@@ -387,37 +389,69 @@ fun DslAdapter.justRunFilterParams() = defaultFilterParams!!.apply {
 }
 
 /**显示情感图[加载中]*/
+@UpdateByDiff
 fun DslAdapter.toLoading() {
     updateAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
 }
 
 /**显示情感图[空数据]*/
+@UpdateByDiff
 fun DslAdapter.toEmpty() {
     updateAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY)
 }
 
 /**显示情感图[错误]*/
-fun DslAdapter.toError() {
+@UpdateByDiff
+fun DslAdapter.toError(error: Throwable? = null) {
+    dslAdapterStatusItem.itemErrorThrowable = error
     updateAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_ERROR)
 }
 
 /**显示情感图[正常]*/
+@UpdateByDiff
 fun DslAdapter.toNone() {
     updateAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
 }
 
-fun DslAdapter.toLoadMoreError() {
-    setLoadMore(DslLoadMoreItem.LOAD_MORE_ERROR)
+/**自动判断Adapter的当前状态*/
+@UpdateByDiff
+fun DslAdapter.updateAdapterState(error: Throwable? = null) {
+    if (error == null) {
+        if (adapterItems.isEmpty()) {
+            toEmpty()
+        } else {
+            toNone()
+        }
+    } else {
+        toError(error)
+    }
 }
 
-/**加载更多技术*/
-fun DslAdapter.toLoadMoreEnd() {
-    setLoadMore(DslLoadMoreItem.LOAD_MORE_NORMAL)
+//</editor-fold desc="AdapterStatus">
+
+//<editor-fold desc="LoadMore">
+
+/**加载更多失败*/
+@UpdateByNotify
+fun DslAdapter.toLoadMoreError(
+    error: Throwable? = null,
+    payload: Any? = null,
+    notify: Boolean = true
+) {
+    dslLoadMoreItem.itemErrorThrowable = error
+    setLoadMore(DslLoadMoreItem.LOAD_MORE_ERROR, payload, notify)
 }
 
-/**无更多*/
-fun DslAdapter.toLoadNoMore() {
-    setLoadMore(DslLoadMoreItem.LOAD_MORE_NO_MORE)
+/**加载更多结束*/
+@UpdateByNotify
+fun DslAdapter.toLoadMoreEnd(payload: Any? = null, notify: Boolean = true) {
+    setLoadMore(DslLoadMoreItem.LOAD_MORE_NORMAL, payload, notify)
+}
+
+/**无加载更多*/
+@UpdateByNotify
+fun DslAdapter.toLoadNoMore(payload: Any? = null, notify: Boolean = true) {
+    setLoadMore(DslLoadMoreItem.LOAD_MORE_NO_MORE, payload, notify)
 }
 
 /**快速同时监听刷新/加载更多的回调*/
@@ -430,15 +464,17 @@ fun DslAdapter.onRefreshOrLoadMore(action: (itemHolder: DslViewHolder, loadMore:
     }
 }
 
-//</editor-fold desc="AdapterStatus">
+//</editor-fold desc="LoadMore">
 
 //<editor-fold desc="Update">
 
 /**立即更新*/
+@UpdateByDiff
 fun DslAdapter.updateNow(filterParams: FilterParams = justRunFilterParams()) =
     updateItemDepend(filterParams)
 
 /**延迟通知*/
+@UpdateByDiff
 fun DslAdapter.delayNotify(filterParams: FilterParams = FilterParams(notifyDiffDelay = 300)) {
     updateItemDepend(filterParams)
 }

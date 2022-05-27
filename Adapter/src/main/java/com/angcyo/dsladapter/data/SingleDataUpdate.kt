@@ -1,6 +1,7 @@
 package com.angcyo.dsladapter.data
 
 import com.angcyo.dsladapter.*
+import com.angcyo.dsladapter.annotation.UpdateByDiff
 
 /**
  * [DslAdapter] 普通界面, 非列表界面的数据更新方式
@@ -36,7 +37,6 @@ class SingleDataUpdate(val adapter: DslAdapter) {
             opList.add(Op(Op.ADD, null, width, addItemList = itemList))
         }
     }
-
 
     fun addWidth(predicate: (index: Int, item: DslAdapterItem) -> Boolean, item: DslAdapterItem) {
         adapter.adapterItems.forEachIndexed { index, dslAdapterItem ->
@@ -236,6 +236,7 @@ class SingleDataUpdate(val adapter: DslAdapter) {
     }
 }
 
+@UpdateByDiff
 fun DslAdapter.updateAdapter(update: SingleDataUpdate.() -> Unit) {
     SingleDataUpdate(this).apply {
         update()
@@ -244,6 +245,7 @@ fun DslAdapter.updateAdapter(update: SingleDataUpdate.() -> Unit) {
 }
 
 /**通过[itemClass]更新item*/
+@UpdateByDiff
 fun <Item : DslAdapterItem> DslAdapter.updateItem(
     itemClass: Class<Item>,
     initItem: Item.() -> Unit = { }

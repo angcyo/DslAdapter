@@ -54,6 +54,8 @@ open class DslLoadMoreItem : BaseDslStateItem() {
         itemWidth = ViewGroup.LayoutParams.MATCH_PARENT
         itemHeight = ViewGroup.LayoutParams.WRAP_CONTENT
 
+        itemUpdateFlag = false
+
         thisAreContentsTheSame = { _, _, _, _ ->
             false
         }
@@ -74,6 +76,8 @@ open class DslLoadMoreItem : BaseDslStateItem() {
             if (itemState == LOAD_MORE_NORMAL || itemState == LOAD_MORE_LOADING) {
                 _notifyLoadMore(itemHolder)
             } else if (itemState == LOAD_MORE_ERROR) {
+                itemHolder.tv(R.id.base_text_view)?.text = itemErrorThrowable?.message
+                    ?: itemHolder.context.getString(R.string.adapter_error)
                 itemHolder.clickItem {
                     if (itemState == LOAD_MORE_ERROR || itemState == _LOAD_MORE_RETRY) {
                         //失败的情况下, 点击触发重新加载
