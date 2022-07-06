@@ -55,25 +55,6 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
 
     /**数据过滤规则*/
     var dslDataFilter: DslDataFilter? = null
-        set(value) {
-            if (field == value) {
-                return
-            }
-            //remove
-            field?.apply {
-                removeDispatchUpdatesListener(this@DslAdapter)
-                beforeFilterInterceptorList.remove(adapterStatusIFilterInterceptor)
-                afterFilterInterceptorList.remove(loadMoreIFilterInterceptor)
-            }
-            field = value
-            //add
-            field?.apply {
-                addDispatchUpdatesListener(this@DslAdapter)
-                beforeFilterInterceptorList.add(0, adapterStatusIFilterInterceptor)
-                afterFilterInterceptorList.add(loadMoreIFilterInterceptor)
-            }
-            updateItemDepend()
-        }
 
     /**单/多选助手*/
     val itemSelectorHelper = ItemSelectorHelper(this)
@@ -107,8 +88,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     val _itemLayoutHold = hashMapOf<Int, Int>()
 
     init {
-        dslDataFilter = DslDataFilter(this)
-
+        updateDataFilter(DslDataFilter(this))
         dataItems?.let {
             this.dataItems.clear()
             this.dataItems.addAll(dataItems)
@@ -279,6 +259,26 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         itemUpdateDependObserver.remove(action)
     }
 
+    /**更新数据过滤器[DslDataFilter]*/
+    fun updateDataFilter(dataFilter: DslDataFilter?) {
+        if (dslDataFilter == dataFilter) {
+            return
+        }
+        //remove
+        dslDataFilter?.apply {
+            removeDispatchUpdatesListener(this@DslAdapter)
+            beforeFilterInterceptorList.remove(adapterStatusIFilterInterceptor)
+            afterFilterInterceptorList.remove(loadMoreIFilterInterceptor)
+        }
+        dslDataFilter = dataFilter
+        //add
+        dslDataFilter?.apply {
+            addDispatchUpdatesListener(this@DslAdapter)
+            beforeFilterInterceptorList.add(0, adapterStatusIFilterInterceptor)
+            afterFilterInterceptorList.add(loadMoreIFilterInterceptor)
+        }
+    }
+
     //</editor-fold>
 
     //<editor-fold desc="辅助方法">
@@ -320,9 +320,12 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
      * [DslAdapterStatusItem.ADAPTER_STATUS_ERROR]
      * */
     @UpdateFlag
-    fun setAdapterStatus(status: Int) {
+    fun setAdapterStatus(status: Int, error: Throwable? = null) {
         if (dslAdapterStatusItem.itemState == status) {
             return
+        }
+        if (status == DslAdapterStatusItem.ADAPTER_STATUS_ERROR) {
+            dslAdapterStatusItem.itemErrorThrowable = error
         }
         dslAdapterStatusItem.itemState = status
         dslAdapterStatusItem.itemUpdateFlag = true
@@ -448,7 +451,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
 
     /**插入数据列表*/
     @UpdateFlag
-    fun insertItem(index: Int, item: DslAdapterItem, checkExist: Boolean = false) {
+    fun insertItem(index: Int, item: DslAdapterItem, checkExist: Boolean = true) {
         if (checkExist && dataItems.contains(item)) {
             return
         }
@@ -576,13 +579,13 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
 
     @UpdateFlag
     fun removeItemFrom(
-        list: MutableList<DslAdapterItem>,
+        fromList: MutableList<DslAdapterItem>,
         item: DslAdapterItem,
         updateOther: Boolean
     ) {
         val index = adapterItems.indexOf(item)
         if (index != -1) {
-            if (list.remove(item)) {
+            if (fromList.remove(item)) {
                 item.itemRemoveFlag = true
                 if (updateOther) {
                     for (i in (index + 1) until adapterItems.size) {
@@ -722,6 +725,17 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
 
     //</editor-fold desc="Item操作">
 
+    /** 获取[fromItem]更新时, 有多少子项需要更新 */
+    fun getUpdateDependItemListFrom(fromItem: DslAdapterItem): List<DslAdapterItem> {
+        val notifyChildFormItemList = mutableListOf<DslAdapterItem>()
+        getValidFilterDataList().forEachIndexed { index, dslAdapterItem ->
+            if (fromItem.isItemInUpdateList(dslAdapterItem, index)) {
+                notifyChildFormItemList.add(dslAdapterItem)
+            }
+        }
+        return notifyChildFormItemList
+    }
+
     /**获取有效过滤后的数据集合*/
     fun getValidFilterDataList(): List<DslAdapterItem> {
         return dslDataFilter?.filterDataList ?: adapterItems
@@ -858,12 +872,31 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         addLastItem(this, config)
     }
 
+    /**
+     * ```
+     *  DslDemoItem()(0){}
+     * ```
+     * */
+    @UpdateFlag
+    operator fun <T : DslAdapterItem> T.invoke(index: Int, config: T.() -> Unit = {}) {
+        insertItem(index, this, config)
+    }
+
     @UpdateFlag
     operator fun <T : DslAdapterItem> T.invoke(
         list: MutableList<DslAdapterItem>,
         config: T.() -> Unit = {}
     ) {
         addLastItem(list, this, config)
+    }
+
+    @UpdateFlag
+    operator fun <T : DslAdapterItem> T.invoke(
+        index: Int,
+        list: MutableList<DslAdapterItem>,
+        config: T.() -> Unit = {}
+    ) {
+        insertItem(list, index, this, config)
     }
 
     /**
