@@ -8,6 +8,7 @@ import android.os.Looper
 import androidx.annotation.LayoutRes
 import com.angcyo.dsladapter.annotation.UpdateByDiff
 import com.angcyo.dsladapter.annotation.UpdateByNotify
+import com.angcyo.dsladapter.annotation.UpdateFlag
 import com.angcyo.dsladapter.filter.IFilterInterceptor
 
 
@@ -71,6 +72,8 @@ inline fun <reified Item : DslAdapterItem> DslAdapter.findItem(
     return find<Item>(tag, useFilterList, predicate)?.apply(dsl)
 }
 
+/**更新第一个满足条件的item*/
+@UpdateByNotify
 fun DslAdapter.updateItem(
     payload: Any? = DslAdapterItem.PAYLOAD_UPDATE_PART,
     useFilterList: Boolean = true,
@@ -81,11 +84,44 @@ fun DslAdapter.updateItem(
     }
 }
 
+/**更新所有满足条件的item*/
+@UpdateByNotify
+fun DslAdapter.updateAllItemBy(
+    payload: Any? = DslAdapterItem.PAYLOAD_UPDATE_PART,
+    useFilterList: Boolean = true,
+    predicate: (DslAdapterItem) -> Boolean
+): List<DslAdapterItem> {
+    val result = mutableListOf<DslAdapterItem>()
+    getDataList(useFilterList).forEach {
+        if (predicate(it)) {
+            result.add(it)
+            it.updateAdapterItem(payload, useFilterList)
+        }
+    }
+    return result
+}
+
+@UpdateByDiff
+fun DslAdapter.removeItem(
+    useFilterList: Boolean = true,
+    predicate: (DslAdapterItem) -> Boolean
+) {
+    val removeList = mutableListOf<DslAdapterItem>()
+    getDataList(useFilterList).filterTo(removeList, predicate)
+    if (removeList.isNotEmpty()) {
+        render {
+            removeItemFromAll(removeList)
+        }
+    }
+}
+
 /**通过[itemTags]更新对应的[DslAdapterItem]*/
+@UpdateByNotify
 fun DslAdapter.updateItem(vararg itemTags: String): List<DslAdapterItem> {
     return updateItem(DslAdapterItem.PAYLOAD_UPDATE_PART, true, *itemTags)
 }
 
+@UpdateByNotify
 fun DslAdapter.updateItem(
     payload: Any?,
     useFilterList: Boolean,
@@ -205,6 +241,7 @@ fun DslAdapter.getItemListPairByItem(item: DslAdapterItem?): Pair<MutableList<Ds
 }
 
 /**通过[layoutId]快速添加一个[DslAdapterItem]*/
+@UpdateFlag
 fun DslAdapter.dslItem(
     @LayoutRes layoutId: Int,
     config: DslAdapterItem.() -> Unit = {}
@@ -217,6 +254,7 @@ fun DslAdapter.dslItem(
 }
 
 /**通过[layoutId]和直接绑定,快速添加一个[DslAdapterItem]*/
+@UpdateFlag
 fun DslAdapter.bindItem(@LayoutRes layoutId: Int, bindAction: ItemBindAction): DslAdapterItem {
     val item = DslAdapterItem()
     item.itemLayoutId = layoutId
@@ -225,6 +263,7 @@ fun DslAdapter.bindItem(@LayoutRes layoutId: Int, bindAction: ItemBindAction): D
     return item
 }
 
+@UpdateFlag
 fun <T : DslAdapterItem> DslAdapter.dslItem(
     dslItem: T,
     config: T.() -> Unit = {}
@@ -233,6 +272,7 @@ fun <T : DslAdapterItem> DslAdapter.dslItem(
     return dslItem
 }
 
+@UpdateFlag
 fun <T : DslAdapterItem> DslAdapter.dslCustomItem(
     dslItem: T,
     config: T.() -> Unit = {}
@@ -243,6 +283,7 @@ fun <T : DslAdapterItem> DslAdapter.dslCustomItem(
 }
 
 /**空的占位item*/
+@UpdateFlag
 fun DslAdapter.renderEmptyItem(
     height: Int = 120 * dpi,
     backgroundColor: Int = Color.TRANSPARENT,
@@ -252,6 +293,7 @@ fun DslAdapter.renderEmptyItem(
     renderEmptyItem(height, ColorDrawable(backgroundColor), list, action)
 }
 
+@UpdateFlag
 fun DslAdapter.renderEmptyItem(
     height: Int = 120 * dpi,
     background: Drawable?,
@@ -268,6 +310,7 @@ fun DslAdapter.renderEmptyItem(
     addLastItem(list, adapterItem)
 }
 
+@UpdateFlag
 fun DslAdapter.renderItem(count: Int = 1, init: DslAdapterItem.(index: Int) -> Unit) {
     for (i in 0 until count) {
         val adapterItem = DslAdapterItem()
@@ -277,6 +320,7 @@ fun DslAdapter.renderItem(count: Int = 1, init: DslAdapterItem.(index: Int) -> U
 }
 
 /**追加一个简单的[DslAdapterItem]*/
+@UpdateFlag
 fun DslAdapter.singleItem(
     @LayoutRes layoutId: Int,
     init: DslAdapterItem.() -> Unit = {},
@@ -289,6 +333,7 @@ fun DslAdapter.singleItem(
     addLastItem(adapterItem)
 }
 
+@UpdateFlag
 fun <T> DslAdapter.renderItem(data: T, init: DslAdapterItem.() -> Unit) {
     val adapterItem = DslAdapterItem()
     adapterItem.itemData = data
@@ -378,7 +423,13 @@ fun mediaPayload(): List<Int> =
 
 //<editor-fold desc="AdapterStatus">
 
-fun DslAdapter.adapterStatus() = dslAdapterStatusItem.itemState
+/**当前情感图的状态*/
+fun DslAdapter.adapterStatus() =
+    if (dslAdapterStatusItem.itemEnable && dslAdapterStatusItem.itemStateEnable) {
+        dslAdapterStatusItem.itemState
+    } else {
+        null
+    }
 
 fun DslAdapter.isAdapterStatusLoading() =
     dslAdapterStatusItem.itemState == DslAdapterStatusItem.ADAPTER_STATUS_LOADING
@@ -394,10 +445,20 @@ fun DslAdapter.toLoading() {
     updateAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
 }
 
+@UpdateFlag
+fun DslAdapter.loadingStatus() {
+    setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_LOADING)
+}
+
 /**显示情感图[空数据]*/
 @UpdateByDiff
 fun DslAdapter.toEmpty() {
     updateAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY)
+}
+
+@UpdateFlag
+fun DslAdapter.emptyStatus() {
+    setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_EMPTY)
 }
 
 /**显示情感图[错误]*/
@@ -407,10 +468,20 @@ fun DslAdapter.toError(error: Throwable? = null) {
     updateAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_ERROR)
 }
 
+@UpdateFlag
+fun DslAdapter.errorStatus(error: Throwable? = null) {
+    setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_ERROR, error)
+}
+
 /**显示情感图[正常]*/
 @UpdateByDiff
 fun DslAdapter.toNone() {
     updateAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
+}
+
+@UpdateFlag
+fun DslAdapter.noneStatus() {
+    setAdapterStatus(DslAdapterStatusItem.ADAPTER_STATUS_NONE)
 }
 
 /**自动判断Adapter的当前状态*/
@@ -533,6 +604,26 @@ fun <T : DslAdapterItem> DslAdapter.findSameClassItem(
     }
 
     return result
+}
+
+/**更新[itemIsSelected]属性*/
+@UpdateByNotify
+fun DslAdapter.selectItem(
+    selected: Boolean = true,
+    update: Boolean = true,
+    useFilterList: Boolean = true,
+    predicate: (DslAdapterItem) -> Boolean
+) {
+    for (item in getDataList(useFilterList)) {
+        if (predicate(item)) {
+            if (item.itemIsSelected != selected) {
+                item.itemIsSelected = selected
+                if (update) {
+                    item.updateAdapterItem(useFilterList = useFilterList)
+                }
+            }
+        }
+    }
 }
 
 //</editor-fold desc="操作扩展">
