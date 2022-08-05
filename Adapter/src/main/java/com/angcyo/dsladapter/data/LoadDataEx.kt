@@ -27,7 +27,7 @@ inline fun <reified Item : DslAdapterItem> DslAdapter.loadSingleData(
     },
     crossinline initOrCreateDslItem: (oldItem: Item?, data: Any) -> Item
 ) {
-    changeDataItems(filterParams) {
+    changeDataItems(false, filterParams) {
         //移除所有不同类型的item
         val removeItemList = mutableListOf<DslAdapterItem>()
         it.forEach { item ->
