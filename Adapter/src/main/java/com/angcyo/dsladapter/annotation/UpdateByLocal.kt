@@ -1,12 +1,13 @@
 package com.angcyo.dsladapter.annotation
 
 /**
- * 标识当前的方法/成员操作会触发Diff更新
- * [com.angcyo.dsladapter.DslAdapter.updateItemDepend]
+ * 直接获取[DslViewHolder]更新视图
+ *
+ * [com.angcyo.dsladapter.DslAdapterItemExKt.itemViewHolder]
+ *
  * @author <a href="mailto:angcyo@126.com">angcyo</a>
- * @since 2022/05/27
+ * @since 2022/08/05
  */
-
 @Target(
     AnnotationTarget.FUNCTION,
     AnnotationTarget.FIELD,
@@ -14,4 +15,4 @@ package com.angcyo.dsladapter.annotation
     AnnotationTarget.PROPERTY
 )
 @Retention(AnnotationRetention.SOURCE)
-annotation class UpdateByDiff
+annotation class UpdateByLocal

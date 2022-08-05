@@ -25,6 +25,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.angcyo.dsladapter.internal.DslHierarchyChangeListenerWrap
+import java.lang.ref.WeakReference
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 import kotlin.math.min
@@ -646,4 +647,8 @@ internal fun makeAccessible(field: Field) {
     ) {
         field.isAccessible = true
     }
+}
+
+fun View.setAnimator(animator: Animator) {
+    setTag(R.id.lib_tag_animator, WeakReference(animator))
 }

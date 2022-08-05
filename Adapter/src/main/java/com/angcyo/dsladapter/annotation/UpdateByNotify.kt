@@ -7,6 +7,11 @@ package com.angcyo.dsladapter.annotation
  * @since 2022/05/27
  */
 
-@Target(AnnotationTarget.FUNCTION, AnnotationTarget.FIELD)
+@Target(
+    AnnotationTarget.FUNCTION,
+    AnnotationTarget.FIELD,
+    AnnotationTarget.CLASS,
+    AnnotationTarget.PROPERTY
+)
 @Retention(AnnotationRetention.SOURCE)
 annotation class UpdateByNotify

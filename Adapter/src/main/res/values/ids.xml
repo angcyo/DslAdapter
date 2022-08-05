@@ -9,4 +9,7 @@
     <!--将DslAdapterItem, 放在View的tag中-->
     <item name="lib_tag_dsl_adapter_item" type="id" />
 
+    <!--存储正在执行的[WeakReference][Animator]-->
+    <item name="lib_tag_animator" type="id" />
+
 </resources>
