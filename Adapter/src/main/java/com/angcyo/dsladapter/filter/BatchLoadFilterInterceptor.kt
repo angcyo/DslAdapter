@@ -90,7 +90,7 @@ open class BatchLoadFilterInterceptor : BaseFilterInterceptor(), Runnable {
 
 /**快速配置[BatchLoadFilterInterceptor]*/
 fun DslAdapter.batchLoad(
-    delay: Long = 16,
+    delay: Long = 64,
     action: BatchLoadFilterInterceptor.() -> Unit = {}
 ): BatchLoadFilterInterceptor {
     return BatchLoadFilterInterceptor().apply {

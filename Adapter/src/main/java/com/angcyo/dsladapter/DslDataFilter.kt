@@ -389,7 +389,16 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
                     //派发更新界面
                     val updateTo = _params?.onDispatchUpdatesTo
                     if (updateTo == null) {
-                        diffResult.dispatchUpdatesTo(RBatchingListUpdateCallback(dslAdapter))
+                        //Cannot call this method while RecyclerView is computing a layout or scrolling
+                        if (dslAdapter._recyclerView?.isComputingLayout == true) {
+                            //L.w("跳过操作! [RecyclerView]正在计算布局, 请不要在RecyclerView正在布局时, 更新Item. ")
+                            dslAdapter._recyclerView?.post {
+                                diffResult.dispatchUpdatesTo(RBatchingListUpdateCallback(dslAdapter))
+                            }
+                            return
+                        } else {
+                            diffResult.dispatchUpdatesTo(RBatchingListUpdateCallback(dslAdapter))
+                        }
                     } else {
                         updateTo(diffResult, diffList)
                     }
@@ -409,7 +418,7 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
 
             //任务结束
             val nowTime = System.currentTimeMillis()
-            L.d("${dslAdapter.hash()}:${hash()} 界面更新结束, 总耗时${LTime.time(_taskStartTime, nowTime)}")
+            L.i("${dslAdapter.hash()}:${hash()} 界面更新结束, 总耗时${LTime.time(_taskStartTime, nowTime)}")
             _updateTaskLit.remove(this)
             taskCancel.set(true)
         }
@@ -419,11 +428,7 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
             val notifyChildFormItemList = mutableListOf<DslAdapterItem>()
 
             _params?.fromDslAdapterItem?.let { fromItem ->
-                dslAdapter.getValidFilterDataList().forEachIndexed { index, dslAdapterItem ->
-                    if (fromItem.isItemInUpdateList(dslAdapterItem, index)) {
-                        notifyChildFormItemList.add(dslAdapterItem)
-                    }
-                }
+                notifyChildFormItemList.addAll(dslAdapter.getUpdateDependItemListFrom(fromItem))
             }
 
             return notifyChildFormItemList

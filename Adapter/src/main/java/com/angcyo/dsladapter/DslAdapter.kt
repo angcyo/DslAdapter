@@ -635,8 +635,12 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
 
     /**可以在回调中改变数据, 并且会自动刷新界面*/
     @UpdateByDiff
-    fun changeItems(filterParams: FilterParams = defaultFilterParams!!, change: () -> Unit) {
-        render(filterParams) {
+    fun changeItems(
+        updateState: Boolean = true,
+        filterParams: FilterParams = defaultFilterParams!!,
+        change: () -> Unit
+    ) {
+        render(updateState, filterParams) {
             change()
             _updateAdapterItems()
         }
@@ -644,30 +648,33 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
 
     @UpdateByDiff
     fun changeDataItems(
+        updateState: Boolean = true,
         filterParams: FilterParams = defaultFilterParams!!,
         change: (dataItems: MutableList<DslAdapterItem>) -> Unit
     ) {
-        changeItems(filterParams) {
+        changeItems(updateState, filterParams) {
             change(dataItems)
         }
     }
 
     @UpdateByDiff
     fun changeHeaderItems(
+        updateState: Boolean = true,
         filterParams: FilterParams = defaultFilterParams!!,
         change: (headerItems: MutableList<DslAdapterItem>) -> Unit
     ) {
-        changeItems(filterParams) {
+        changeItems(updateState, filterParams) {
             change(headerItems)
         }
     }
 
     @UpdateByDiff
     fun changeFooterItems(
+        updateState: Boolean = true,
         filterParams: FilterParams = defaultFilterParams!!,
         change: (footerItems: MutableList<DslAdapterItem>) -> Unit
     ) {
-        changeItems(filterParams) {
+        changeItems(updateState, filterParams) {
             change(footerItems)
         }
     }
@@ -675,13 +682,14 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     @UpdateByDiff
     fun renderHeader(
         reset: Boolean = false,
+        updateState: Boolean = true,
         filterParams: FilterParams = defaultFilterParams!!,
         render: DslAdapter.(headerItems: MutableList<DslAdapterItem>) -> Unit
     ) {
         val dslAdapter = DslAdapter()
         dslAdapter.dslDataFilter = null
         dslAdapter.render(headerItems)
-        changeItems(filterParams) {
+        changeItems(updateState, filterParams) {
             if (reset) {
                 headerItems.clear()
             }
@@ -692,13 +700,14 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     @UpdateByDiff
     fun renderData(
         reset: Boolean = false,
+        updateState: Boolean = true,
         filterParams: FilterParams = defaultFilterParams!!,
         render: DslAdapter.(dataItems: MutableList<DslAdapterItem>) -> Unit
     ) {
         val dslAdapter = DslAdapter()
         dslAdapter.dslDataFilter = null
         dslAdapter.render(dataItems)
-        changeItems(filterParams) {
+        changeItems(updateState, filterParams) {
             if (reset) {
                 dataItems.clear()
             }
@@ -709,13 +718,14 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
     @UpdateByDiff
     fun renderFooter(
         reset: Boolean = false,
+        updateState: Boolean = true,
         filterParams: FilterParams = defaultFilterParams!!,
         render: DslAdapter.(footerItems: MutableList<DslAdapterItem>) -> Unit
     ) {
         val dslAdapter = DslAdapter()
         dslAdapter.dslDataFilter = null
         dslAdapter.render(footerItems)
-        changeItems(filterParams) {
+        changeItems(updateState, filterParams) {
             if (reset) {
                 footerItems.clear()
             }
@@ -762,9 +772,29 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
 
     /**渲染[DslAdapter]中的item*/
     @UpdateByDiff
-    fun render(filterParams: FilterParams = defaultFilterParams!!, action: DslAdapter.() -> Unit) {
+    fun render(
+        updateState: Boolean = true,
+        filterParams: FilterParams = defaultFilterParams!!,
+        action: DslAdapter.() -> Unit
+    ) {
+        //之前的状态
+        val oldState = adapterStatus()
         action()
         _updateAdapterItems()
+        if (updateState) {
+            val nowState = adapterStatus()
+            if (adapterItems.isEmpty()) {
+                if ((oldState == null || oldState <= 0) &&
+                    (nowState == DslAdapterStatusItem.ADAPTER_STATUS_LOADING || nowState == DslAdapterStatusItem.ADAPTER_STATUS_ERROR)
+                ) {
+                    //未被初始化, 并且新状态新 加载中/错误... 则保持此状态
+                } else {
+                    emptyStatus()
+                }
+            } else {
+                noneStatus()
+            }
+        }
         updateItemDepend(filterParams)
     }
 
