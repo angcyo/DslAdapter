@@ -3,6 +3,7 @@ package com.angcyo.dsladapter
 import android.animation.Animator
 import android.animation.AnimatorInflater
 import android.app.Activity
+import android.app.Fragment
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.Paint
@@ -37,6 +38,61 @@ import kotlin.math.min
  * @date 2019/10/16
  * Copyright (c) 2019 ShenZhen O&M Cloud Co., Ltd. All rights reserved.
  */
+
+fun View?.isVisible() = this?.visibility == View.VISIBLE
+
+internal fun Any?.getMember(
+    cls: Class<*>,
+    member: String
+): Any? {
+    var result: Any? = null
+    try {
+        var cl: Class<*>? = cls
+        while (cl != null) {
+            try {
+                val memberField = cls.getDeclaredField(member)
+                //memberField.isAccessible = true
+                makeAccessible(memberField)
+                result = memberField[this]
+                return result
+            } catch (e: NoSuchFieldException) {
+                cl = cl.superclass
+            }
+        }
+    } catch (e: Exception) {
+        //L.i("错误:" + cls.getSimpleName() + " ->" + e.getMessage());
+    }
+    return result
+}
+
+internal fun makeAccessible(field: Field) {
+    if ((!Modifier.isPublic(field.modifiers) ||
+                !Modifier.isPublic(field.declaringClass.modifiers) ||
+                Modifier.isFinal(field.modifiers)) && !field.isAccessible
+    ) {
+        field.isAccessible = true
+    }
+}
+
+fun View.setAnimator(animator: Animator) {
+    setTag(R.id.lib_tag_animator, WeakReference(animator))
+}
+
+/**取消动画[Animator]*/
+fun View.cancelAnimator() {
+    val tag = getTag(R.id.lib_tag_animator)
+    var animator: Animator? = null
+    if (tag is WeakReference<*>) {
+        val any = tag.get()
+        if (any is Animator) {
+            animator = any
+        }
+    } else if (tag is Animator) {
+        animator = tag
+    }
+    animator?.cancel()
+}
+
 fun RecyclerView.eachChildRViewHolder(
     targetView: View? = null,/*指定目标, 则只回调目标前后的ViewHolder*/
     callback: (
@@ -446,6 +502,13 @@ fun ViewGroup.eachChild(recursively: Boolean = false, map: (index: Int, child: V
 
 //<editor-fold desc="Dsl吸附">
 
+val Activity._vh: DslViewHolder
+    get() = window.decorView.dslViewHolder()
+
+val Fragment._vh: DslViewHolder?
+    get() = view?.dslViewHolder()
+
+/**从[View]中, 获取挂载的[DslViewHolder].如果没有, 则使用本身创建一个, 并设置给tag*/
 fun View.dslViewHolder(): DslViewHolder {
     return this.run {
         var _tag = getTag(R.id.lib_tag_dsl_view_holder)
@@ -464,6 +527,7 @@ fun View.dslViewHolder(): DslViewHolder {
     }
 }
 
+/**获取挂载的[DslViewHolder]*/
 fun View?.tagDslViewHolder(): DslViewHolder? {
     return this?.run {
         var _tag = getTag(R.id.lib_tag_dsl_view_holder)
@@ -480,6 +544,7 @@ fun View?.tagDslViewHolder(): DslViewHolder? {
     }
 }
 
+/**获取挂载的[DslAdapterItem]*/
 fun View?.tagDslAdapterItem(): DslAdapterItem? {
     return this?.run {
         val tag = getTag(R.id.lib_tag_dsl_adapter_item)
@@ -491,30 +556,57 @@ fun View?.tagDslAdapterItem(): DslAdapterItem? {
     }
 }
 
+/**设置挂载[DslViewHolder]*/
 fun View?.setDslViewHolder(dslViewHolder: DslViewHolder?) {
     this?.setTag(R.id.lib_tag_dsl_view_holder, dslViewHolder)
 }
 
+/**设置挂载[DslAdapterItem]*/
 fun View?.setDslAdapterItem(dslAdapterItem: DslAdapterItem?) {
     this?.setTag(R.id.lib_tag_dsl_adapter_item, dslAdapterItem)
+}
+
+fun View?.setDslAdapterItemDecoration(dslAdapterItem: DslAdapterItem?) {
+    this?.setTag(
+        R.id.lib_tag_dsl_item_decoration,
+        "${dslAdapterItem?.itemTag ?: dslAdapterItem?.hashCode()}"
+    )
 }
 
 //</editor-fold desc="Dsl吸附">
 
 //</editor-fold desc="DslAdapterItem操作">
 
-fun ViewGroup.appendDslItem(items: List<DslAdapterItem>) {
+fun ViewGroup.appendDslItem(
+    items: List<DslAdapterItem>,
+    index: Int = -1,
+    payloads: List<Any> = emptyList()
+) {
+    var newIndex = index
     items.forEach {
-        appendDslItem(it)
+        appendDslItem(it, newIndex, payloads)
+        if (newIndex >= 0) {
+            newIndex++
+        }
     }
 }
 
-fun ViewGroup.appendDslItem(dslAdapterItem: DslAdapterItem): DslViewHolder {
-    return addDslItem(dslAdapterItem)
+fun ViewGroup.appendDslItem(
+    dslAdapterItem: DslAdapterItem,
+    index: Int = -1,
+    payloads: List<Any> = emptyList()
+): DslViewHolder {
+    return addDslItem(dslAdapterItem, index, payloads)
 }
 
-fun ViewGroup.addDslItem(dslAdapterItem: DslAdapterItem, index: Int = -1): DslViewHolder {
+fun ViewGroup.addDslItem(
+    dslAdapterItem: DslAdapterItem,
+    index: Int = -1,
+    payloads: List<Any> = emptyList()
+): DslViewHolder {
     setOnHierarchyChangeListener(DslHierarchyChangeListenerWrap())
+    val visible = !dslAdapterItem.itemHidden
+
     val itemView = inflate(dslAdapterItem.itemLayoutId, false)
     val dslViewHolder = DslViewHolder(itemView)
     itemView.tag = dslViewHolder
@@ -522,14 +614,22 @@ fun ViewGroup.addDslItem(dslAdapterItem: DslAdapterItem, index: Int = -1): DslVi
     itemView.setDslViewHolder(dslViewHolder)
     itemView.setDslAdapterItem(dslAdapterItem)
 
-    dslAdapterItem.itemBind(dslViewHolder, childCount - 1, dslAdapterItem, emptyList())
+    var itemIndex = if (index < 0) childCount else index
+
+    itemView.visible(visible)
+    dslAdapterItem.itemBind(dslViewHolder, itemIndex, dslAdapterItem, payloads)
 
     //头分割线的支持
     if (this is LinearLayout) {
         if (this.orientation == LinearLayout.VERTICAL) {
             if (dslAdapterItem.itemTopInsert > 0) {
                 addView(
-                    View(context).apply { setBackgroundColor(dslAdapterItem.itemDecorationColor) },
+                    View(context).apply {
+                        setDslAdapterItemDecoration(dslAdapterItem)
+                        visible(visible)
+                        setBackgroundColor(dslAdapterItem.itemDecorationColor)
+                    },
+                    itemIndex++,
                     LinearLayout.LayoutParams(-1, dslAdapterItem.itemTopInsert).apply {
                         leftMargin = dslAdapterItem.itemLeftOffset
                         rightMargin = dslAdapterItem.itemRightOffset
@@ -538,7 +638,12 @@ fun ViewGroup.addDslItem(dslAdapterItem: DslAdapterItem, index: Int = -1): DslVi
         } else {
             if (dslAdapterItem.itemLeftInsert > 0) {
                 addView(
-                    View(context).apply { setBackgroundColor(dslAdapterItem.itemDecorationColor) },
+                    View(context).apply {
+                        setDslAdapterItemDecoration(dslAdapterItem)
+                        visible(visible)
+                        setBackgroundColor(dslAdapterItem.itemDecorationColor)
+                    },
+                    itemIndex++,
                     LinearLayout.LayoutParams(dslAdapterItem.itemTopInsert, -1).apply {
                         topMargin = dslAdapterItem.itemTopOffset
                         bottomMargin = dslAdapterItem.itemBottomOffset
@@ -546,13 +651,18 @@ fun ViewGroup.addDslItem(dslAdapterItem: DslAdapterItem, index: Int = -1): DslVi
             }
         }
     }
-    addView(itemView, index)
+    addView(itemView, itemIndex++)
     //尾分割线的支持
     if (this is LinearLayout) {
         if (this.orientation == LinearLayout.VERTICAL) {
             if (dslAdapterItem.itemBottomInsert > 0) {
                 addView(
-                    View(context).apply { setBackgroundColor(dslAdapterItem.itemDecorationColor) },
+                    View(context).apply {
+                        setDslAdapterItemDecoration(dslAdapterItem)
+                        visible(visible)
+                        setBackgroundColor(dslAdapterItem.itemDecorationColor)
+                    },
+                    itemIndex,
                     LinearLayout.LayoutParams(-1, dslAdapterItem.itemBottomInsert).apply {
                         leftMargin = dslAdapterItem.itemLeftOffset
                         rightMargin = dslAdapterItem.itemRightOffset
@@ -561,7 +671,12 @@ fun ViewGroup.addDslItem(dslAdapterItem: DslAdapterItem, index: Int = -1): DslVi
         } else {
             if (dslAdapterItem.itemRightInsert > 0) {
                 addView(
-                    View(context).apply { setBackgroundColor(dslAdapterItem.itemDecorationColor) },
+                    View(context).apply {
+                        setDslAdapterItemDecoration(dslAdapterItem)
+                        visible(visible)
+                        setBackgroundColor(dslAdapterItem.itemDecorationColor)
+                    },
+                    itemIndex,
                     LinearLayout.LayoutParams(dslAdapterItem.itemRightInsert, -1).apply {
                         topMargin = dslAdapterItem.itemTopOffset
                         bottomMargin = dslAdapterItem.itemBottomOffset
@@ -570,6 +685,27 @@ fun ViewGroup.addDslItem(dslAdapterItem: DslAdapterItem, index: Int = -1): DslVi
         }
     }
     return dslViewHolder
+}
+
+/**将[DslAdapterItem]绑定到[itemView]上*/
+fun DslAdapterItem.bindInRootView(
+    itemView: View?,
+    index: Int = -1,
+    payloads: List<Any> = emptyList()
+): DslViewHolder? {
+    if (itemView == null) {
+        return null
+    }
+    val dslViewHolder = DslViewHolder(itemView)
+    itemView.tag = dslViewHolder
+    itemView.setDslViewHolder(dslViewHolder)
+    itemView.setDslAdapterItem(this)
+    itemBind(dslViewHolder, index, this, payloads)
+    return dslViewHolder
+}
+
+fun ViewGroup.resetDslItem(item: DslAdapterItem) {
+    resetDslItem(listOf(item))
 }
 
 fun ViewGroup.resetDslItem(items: List<DslAdapterItem>) {
@@ -614,56 +750,91 @@ fun ViewGroup.resetDslItem(items: List<DslAdapterItem>) {
         addDslItem(dslItem)
     }
 }
-//<editor-fold desc="DslAdapterItem操作">
 
-internal fun Any?.getMember(
-    cls: Class<*>,
-    member: String
-): Any? {
-    var result: Any? = null
-    try {
-        var cl: Class<*>? = cls
-        while (cl != null) {
-            try {
-                val memberField = cls.getDeclaredField(member)
-                //memberField.isAccessible = true
-                makeAccessible(memberField)
-                result = memberField[this]
-                return result
-            } catch (e: NoSuchFieldException) {
-                cl = cl.superclass
+/**查找[ViewGroup]中, 包含的[DslAdapterItem]集合*/
+fun ViewGroup.findDslItemList(onlyVisible: Boolean = true): List<DslAdapterItem> {
+    val result = mutableListOf<DslAdapterItem>()
+    forEach { _, child ->
+        val dslItem = child.tagDslAdapterItem()
+        dslItem?.apply {
+            if (onlyVisible) {
+                if (child.isVisible()) {
+                    result.add(this)
+                }
+            } else {
+                result.add(this)
             }
         }
-    } catch (e: Exception) {
-        //L.i("错误:" + cls.getSimpleName() + " ->" + e.getMessage());
     }
     return result
 }
 
-internal fun makeAccessible(field: Field) {
-    if ((!Modifier.isPublic(field.modifiers) ||
-                !Modifier.isPublic(field.declaringClass.modifiers) ||
-                Modifier.isFinal(field.modifiers)) && !field.isAccessible
-    ) {
-        field.isAccessible = true
-    }
-}
-
-fun View.setAnimator(animator: Animator) {
-    setTag(R.id.lib_tag_animator, WeakReference(animator))
-}
-
-/**取消动画[Animator]*/
-fun View.cancelAnimator() {
-    val tag = getTag(R.id.lib_tag_animator)
-    var animator: Animator? = null
-    if (tag is WeakReference<*>) {
-        val any = tag.get()
-        if (any is Animator) {
-            animator = any
+/**更新所有[DslAdapterItem]在[ViewGroup]中*/
+fun ViewGroup.updateAllDslItem(payloads: List<Any> = emptyList()) {
+    forEach { index, child ->
+        val dslItem = child.tagDslAdapterItem()
+        dslItem?.also {
+            it.itemBind(child.dslViewHolder(), index, it, payloads)
         }
-    } else if (tag is Animator) {
-        animator = tag
     }
-    animator?.cancel()
 }
+
+/**更新指定的[DslAdapterItem]在[ViewGroup]中*/
+fun ViewGroup.updateDslItem(item: DslAdapterItem, payloads: List<Any> = emptyList()) {
+    forEach { index, child ->
+        val dslItem = child.tagDslAdapterItem()
+        dslItem?.also {
+            if (item == it) {
+                it.itemBind(child.dslViewHolder(), index, it, payloads)
+            }
+        }
+    }
+}
+
+/**更新或者插入指定的[DslAdapterItem]在[ViewGroup]中*/
+fun ViewGroup.updateOrInsertDslItem(
+    item: DslAdapterItem,
+    insertIndex: Int = -1,
+    payloads: List<Any> = emptyList()
+) {
+    var have = false
+    forEach { index, child ->
+        val dslItem = child.tagDslAdapterItem()
+        if (item == dslItem) {
+            have = true
+            //更新
+            item.itemBind(child.dslViewHolder(), index, item, payloads)
+        }
+    }
+    if (!have) {
+        //插入
+        addDslItem(item, insertIndex, payloads)
+    }
+}
+
+/**移除指定的[item]*/
+fun ViewGroup.removeDslItem(item: DslAdapterItem?) {
+    removeAllDslItem { index, dslAdapterItem -> dslAdapterItem == item }
+}
+
+/**移除所有符合规则的child*/
+fun ViewGroup.removeAllDslItem(predicate: (Int, DslAdapterItem?) -> Boolean = { _, item -> item != null }) {
+
+    val removeIndexList = mutableListOf<Int>()
+
+    forEach { index, child ->
+        val dslItem = child.tagDslAdapterItem()
+
+        if (predicate(index, dslItem)) {
+            removeIndexList.add(index)
+        }
+    }
+
+    //移除item
+    removeIndexList.reverse()
+    removeIndexList.forEach {
+        removeViewAt(it)
+    }
+}
+
+//<editor-fold desc="DslAdapterItem操作">

@@ -12,4 +12,7 @@
     <!--存储正在执行的[WeakReference][Animator]-->
     <item name="lib_tag_animator" type="id" />
 
+    <!--取出来的值, 表示属于那个[DslAdapterItem.itemTag]-->
+    <item name="lib_tag_dsl_item_decoration" type="id" />
+
 </resources>
