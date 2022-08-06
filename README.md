@@ -141,7 +141,7 @@ allprojects {
 ```kotlin
 dependencies {
     //androidx(推荐)
-    implementation 'com.github.angcyo:DslAdapter:5.0.0'
+    implementation 'com.github.angcyo:DslAdapter:5.0.1'
     //支持DataBinding
     implementation 'com.github.angcyo:DslAdapter:3.0.0-binding'
 
