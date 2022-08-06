@@ -80,6 +80,8 @@ dslAdapter.render {
 14. 支持`DataBinding`(`3.0.0`后)
 15. 支持`ViewBinding`([参考示例](https://github.com/angcyo/DslAdapter/blob/master/Sample/src/main/java/com/angcyo/dsladapter/dsl/DslViewBindingItem.kt))
 16. 支持`Item动画`(`4.3.0`后)
+17. 支持将`DslAdapterItem`添加到任意`ViewGroup`中(`5.1.0`后)
+18. 支持单独将`DslAdapterItem`的`itemBind`逻辑绑定在任意`View`中(`5.1.0`后)
 
 # 功能展示
 
