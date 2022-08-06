@@ -77,7 +77,10 @@ open class DslAdapterItem : LifecycleOwner {
         var DEFAULT_THROTTLE_INTERVAL = ThrottleClickListener.DEFAULT_THROTTLE_INTERVAL
     }
 
-    /**适配器, 自动赋值[com.angcyo.dsladapter.DslAdapter.onBindViewHolder]*/
+    /**适配器, 自动赋值
+     * [com.angcyo.dsladapter.DslAdapter._updateAdapterItems]
+     * [com.angcyo.dsladapter.DslAdapter.onBindViewHolder]
+     * */
     var itemDslAdapter: DslAdapter? = null
 
     //<editor-fold desc="update操作">
@@ -1488,6 +1491,7 @@ open class DslAdapterItem : LifecycleOwner {
             lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
         }
         if (itemAnimateRes != 0) {
+            itemHolder.itemView.cancelAnimator()
             itemHolder.itemView.clearAnimation()
         }
         itemHolder.clear()

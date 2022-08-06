@@ -291,14 +291,11 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         adapterItems.addAll(dataItems)
         adapterItems.addAll(footerItems)
 
-        adapterItems.forEach {
-            it.clearItemGroupParamsCache()
+        adapterItems.forEach { item ->
+            //提前赋值
+            item.itemDslAdapter = this
+            item.clearItemGroupParamsCache()
         }
-
-        /*//2021-6-25
-        adapterItems.forEach {
-            it.itemDslAdapter = this
-        }*/
     }
 
     //</editor-fold desc="辅助方法">

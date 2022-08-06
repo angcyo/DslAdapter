@@ -652,3 +652,18 @@ internal fun makeAccessible(field: Field) {
 fun View.setAnimator(animator: Animator) {
     setTag(R.id.lib_tag_animator, WeakReference(animator))
 }
+
+/**取消动画[Animator]*/
+fun View.cancelAnimator() {
+    val tag = getTag(R.id.lib_tag_animator)
+    var animator: Animator? = null
+    if (tag is WeakReference<*>) {
+        val any = tag.get()
+        if (any is Animator) {
+            animator = any
+        }
+    } else if (tag is Animator) {
+        animator = tag
+    }
+    animator?.cancel()
+}
