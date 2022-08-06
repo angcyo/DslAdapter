@@ -1,3 +1,10 @@
+# 2022-8-6
+
+`5.1.0`
+
+- 新增了一些`DslAdapterItem`使用在`ViewGroup`中的方法
+- `DslAdapterItem`支持直接绑定在任意`View`中
+
 # 2022-8-5
 
 `5.0.1`
