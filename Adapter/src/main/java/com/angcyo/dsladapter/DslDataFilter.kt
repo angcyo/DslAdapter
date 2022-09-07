@@ -292,7 +292,7 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
 
             resultList.addAll(_newList)
 
-            L.v("${dslAdapter.hash()}:${this.hash()} 数据列表->原:${oldList.size} 后:${newList.size} 终:${_newList.size}")
+            L.i("${dslAdapter.hash()}:${this.hash()} 数据列表->原:${oldList.size} 后:${newList.size} 终:${_newList.size}")
 
             //开始计算diff
             val diffResult = DiffUtil.calculateDiff(

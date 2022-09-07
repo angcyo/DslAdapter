@@ -6,6 +6,7 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import androidx.core.view.GestureDetectorCompat
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.OnItemTouchListener
 import com.angcyo.dsladapter.ItemSelectorHelper.Companion.OPTION_DESELECT
 import com.angcyo.dsladapter.ItemSelectorHelper.Companion.OPTION_SELECT
 import kotlin.math.max
@@ -36,7 +37,7 @@ class SlidingSelectorHelper(val context: Context, val dslAdapter: DslAdapter) :
         }
 
         /**卸载*/
-        fun uninstall(recyclerView: RecyclerView, helper: RecyclerView.OnItemTouchListener) {
+        fun uninstall(recyclerView: RecyclerView, helper: OnItemTouchListener) {
             recyclerView.removeOnItemTouchListener(helper)
         }
     }

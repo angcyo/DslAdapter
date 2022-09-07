@@ -12,6 +12,12 @@ import java.util.*
  *
  * https://github.com/angcyo/DslAdapter/wiki/%E6%8B%96%E6%8B%BD%E6%8E%92%E5%BA%8F%E5%92%8C%E4%BE%A7%E6%BB%91%E5%88%A0%E9%99%A4
  *
+ * [com.angcyo.dsladapter.DragCallbackHelper.Companion.install]
+ * [com.angcyo.dsladapter.DragCallbackHelper.startDrag]
+ *
+ * [onItemMoveChanged]
+ * [onItemSwipeDeleted]
+ *
  * Email:angcyo@126.com
  * @author angcyo
  * @date 2019/11/05
@@ -43,8 +49,14 @@ class DragCallbackHelper : ItemTouchHelper.Callback() {
         const val PAYLOAD_UPDATE_PART_SWIPED = 0x1_000
 
         /**安装*/
-        fun install(recyclerView: RecyclerView): DragCallbackHelper {
+        fun install(
+            recyclerView: RecyclerView,
+            dragFlag: Int = FLAG_ALL,
+            swipeFlag: Int = FLAG_NONE
+        ): DragCallbackHelper {
             return DragCallbackHelper().apply {
+                itemDragFlag = dragFlag
+                itemSwipeFlag = swipeFlag
                 attachToRecyclerView(recyclerView)
             }
         }
@@ -76,8 +88,8 @@ class DragCallbackHelper : ItemTouchHelper.Callback() {
     var _swipeHappened = false
 
     /**拖拽排序后的回调, 数据源可以是[DslAdapter]中的[headerItems] [dataItems] [footerItems]其中之一
-     * [fromList] [fromPosition]所在的数据源
-     * [toList] [toPosition]所在的数据源
+     * [fromList] [fromPosition]所在的数据源, 和对应的位置
+     * [toList] [toPosition]所在的数据源, 和对应的位置
      * */
     var onItemMoveChanged: ((fromList: List<DslAdapterItem>, toList: List<DslAdapterItem>, fromPosition: Int, toPosition: Int) -> Unit)? =
         null
@@ -216,7 +228,10 @@ class DragCallbackHelper : ItemTouchHelper.Callback() {
 
         }
 
-    /**如果是快速的侧滑删除, [clearView] 可能无法被执行*/
+    /**
+     * 先会触发[onSelectedChanged]的[ACTION_STATE_IDLE]
+     * 手势释放后回调.
+     * 如果是快速的侧滑删除, [clearView] 可能无法被执行*/
     override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
         super.clearView(recyclerView, viewHolder)
         onClearView.invoke(recyclerView, viewHolder)
@@ -226,6 +241,12 @@ class DragCallbackHelper : ItemTouchHelper.Callback() {
     var onSelectedChanged: (viewHolder: RecyclerView.ViewHolder?, actionState: Int) -> Unit =
         { _, _ -> }
 
+    /**手势选中[viewHolder]状态改变时触发
+     * [actionState]
+     * [androidx.recyclerview.widget.ItemTouchHelper.ACTION_STATE_IDLE]
+     * [androidx.recyclerview.widget.ItemTouchHelper.ACTION_STATE_DRAG]
+     * [androidx.recyclerview.widget.ItemTouchHelper.ACTION_STATE_SWIPE]
+     * */
     override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
         super.onSelectedChanged(viewHolder, actionState)
         onSelectedChanged.invoke(viewHolder, actionState)
@@ -336,10 +357,12 @@ class DragCallbackHelper : ItemTouchHelper.Callback() {
         _itemTouchHelper?.attachToRecyclerView(null)
     }
 
+    /**主动开始拖拽*/
     fun startDrag(viewHolder: RecyclerView.ViewHolder) {
         _itemTouchHelper?.startDrag(viewHolder)
     }
 
+    /**主动开始侧滑*/
     fun startSwipe(viewHolder: RecyclerView.ViewHolder) {
         _itemTouchHelper?.startSwipe(viewHolder)
     }

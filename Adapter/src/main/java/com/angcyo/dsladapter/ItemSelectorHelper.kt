@@ -229,6 +229,25 @@ class ItemSelectorHelper(val dslAdapter: DslAdapter) {
             val oldSelectorList = getSelectorItemList(selectorParams._useFilterList)
             if (selectorModel == MODEL_SINGLE) {
                 //单选模式下, 选中一个null item, 允许取消之前的item
+
+                //单选模式下, 取消sub item中的状态
+                val allItems = dslAdapter.getDataList(selectorParams._useFilterList)
+                allItems.forEach {
+                    it.itemSubList.forEach { subItem ->
+                        if (subItem.itemIsSelected && subItem != item) {
+                            if (subItem.isItemCanSelected(subItem.itemIsSelected, false)) {
+                                _selectorInner(
+                                    SelectorParams(
+                                        it,
+                                        selector = OPTION_DESELECT,
+                                        notifySelectListener = true
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+
                 if (oldSelectorList.isNotEmpty()) {
                     //取消之前选中的项
                     oldSelectorList.forEach {

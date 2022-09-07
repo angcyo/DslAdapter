@@ -17,7 +17,10 @@ abstract class BaseDslStateItem : DslAdapterItem() {
      * */
     val itemStateLayoutMap = hashMapOf<Int, Int>()
 
-    /**当前的布局状态*/
+    /**当前的布局状态
+     * [com.angcyo.dsladapter.DslAdapterStatusItem.ADAPTER_STATUS_LOADING]
+     * [com.angcyo.dsladapter.DslLoadMoreItem.LOAD_MORE_LOADING]
+     * */
     var itemState = -1
         set(value) {
             val old = field
@@ -40,6 +43,10 @@ abstract class BaseDslStateItem : DslAdapterItem() {
     init {
         itemLayoutId = R.layout.item_base_state
         itemSpanCount = FULL_ITEM
+
+        //不支持拖拽和侧滑
+        itemDragEnable = false
+        itemSwipeEnable = false
     }
 
     override fun onItemBind(

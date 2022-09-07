@@ -158,6 +158,20 @@ open class DslAdapterItem : LifecycleOwner {
         }
     }
 
+    /**更新选项*/
+    open fun updateItemSelect(
+        select: Boolean,
+        selectorParams: SelectorParams = SelectorParams(
+            this,
+            select.toSelectOption(),
+            _useFilterList = false
+        )
+    ) {
+        itemDslAdapter?.itemSelectorHelper?.selector(selectorParams).elseNull {
+            L.w("跳过操作! updateItemSelector需要[itemDslAdapter],请赋值.")
+        }
+    }
+
     /**有依赖时, 才更新
      * [updateItemDepend]*/
     @UpdateByDiff
@@ -194,6 +208,9 @@ open class DslAdapterItem : LifecycleOwner {
      * 需要[dslSpanSizeLookup]支持.
      *
      * 在[StaggeredGridLayoutManager]中, 会使用[layoutParams.isFullSpan]的方式满屏
+     *
+     * [com.angcyo.dsladapter.DslAdapterItem.fullWidthItem]
+     * [com.angcyo.dsladapter.AdapterLibEx.fullSpan]
      *
      * */
     var itemSpanCount = 1
@@ -299,6 +316,7 @@ open class DslAdapterItem : LifecycleOwner {
         adapterItem: DslAdapterItem,
         payloads: List<Any>
     ) {
+        _initItemEnable(itemHolder)
         _initItemBackground(itemHolder)
         _initItemSize(itemHolder)
         _initItemPadding(itemHolder)
@@ -401,6 +419,11 @@ open class DslAdapterItem : LifecycleOwner {
 
     //<editor-fold desc="内部初始化">
 
+    //初始化激活状态
+    open fun _initItemEnable(itemHolder: DslViewHolder) {
+        itemHolder.enable(itemHolder.itemView, itemEnable, true)
+    }
+
     //初始化背景
     open fun _initItemBackground(itemHolder: DslViewHolder) {
         itemHolder.itemView.isSelected = itemIsSelected
@@ -445,8 +468,10 @@ open class DslAdapterItem : LifecycleOwner {
     //初始化事件
     open fun _initItemListener(itemHolder: DslViewHolder) {
         val clickListener = _clickListener
-        if (itemClick == null || clickListener == null || !itemEnable) {
-            itemHolder.itemView.isClickable = false
+        if (itemClick == null || clickListener == null) {
+            if (!itemEnable) {
+                itemHolder.itemView.setOnClickListener(null)
+            }
         } else {
             if (clickListener is ThrottleClickListener) {
                 clickListener.throttleInterval = itemClickThrottleInterval
@@ -1242,12 +1267,17 @@ open class DslAdapterItem : LifecycleOwner {
      * [onSetItemSelected]*/
     var itemSingleSelectMutex: Boolean = false
 
+    /**[otherItem]是否需要互斥*/
+    var itemIsSelectMutexAction: (otherItem: DslAdapterItem) -> Boolean = {
+        it.className() == this.className()
+    }
+
     /**选中状态改变回调*/
     @UpdateByNotify
     open fun onSetItemSelected(select: Boolean) {
         if (select && itemSingleSelectMutex) {
             itemDslAdapter?.eachItem { index, dslAdapterItem ->
-                if (dslAdapterItem.className() == this.className() && dslAdapterItem != this) {
+                if (dslAdapterItem != this && itemIsSelectMutexAction(dslAdapterItem)) {
                     //互斥操作
                     dslAdapterItem.itemIsSelected = false
                     dslAdapterItem.updateAdapterItem()
@@ -1256,7 +1286,7 @@ open class DslAdapterItem : LifecycleOwner {
         }
     }
 
-    /**是否 允许被选中*/
+    /**是否 允许改变选中状态*/
     var isItemCanSelected: (fromSelector: Boolean, toSelector: Boolean) -> Boolean =
         { from, to -> from != to }
 

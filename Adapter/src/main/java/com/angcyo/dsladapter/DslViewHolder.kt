@@ -2,6 +2,7 @@ package com.angcyo.dsladapter
 
 import android.os.Build
 import android.util.SparseArray
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
@@ -84,6 +85,13 @@ open class DslViewHolder(
         click(id, View.OnClickListener { listener.invoke(it) })
     }
 
+    fun click(@IdRes vararg ids: Int, listener: (View) -> Unit) {
+        val clickListener = View.OnClickListener { listener.invoke(it) }
+        ids.forEach {
+            click(it, clickListener)
+        }
+    }
+
     fun selectorClick(
         @IdRes id: Int,
         listener: (selected: Boolean) -> Boolean = { false /*不拦截默认处理*/ }
@@ -110,7 +118,7 @@ open class DslViewHolder(
 
     /**节流点击一组事件*/
     fun throttleClick(
-        vararg ids: Int,
+        @IdRes vararg ids: Int,
         throttleInterval: Long = ThrottleClickListener.DEFAULT_THROTTLE_INTERVAL,
         action: (View) -> Unit
     ) {
@@ -188,6 +196,26 @@ open class DslViewHolder(
             compoundButton.isChecked = checked
         }
         return compoundButton
+    }
+
+    fun touch(@IdRes id: Int, block: (view: View, event: MotionEvent) -> Boolean) {
+        touch(v<View>(id), block)
+    }
+
+    fun touch(view: View?, block: (view: View, event: MotionEvent) -> Boolean) {
+        view?.setOnTouchListener(block)
+    }
+
+    /**初始化, 点击之后再次初始化*/
+    fun clickAndInit(@IdRes id: Int, init: (View) -> Unit, click: (View) -> Unit) {
+        val view = v<View>(id)
+        view?.apply {
+            init(this)
+            setOnClickListener {
+                click(it)
+                init(it)
+            }
+        }
     }
 
     //</editor-fold desc="事件处理">
@@ -314,8 +342,12 @@ open class DslViewHolder(
         return this
     }
 
+    fun selected(selected: Boolean = true) {
+        selected(itemView, selected)
+    }
+
     /**选中当前的view, 以及其所有的子view*/
-    private fun selected(view: View?, selected: Boolean) {
+    fun selected(view: View?, selected: Boolean = true) {
         if (view == null) {
             return
         }
@@ -526,6 +558,11 @@ open class DslViewHolder(
 
     fun isEnabled(@IdRes resId: Int): Boolean {
         return view(resId)?.isEnabled == true
+    }
+
+    /**是否是在[RecyclerView]中*/
+    fun isInRecyclerView(): Boolean {
+        return itemView.parent is RecyclerView
     }
 
     //</editor-fold desc="属性控制">

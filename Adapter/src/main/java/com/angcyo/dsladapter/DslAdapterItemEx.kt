@@ -159,11 +159,11 @@ fun DslAdapterItem.paddingHorizontal(left: Int, right: Int) {
     itemPaddingRight = right
 }
 
-/**仅绘制左边区域的分割线*/
-fun DslAdapterItem.drawLeft(
+/**仅绘制上边左边偏移的区域的分割线*/
+fun DslAdapterItem.drawTopOffsetLeft(
     offsetLeft: Int,
     insertTop: Int,
-    color: Int = Color.WHITE
+    color: Int
 ) {
     itemLeftOffset = offsetLeft
     itemRightOffset = 0
@@ -172,6 +172,40 @@ fun DslAdapterItem.drawLeft(
     itemBottomInsert = 0
 
     onlyDrawOffsetArea = true
+    itemDecorationColor = color
+}
+
+/**仅绘制左边区域的分割线*/
+fun DslAdapterItem.drawLeft(
+    insertLeft: Int,
+    offsetTop: Int,
+    offsetBottom: Int,
+    color: Int = Color.WHITE
+) {
+    itemTopOffset = offsetTop
+    itemBottomOffset = offsetBottom
+
+    itemRightInsert = 0
+    itemLeftInsert = insertLeft
+
+    onlyDrawOffsetArea = false
+    itemDecorationColor = color
+}
+
+/**仅绘制右边区域的分割线*/
+fun DslAdapterItem.drawRight(
+    insertRight: Int,
+    offsetTop: Int,
+    offsetBottom: Int,
+    color: Int = Color.WHITE
+) {
+    itemTopOffset = offsetTop
+    itemBottomOffset = offsetBottom
+
+    itemRightInsert = insertRight
+    itemLeftInsert = 0
+
+    onlyDrawOffsetArea = false
     itemDecorationColor = color
 }
 
@@ -307,6 +341,14 @@ fun DslAdapterItem.isItemDetached(): Boolean {
     return lifecycle.currentState != Lifecycle.State.RESUMED
 }
 
+/**是否是占满宽度的item
+ *
+ * [com.angcyo.dsladapter.AdapterLibExKt.fullSpan]
+ * */
+fun DslAdapterItem.fullWidthItem() {
+    itemSpanCount = DslAdapterItem.FULL_ITEM
+}
+
 /**是否是占满宽度的item*/
 fun DslAdapterItem.isFullWidthItem(): Boolean {
     return isInLinearLayoutManager() || itemSpanCount == DslAdapterItem.FULL_ITEM
@@ -353,7 +395,10 @@ fun DslAdapterItem.afterItem(
     var findAnchor = false
     var startIndex = -1
     var result: DslAdapterItem? = null
-    adapter.getDataList(useFilterList).forEachIndexed { index, dslAdapterItem ->
+
+    val dataList = adapter.getDataList(useFilterList)
+    var index = 0
+    for (dslAdapterItem in dataList) {
         if (this == dslAdapterItem) {
             findAnchor = true
             startIndex = index
@@ -361,10 +406,11 @@ fun DslAdapterItem.afterItem(
             if (findAnchor) {
                 if (predicate(dslAdapterItem, index - startIndex)) {
                     result = dslAdapterItem
-                    return@forEachIndexed
+                    break
                 }
             }
         }
+        index++
     }
     return result
 }
@@ -443,6 +489,42 @@ var DslAdapterItem.itemGroup: String?
 /**找到[DslAdapterItem]对应的*/
 fun DslAdapterItem.findViewHolder(recyclerView: RecyclerView? = itemDslAdapter?._recyclerView): RecyclerView.ViewHolder? {
     return itemViewHolder(recyclerView)
+}
+
+/**移除自身*/
+fun DslAdapterItem.removeIt(adapter: DslAdapter? = null): Boolean {
+    val item = this
+    var reslut = false
+    (adapter ?: itemDslAdapter)?.apply {
+        val h = headerItems.remove(item)
+        val d = dataItems.remove(item)
+        val f = footerItems.remove(item)
+
+        reslut = h || d || f
+        if (reslut) {
+            _updateAdapterItems()
+            item.updateItemDepend()
+        }
+    }
+    return reslut
+}
+
+/**使用新的item, 替换自身*/
+fun DslAdapterItem.replaceIt(newItem: DslAdapterItem?, adapter: DslAdapter? = null): Boolean {
+    val item = this
+    var reslut = false
+    (adapter ?: itemDslAdapter)?.apply {
+        val h = headerItems.replace(item, newItem)
+        val d = dataItems.replace(item, newItem)
+        val f = footerItems.replace(item, newItem)
+        reslut = h || d || f
+        if (reslut) {
+            _updateAdapterItems()
+            //item.updateItemDepend()
+            notifyDataChanged()//替换了数据之后, 只能通过此方法才能更新界面
+        }
+    }
+    return reslut
 }
 
 //</editor-fold desc="操作扩展">
@@ -558,7 +640,7 @@ inline fun <reified Item : DslAdapterItem> DslAdapter._updateOrInsertItem(
                 it.add(clamp(insertIndex, 0, it.size), newItem)
             } else {
                 //需要更新处理
-                findItem.itemUpdateFlag = true
+                findItem.itemChanging = true
                 val indexOf = it.indexOf(findItem)
                 if (indexOf != -1) {
                     it[indexOf] = newItem

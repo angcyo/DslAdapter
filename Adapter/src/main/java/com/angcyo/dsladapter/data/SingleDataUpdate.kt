@@ -85,7 +85,7 @@ class SingleDataUpdate(val adapter: DslAdapter) {
         val oldItemList = mutableListOf<DslAdapterItem>()
         var findAnchor = false
         if (at != null) {
-            adapter.adapterItems.forEach { item ->
+            for (item in adapter.adapterItems) {
                 if (item == at) {
                     findAnchor = true
                 } else {
@@ -94,7 +94,7 @@ class SingleDataUpdate(val adapter: DslAdapter) {
                             oldItemList.add(item)
                         } else {
                             //不一样的item, 中断forEach
-                            return@forEach
+                            break
                         }
                     }
                 }

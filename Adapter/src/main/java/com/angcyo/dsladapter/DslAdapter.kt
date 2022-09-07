@@ -853,6 +853,34 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         notifyItemRangeChanged(0, itemCount, payload)
     }
 
+    /**更新界面上所有[DslAdapterItem]*/
+    @UpdateByNotify
+    fun updateAllDataItem(payload: Any? = DslAdapterItem.PAYLOAD_UPDATE_PART) {
+        dataItems.forEach {
+            it.diffResult(null, null)
+        }
+        notifyItemRangeChanged(0, dataItems.size, payload)
+    }
+
+
+    /**更新界面上所有[DslAdapterItem]*/
+    @UpdateByNotify
+    fun updateAllHeaderItem(payload: Any? = DslAdapterItem.PAYLOAD_UPDATE_PART) {
+        headerItems.forEach {
+            it.diffResult(null, null)
+        }
+        notifyItemRangeChanged(dataItems.size, headerItems.size, payload)
+    }
+
+    /**更新界面上所有[DslAdapterItem]*/
+    @UpdateByNotify
+    fun updateAllFooterItem(payload: Any? = DslAdapterItem.PAYLOAD_UPDATE_PART) {
+        footerItems.forEach {
+            it.diffResult(null, null)
+        }
+        notifyItemRangeChanged(dataItems.size + headerItems.size, footerItems.size, payload)
+    }
+
     /**更新一批[DslAdapterItem]*/
     @UpdateByNotify
     fun updateItems(

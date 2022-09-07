@@ -550,6 +550,16 @@ fun DslAdapter.delayNotify(filterParams: FilterParams = FilterParams(notifyDiffD
     updateItemDepend(filterParams)
 }
 
+/**更新列表中所有的[DslAdapterItem]*/
+@UpdateByNotify
+fun List<DslAdapterItem>.updateAdapterItem(payload: Any? = DslAdapterItem.PAYLOAD_UPDATE_PART) {
+    /**更新界面上所有[DslAdapterItem]*/
+    forEach {
+        it.diffResult(null, null)
+        it.updateAdapterItem(payload)
+    }
+}
+
 //</editor-fold desc="Update">
 
 //<editor-fold desc="操作扩展">

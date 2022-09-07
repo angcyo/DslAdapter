@@ -424,6 +424,22 @@ fun List<Any?>?.isListEmpty(): Boolean {
 
 fun List<*>?.size() = this?.size ?: 0
 
+/**将指定位置的元素, 替换成新的元素.
+ * 如果新的元素为空, 则仅移除旧元素*/
+fun <T> MutableList<T>.replace(element: T, newElement: T?): Boolean {
+    val index = indexOf(element)
+    if (index != -1) {
+        return if (newElement == null) {
+            //remove
+            remove(element)
+        } else {
+            set(index, newElement)
+            true
+        }
+    }
+    return false
+}
+
 fun View?.mH(def: Int = 0): Int {
     return this?.measuredHeight ?: def
 }
