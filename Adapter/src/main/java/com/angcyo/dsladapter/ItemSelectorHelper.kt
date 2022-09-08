@@ -233,19 +233,7 @@ class ItemSelectorHelper(val dslAdapter: DslAdapter) {
                 //单选模式下, 取消sub item中的状态
                 val allItems = dslAdapter.getDataList(selectorParams._useFilterList)
                 allItems.forEach {
-                    it.itemSubList.forEach { subItem ->
-                        if (subItem.itemIsSelected && subItem != item) {
-                            if (subItem.isItemCanSelected(subItem.itemIsSelected, false)) {
-                                _selectorInner(
-                                    SelectorParams(
-                                        it,
-                                        selector = OPTION_DESELECT,
-                                        notifySelectListener = true
-                                    )
-                                )
-                            }
-                        }
-                    }
+                    _cancelSubItemList(it, item)
                 }
 
                 if (oldSelectorList.isNotEmpty()) {
@@ -274,6 +262,25 @@ class ItemSelectorHelper(val dslAdapter: DslAdapter) {
         if (selectorParams.notifySelectListener) {
             //事件通知
             _notifySelectorChange(selectorParams)
+        }
+    }
+
+    /**取消*/
+    fun _cancelSubItemList(item: DslAdapterItem, fromItem: DslAdapterItem?) {
+        item.itemSubList.forEach { subItem ->
+            if (subItem.itemIsSelected && subItem != fromItem) {
+                if (subItem.isItemCanSelected(subItem.itemIsSelected, false)) {
+                    _selectorInner(
+                        SelectorParams(
+                            fromItem,
+                            selector = OPTION_DESELECT,
+                            notifySelectListener = true
+                        )
+                    )
+                }
+            }
+            //递归
+            _cancelSubItemList(subItem, fromItem)
         }
     }
 
