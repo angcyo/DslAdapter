@@ -1,9 +1,10 @@
-# 2022-9-8
+# 2022-9-9
 
-`5.1.2`
+`5.1.3`
 
 - 新增了一些常用`api`
 - 修复一些已知问题
+- 新增新的数据获取api`com.angcyo.dsladapter.DslAdapter.getDataAndSubList`
 
 # 2022-8-6
 
