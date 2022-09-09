@@ -762,6 +762,22 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         return if (useFilterList) getValidFilterDataList() else adapterItems
     }
 
+    /**包含[com.angcyo.dsladapter.DslAdapterItem.itemSubList]*/
+    fun getDataAndSubList(useFilterList: Boolean = false): List<DslAdapterItem> {
+        val list = if (useFilterList) getValidFilterDataList() else adapterItems
+        val result = mutableListOf<DslAdapterItem>()
+        fun addSubList(item: DslAdapterItem) {
+            result.add(item)
+            item.itemSubList.forEach {
+                addSubList(it)
+            }
+        }
+        list.forEach {
+            addSubList(it)
+        }
+        return result
+    }
+
     /**创建默认的[FilterParams]*/
     fun _defaultFilterParams(): FilterParams {
         return FilterParams()
