@@ -49,7 +49,7 @@ dependencies {
 
     //compileOnly 'com.github.angcyo:DslAdapter:4.0.0'
 
-    implementation('com.github.angcyo:DslItem:2.0.0') {
+    implementation('com.github.angcyo:DslItem:2.1.0') {
         exclude module: 'DslAdapter'
     }
 }
