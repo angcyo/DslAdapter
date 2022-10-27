@@ -5,6 +5,7 @@ import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Looper
+import android.view.ViewGroup
 import androidx.annotation.LayoutRes
 import com.angcyo.dsladapter.annotation.UpdateByDiff
 import com.angcyo.dsladapter.annotation.UpdateByNotify
@@ -304,7 +305,7 @@ fun DslAdapter.renderEmptyItem(
     adapterItem.itemLayoutId = R.layout.base_empty_item
     adapterItem.itemBindOverride = { itemHolder, _, _, _ ->
         itemHolder.itemView.setBgDrawable(background)
-        itemHolder.itemView.setWidthHeight(-1, height)
+        itemHolder.itemView.setWidthHeight(ViewGroup.LayoutParams.MATCH_PARENT, height)
     }
     adapterItem.action()
     addLastItem(list, adapterItem)

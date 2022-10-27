@@ -1,6 +1,7 @@
 package com.angcyo.dsladapter
 
 import android.graphics.Canvas
+import android.graphics.Color
 import android.text.TextUtils
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -62,8 +63,8 @@ class DragCallbackHelper : ItemTouchHelper.Callback() {
         }
 
         /**卸载*/
-        fun uninstall(dragCallbackHelper: DragCallbackHelper) {
-            dragCallbackHelper.detachFromRecyclerView()
+        fun uninstall(dragCallbackHelper: DragCallbackHelper?) {
+            dragCallbackHelper?.detachFromRecyclerView()
         }
     }
 
@@ -270,7 +271,10 @@ class DragCallbackHelper : ItemTouchHelper.Callback() {
             }
         }
 
-    var _drawText = DrawText()
+    var _drawText = DrawText().apply {
+        textPaint.color = Color.RED
+        textPaint.textSize = 14 * dp
+    }
 
     override fun onChildDraw(
         canvas: Canvas,
@@ -293,11 +297,11 @@ class DragCallbackHelper : ItemTouchHelper.Callback() {
                 itemView.left.toFloat()
             } else {
                 //向左滑动删除
-                (itemView.right - _drawText._paint.measureText(swipeTipText.toString()))
+                (itemView.right - _drawText.textPaint.measureText(swipeTipText.toString()))
             }
 
             val y: Float =
-                itemView.top + itemView.measuredHeight / 2 - _drawText._paint.textHeight() / 2
+                itemView.top + itemView.measuredHeight / 2 - _drawText.textPaint.textHeight() / 2
 
             canvas.save()
             canvas.translate(x, y)

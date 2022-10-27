@@ -1,19 +1,19 @@
 package com.angcyo.dsladapter.internal
 
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Rect
 import android.os.Build
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.view.ViewGroup
-import com.angcyo.dsladapter.dp
+import java.lang.Float.max
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 /**
- *
+ * 使用[StaticLayout]进行文本绘制, 支持[SpannableString] 支持换行
  * Email:angcyo@126.com
  * @author angcyo
  * @date 2019/11/06
@@ -30,30 +30,63 @@ class DrawText {
         }
     }
 
+    /**画笔*/
+    var textPaint: TextPaint by MakeLayoutProperty(TextPaint(Paint.ANTI_ALIAS_FLAG))
+
     /**需要绘制的文本*/
     var drawText: CharSequence? by MakeLayoutProperty(null)
 
-    /**文本大小*/
-    var textSize: Float by MakeLayoutProperty(14 * dp)
-
-    /**文本绘制的宽度*/
+    /**文本允许绘制的宽度*/
     var textWidth: Int by MakeLayoutProperty(ViewGroup.LayoutParams.WRAP_CONTENT)
-
-    /**文本颜色*/
-    var textColor = Color.RED
 
     /**相对行间距，相对字体大小，1.5f表示行间距为1.5倍的字体高度。*/
     var spacingMult: Float by MakeLayoutProperty(1f)
+
     /**在基础行距上添加多少*/
     var spacingAdd: Float by MakeLayoutProperty(0f)
     var includePad: Boolean by MakeLayoutProperty(false)
 
     var alignment: Layout.Alignment? by MakeLayoutProperty(Layout.Alignment.ALIGN_NORMAL)
 
-    var _paint: TextPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
-    var _textLayout: Layout? = null
+    var _textLayout: StaticLayout? = null
 
-    fun makeLayout(): Layout {
+    //---
+
+    fun getWidth() = makeLayout().width
+
+    fun getHeight() = makeLayout().height
+
+    fun getBounds(rect: Rect): Rect {
+        val layout = makeLayout()
+        rect.set(0, 0, layout.width, layout.height)
+        return rect
+    }
+
+    //---
+
+    /**重新创建[StaticLayout]*/
+    fun makeLayout(): StaticLayout {
+        val width = if (textWidth >= 0) textWidth else Int.MAX_VALUE
+        val layout = _makeLayout(width)
+        _textLayout = layout
+
+        if (textWidth >= 0) {
+            //no  op
+        } else {
+            //重新赋值宽度
+            var maxWidth = 0f
+            for (line in 0 until layout.lineCount) {
+                maxWidth = max(layout.getLineWidth(line), maxWidth)
+            }
+            //wrap_content 重新计算宽度
+            _textLayout = _makeLayout(maxWidth.toInt())
+        }
+
+        return _textLayout!!
+    }
+
+    /**[width]宽度决定了行数 需要>=0*/
+    fun _makeLayout(width: Int): StaticLayout {
         //StaticLayout 只能用一次.
 
         /**
@@ -69,13 +102,10 @@ class DrawText {
          * TextUtils.TruncateAt ellipsize : 从什么位置开始省略
          * int ellipsizedWidth : 超过多少开始省略
          * */
-        _paint.textSize = textSize
         val text = drawText ?: ""
-        val width = if (textWidth >= 0) textWidth else _paint.measureText(text.toString()).toInt()
-
-        _textLayout = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        val layout = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             StaticLayout.Builder.obtain(
-                text, 0, text.length, _paint,
+                text, 0, text.length, textPaint,
                 width
             ).run {
                 alignment?.run {
@@ -83,21 +113,21 @@ class DrawText {
                 }
                 setLineSpacing(spacingAdd, spacingMult)
                 setIncludePad(includePad)
+                //setMaxLines()
+                //setEllipsize()
                 build()
             }
         } else {
-            StaticLayout(text, _paint, width, alignment, spacingMult, spacingAdd, includePad)
+            StaticLayout(text, textPaint, width, alignment, spacingMult, spacingAdd, includePad)
         }
-
-        return _textLayout!!
+        return layout
     }
 
+    /**开始绘制*/
     fun onDraw(canvas: Canvas) {
         if (drawText.isNullOrEmpty()) {
             return
         }
-        _paint.color = textColor
-
         /*
         * Layout在绘制的时候, (0, 0) 坐标是文本左上角
         * Canvas.drawText, (0, 0) 坐标是文本Baseline的位置

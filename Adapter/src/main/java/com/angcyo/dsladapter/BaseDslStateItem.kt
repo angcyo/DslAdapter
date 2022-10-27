@@ -34,6 +34,9 @@ abstract class BaseDslStateItem : DslAdapterItem() {
     /**是否将激活状态item*/
     open var itemStateEnable: Boolean = true
 
+    /**失败状态是否支持重试*/
+    var itemEnableRetry: Boolean = true
+
     /**当状态改变时回调*/
     var onItemStateChange: (from: Int, to: Int) -> Unit = { _, _ -> }
 
@@ -100,4 +103,10 @@ abstract class BaseDslStateItem : DslAdapterItem() {
 
     /**是否处于状态显示模式*/
     open fun isInStateLayout() = itemEnable && itemStateEnable && itemState > 0
+
+    override fun updateItemOnHaveDepend(updateSelf: Boolean, filterParams: FilterParams) {
+        //super.updateItemOnHaveDepend(updateSelf, filterParams)
+        //直接使用diff更新
+        updateItemDepend(filterParams)
+    }
 }

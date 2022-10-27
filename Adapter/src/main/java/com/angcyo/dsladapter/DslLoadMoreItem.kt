@@ -79,10 +79,12 @@ open class DslLoadMoreItem : BaseDslStateItem() {
                 itemHolder.tv(R.id.base_text_view)?.text = itemErrorThrowable?.message
                     ?: itemHolder.context.getString(R.string.adapter_error)
                 itemHolder.clickItem {
-                    if (itemState == LOAD_MORE_ERROR || itemState == _LOAD_MORE_RETRY) {
-                        //失败的情况下, 点击触发重新加载
-                        _notifyLoadMore(itemHolder)
-                        updateAdapterItem()
+                    if (itemEnableRetry) {
+                        if (itemState == LOAD_MORE_ERROR || itemState == _LOAD_MORE_RETRY) {
+                            //失败的情况下, 点击触发重新加载
+                            _notifyLoadMore(itemHolder)
+                            updateAdapterItem()
+                        }
                     }
                 }
             } else {

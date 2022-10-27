@@ -65,7 +65,7 @@ open class DslAdapterStatusItem : BaseDslStateItem() {
                 ?: itemHolder.context.getString(R.string.adapter_error)
             //出现错误后, 触击刷新
             itemHolder.clickItem {
-                if (itemState == ADAPTER_STATUS_ERROR) {
+                if (itemEnableRetry && itemState == ADAPTER_STATUS_ERROR) {
                     _notifyRefresh(itemHolder)
                     itemDslAdapter?.updateAdapterStatus(ADAPTER_STATUS_LOADING)
                 }

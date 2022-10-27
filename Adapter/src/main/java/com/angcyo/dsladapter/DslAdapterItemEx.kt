@@ -6,6 +6,7 @@ import androidx.core.math.MathUtils.clamp
 import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.angcyo.dsladapter.annotation.UpdateByNotify
 import com.angcyo.dsladapter.data.Page
 import com.angcyo.dsladapter.data.UpdateDataConfig
 import com.angcyo.dsladapter.data.updateData
@@ -525,6 +526,16 @@ fun DslAdapterItem.replaceIt(newItem: DslAdapterItem?, adapter: DslAdapter? = nu
         }
     }
     return reslut
+}
+
+/**更新[DslAdapterItem]的选中状态, 并且刷新界面*/
+@UpdateByNotify
+fun DslAdapterItem.updateItemSelected(select: Boolean) {
+    if (itemIsSelected == select) {
+        return
+    }
+    itemIsSelected = select
+    updateAdapterItem()
 }
 
 //</editor-fold desc="操作扩展">
