@@ -32,13 +32,26 @@ android {
     viewBinding {
         enabled = true
     }
+
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+        //https://www.jianshu.com/p/93678f8b3421
+        disable 'GoogleAppIndexingWarning'
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    // For Kotlin projects https://developer.android.com/studio/write/java8-support.html
+    /*kotlinOptions { jvmTarget = "1.8" }*/
+    kotlinOptions { jvmTarget = JavaVersion.VERSION_1_8 }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'androidx.appcompat:appcompat:1.4.1'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'com.google.android.material:material:1.5.0'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     testImplementation 'junit:junit:4.13.2'

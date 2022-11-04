@@ -24,12 +24,26 @@ android {
     viewBinding {
         enabled = true
     }
+
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+        //https://www.jianshu.com/p/93678f8b3421
+        disable 'GoogleAppIndexingWarning'
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    // For Kotlin projects https://developer.android.com/studio/write/java8-support.html
+    /*kotlinOptions { jvmTarget = "1.8" }*/
+    kotlinOptions { jvmTarget = JavaVersion.VERSION_1_8 }
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
 
-    def lifecycle_version = "2.4.1"
+    def lifecycle_version = "2.5.1"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
 }
