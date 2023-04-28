@@ -103,12 +103,11 @@ open class HoverItemDecoration : RecyclerView.ItemDecoration() {
     }
 
     private val attachStateChangeListener = object : View.OnAttachStateChangeListener {
-        override fun onViewDetachedFromWindow(view: View?) {
+        override fun onViewDetachedFromWindow(view: View) {
             removeAllHoverView()
         }
 
-        override fun onViewAttachedToWindow(view: View?) {
-
+        override fun onViewAttachedToWindow(view: View) {
         }
     }
 
@@ -265,12 +264,15 @@ open class HoverItemDecoration : RecyclerView.ItemDecoration() {
 
     /**当前悬浮分割线的坐标.*/
     val overDecorationRect = Rect()
+
     /**下一个悬浮分割线的坐标.*/
     internal val nextDecorationRect = Rect()
+
     /**分割线的所在位置*/
     var overAdapterPosition = RecyclerView.NO_POSITION
 
     private var tempRect = Rect()
+
     /**
      * 核心方法, 用来实时监测界面上 需要浮动的 分割线.
      * */

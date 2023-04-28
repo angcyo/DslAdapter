@@ -13,6 +13,7 @@ import androidx.annotation.AnimRes
 import androidx.annotation.AnimatorRes
 import androidx.annotation.AnyThread
 import androidx.annotation.CallSuper
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.math.MathUtils.clamp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -22,6 +23,7 @@ import com.angcyo.dsladapter.SwipeMenuHelper.Companion.SWIPE_MENU_TYPE_DEFAULT
 import com.angcyo.dsladapter.SwipeMenuHelper.Companion.SWIPE_MENU_TYPE_FLOWING
 import com.angcyo.dsladapter.annotation.*
 import com.angcyo.dsladapter.internal.ThrottleClickListener
+import com.angcyo.dsladapter.item.IDslItem
 import java.lang.ref.WeakReference
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -73,7 +75,7 @@ open class DslAdapterItem : LifecycleOwner {
         /**占满宽度的item*/
         const val FULL_ITEM = -1
 
-        /**节流间隔时长*/
+        /**节流间隔时长, 毫秒*/
         var DEFAULT_THROTTLE_INTERVAL = ThrottleClickListener.DEFAULT_THROTTLE_INTERVAL
     }
 
@@ -101,11 +103,22 @@ open class DslAdapterItem : LifecycleOwner {
         }
     }
 
-    /**移除[item]*/
+    /**移除[item], 注意:此方式只是删除了item, 界面并不会刷新.
+     * [removeAdapterItemJust]*/
     @UpdateFlag
     open fun removeAdapterItem() {
         itemDslAdapter?.apply {
             removeItemFromAll(this@DslAdapterItem)
+        }.elseNull {
+            L.w("跳过操作! updateAdapterItem需要[itemDslAdapter],请赋值.")
+        }
+    }
+
+    /**移除[item], 立即刷新界面*/
+    @UpdateByDiff
+    open fun removeAdapterItemJust() {
+        itemDslAdapter?.render {
+            removeAdapterItem()
         }.elseNull {
             L.w("跳过操作! updateAdapterItem需要[itemDslAdapter],请赋值.")
         }
@@ -300,7 +313,7 @@ open class DslAdapterItem : LifecycleOwner {
 
     var itemLongClick: ((View) -> Boolean)? = null
 
-    /**点击节流间隔时长*/
+    /**点击节流间隔时长, 忽略多少毫秒内的重复点击*/
     var itemClickThrottleInterval: Long = DEFAULT_THROTTLE_INTERVAL
 
     //使用节流方式处理点击事件
@@ -380,6 +393,7 @@ open class DslAdapterItem : LifecycleOwner {
                         animator.setTarget(itemHolder.itemView)
                         animator.startDelay = _itemAnimateDelay
                         itemHolder.itemView.setAnimator(animator)
+                        itemHolder.itemView.clearAnimatorProperty()
                         animator.start()
                         _itemAnimateDelay = -2 //动画已执行标识
                     }
@@ -452,9 +466,21 @@ open class DslAdapterItem : LifecycleOwner {
         //设置
         if (itemMinWidth != undefined_size) {
             itemView.minimumWidth = itemMinWidth
+            try {
+                when (itemView) {
+                    is ConstraintLayout -> itemView.minWidth = itemMinWidth
+                }
+            } catch (e: Exception) {
+            }
         }
         if (itemMinHeight != undefined_size) {
             itemView.minimumHeight = itemMinHeight
+            try {
+                when (itemView) {
+                    is ConstraintLayout -> itemView.minHeight = itemMinHeight
+                }
+            } catch (e: Exception) {
+            }
         }
 
         //初始化默认值
@@ -495,18 +521,47 @@ open class DslAdapterItem : LifecycleOwner {
         adapterItem: DslAdapterItem,
         payloads: List<Any>
     ) {
+        if (this is IDslItem) {
+            initItemConfig(itemHolder, itemPosition, adapterItem, payloads)
+        }
     }
 
     open fun _initItemStyle(itemHolder: DslViewHolder) {
+        val lastPositionInGroup = isLastPositionInGroup()
         val lineView = itemHolder.view(R.id.lib_item_line_view)
         if (lineView != null) {
             val showLine = itemShowLastLineView
             if (showLine == null) {
                 if (itemAutoHideLastLineView) {
-                    lineView.gone(isLastPositionInGroup())
+                    lineView.gone(lastPositionInGroup)
                 }
             } else {
                 lineView.visible(showLine)
+            }
+        }
+        //padding
+        if (itemAutoPaddingFirstOrLast && (itemFirstPaddingTop != null || itemLastPaddingBottom != null)) {
+            itemHolder.itemView.apply {
+                var tagPaddingTop = getTag(R.id.lib_tag_padding_top) as? Int
+                if (tagPaddingTop == null) {
+                    setTag(R.id.lib_tag_padding_top, paddingTop)
+                    tagPaddingTop = paddingTop
+                }
+
+                var tagPaddingBottom = getTag(R.id.lib_tag_padding_bottom) as? Int
+                if (tagPaddingBottom == null) {
+                    setTag(R.id.lib_tag_padding_bottom, paddingBottom)
+                    tagPaddingBottom = paddingBottom
+                }
+
+                setPadding(
+                    paddingLeft,
+                    if (isFirstPositionInGroup()) itemFirstPaddingTop
+                        ?: tagPaddingTop else tagPaddingTop,
+                    paddingRight,
+                    if (lastPositionInGroup) itemLastPaddingBottom
+                        ?: tagPaddingBottom else tagPaddingBottom
+                )
             }
         }
     }
@@ -772,6 +827,19 @@ open class DslAdapterItem : LifecycleOwner {
         _itemGroupParamsCache = null
     }
 
+    /**当前的[DslAdapterItem]是否在分组中的第一个*/
+    open fun isFirstPositionInGroup(useFilterList: Boolean = true): Boolean {
+        val adapter = itemDslAdapter ?: return false
+        return if (itemGroups.isEmpty()) {
+            //简单分组
+            val allItemList = adapter.getDataList(useFilterList)
+            val index = allItemList.indexOf(this)
+            index == 0
+        } else {
+            itemGroupParams.isFirstPosition()
+        }
+    }
+
     /**当前的[DslAdapterItem]是否在分组中的最后一个*/
     open fun isLastPositionInGroup(useFilterList: Boolean = true): Boolean {
         val adapter = itemDslAdapter ?: return false
@@ -796,6 +864,29 @@ open class DslAdapterItem : LifecycleOwner {
     var itemIsHover: Boolean = itemIsGroupHead
 
     //</editor-fold>
+
+    //<editor-fold desc="特性属性">
+
+    /**自动隐藏分组最后一个item的[R.id.lib_item_line_view]view*/
+    var itemAutoHideLastLineView: Boolean = true
+
+    /**是否强制隐藏/显示线*/
+    var itemShowLastLineView: Boolean? = null
+
+    //---
+
+    /**
+     * 自动在第一个/最后一个item,填充paddingTop/paddingBottom
+     * [itemLastPaddingBottom] [itemFirstPaddingTop]的使能开关*/
+    var itemAutoPaddingFirstOrLast: Boolean = true
+
+    /**最后一个item, 自动添加[paddingBottom]*/
+    var itemLastPaddingBottom: Int? = null
+
+    /**第一个item, 自动添加[paddingTop]*/
+    var itemFirstPaddingTop: Int? = null
+
+    //</editor-fold desc="特性属性">
 
     //<editor-fold desc="表单/分割线配置">
 
@@ -822,12 +913,6 @@ open class DslAdapterItem : LifecycleOwner {
      * 仅绘制offset的区域
      * */
     var onlyDrawOffsetArea = false
-
-    /**自动隐藏分组最后一个item的[R.id.lib_item_line_view]view*/
-    var itemAutoHideLastLineView: Boolean = true
-
-    /**是否强制隐藏/显示线*/
-    var itemShowLastLineView: Boolean? = null
 
     /**不绘制分组最后一个item的底部分割线*/
     var noDrawLastItemDecoration: Boolean = true
@@ -1055,9 +1140,9 @@ open class DslAdapterItem : LifecycleOwner {
     /**标识当前的item是否被移除了, 被移除之后, 会影响[thisAreItemsTheSame]的比对*/
     var itemRemoveFlag: Boolean = false
 
-    /**是否需要更新item,等同于[itemChanging], 但不会触发[itemChanged]
+    /**是否需要更新item,等同于[itemChanging], 但是不会触发[itemChanged]的回调
      * 在[diffResult]之后会被重置为[false]
-     * * 默认为[true], 确保每次new的[DslAdapterItem]有机会更新数据
+     * 默认为[true], 确保每次new的[DslAdapterItem]有机会更新数据
      * [itemChanging]*/
     var itemUpdateFlag: Boolean = true
 
@@ -1157,7 +1242,8 @@ open class DslAdapterItem : LifecycleOwner {
 
     //<editor-fold desc="定向更新">
 
-    /**标识此[Item]是否发生过改变, 可用于实现退出界面提示是否保存内容.*/
+    /**标识此[Item]是否发生过改变, 可用于实现退出界面提示是否保存内容.
+     * [itemChanging]*/
     @UpdateByDiff
     @UpdateByNotify
     var itemChanged = false
@@ -1266,7 +1352,9 @@ open class DslAdapterItem : LifecycleOwner {
             val old = field
             field = value
             if (old != value) {
+                itemSelectMutexFromItem = this
                 onSetItemSelected(value)
+                itemSelectMutexFromItem = null
             }
         }
 
@@ -1279,15 +1367,23 @@ open class DslAdapterItem : LifecycleOwner {
         it.className() == this.className()
     }
 
+    /**互斥选择触发时, 是由那个[DslAdapterItem]产生的*/
+    var itemSelectMutexFromItem: DslAdapterItem? = null
+
     /**选中状态改变回调*/
     @UpdateByNotify
     open fun onSetItemSelected(select: Boolean) {
         if (select && itemSingleSelectMutex) {
+            val fromItem = this
             itemDslAdapter?.eachItem { index, dslAdapterItem ->
                 if (dslAdapterItem != this && itemIsSelectMutexAction(dslAdapterItem)) {
                     //互斥操作
-                    dslAdapterItem.itemIsSelected = false
-                    dslAdapterItem.updateAdapterItem()
+                    if (dslAdapterItem.itemIsSelected) {
+                        dslAdapterItem.itemSelectMutexFromItem = fromItem
+                        dslAdapterItem.itemIsSelected = false
+                        dslAdapterItem.updateAdapterItem()
+                        dslAdapterItem.itemSelectMutexFromItem = null //清空
+                    }
                 }
             }
         }
@@ -1505,9 +1601,8 @@ open class DslAdapterItem : LifecycleOwner {
 
     val lifecycleRegistry = LifecycleRegistry(this)
 
-    override fun getLifecycle(): Lifecycle {
-        return lifecycleRegistry
-    }
+    override val lifecycle: Lifecycle
+        get() = lifecycleRegistry
 
     /**请勿覆盖[itemViewAttachedToWindow]*/
     @CallSuper

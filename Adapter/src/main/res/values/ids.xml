@@ -15,4 +15,11 @@
     <!--取出来的值, 表示属于那个[DslAdapterItem.itemTag]-->
     <item name="lib_tag_dsl_item_decoration" type="id" />
 
+    <!--保存view的enable状态-->
+    <item name="lib_tag_enable" type="id" />
+
+    <!--保存paddingBottom-->
+    <item name="lib_tag_padding_bottom" type="id" />
+    <!--保存paddingTop-->
+    <item name="lib_tag_padding_top" type="id" />
 </resources>

@@ -13,41 +13,52 @@
         tools:ignore="AllowBackup,GoogleAppIndexingWarning">
         <activity
             android:name=".TreeDemoActivity"
+            android:exported="false"
             android:label="树结构示例" />
         <activity
             android:name=".StaggeredGridLayoutActivity"
+            android:exported="false"
             android:label="拖拽+滑动删除示例" />
         <activity
             android:name=".SelectorDemoActivity"
+            android:exported="false"
             android:label="选择功能" />
         <activity
             android:name=".GroupDemoActivity"
+            android:exported="false"
             android:label="群组(线性布局)功能" />
         <activity
             android:name=".GroupGridDemoActivity"
+            android:exported="false"
             android:label="群组(网格布局)功能" />
         <activity
             android:name=".GridFillDemoActivity"
+            android:exported="false"
             android:label="网格,群组,填充功能示例" />
         <activity
             android:name=".LoadMoreActivity"
+            android:exported="false"
             android:label="加载更多示例" />
         <activity
             android:name=".AdapterStatusActivity"
+            android:exported="false"
             android:label="情感图示例" />
         <activity
             android:name=".LoadDataActivity"
+            android:exported="false"
             android:label="APP数据加载示例" />
         <activity
             android:name=".SwipeMenuActivity"
+            android:exported="false"
             android:label="侧滑菜单使用示例" />
         <activity
             android:name=".SwipeDragActivity"
+            android:exported="false"
             android:label="侧滑菜单+拖拽使用示例" />
         <activity
             android:name=".MainActivity"
-            android:label="@string/app_name"
-            android:exported="true">
+            android:exported="true"
+            android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

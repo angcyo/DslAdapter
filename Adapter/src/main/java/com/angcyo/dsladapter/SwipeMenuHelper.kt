@@ -248,43 +248,39 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback) : ItemDecoration
 
     val itemTouchHelperGestureListener = object : GestureDetector.SimpleOnGestureListener() {
 
-        override fun onDown(e: MotionEvent?): Boolean {
-            if (e != null) {
-                val findSwipedView = findSwipedView(e)
-                if (findSwipedView == null) {
-                    _needHandleTouch = false
-                    closeSwipeMenu(_swipeMenuViewHolder)
-                } else {
-                    findSwipedView.apply {
-                        _recyclerView?.adapter?.let {
-                            if (it is DslAdapter) {
-                                it[adapterPosition, true, false]?.apply {
-                                    if (_itemSwipeMenuHelper != this@SwipeMenuHelper) {
-                                        _itemSwipeMenuHelper = this@SwipeMenuHelper
-                                    }
+        override fun onDown(e: MotionEvent): Boolean {
+            val findSwipedView = findSwipedView(e)
+            if (findSwipedView == null) {
+                _needHandleTouch = false
+                closeSwipeMenu(_swipeMenuViewHolder)
+            } else {
+                findSwipedView.apply {
+                    _recyclerView?.adapter?.let {
+                        if (it is DslAdapter) {
+                            it[adapterPosition, true, false]?.apply {
+                                if (_itemSwipeMenuHelper != this@SwipeMenuHelper) {
+                                    _itemSwipeMenuHelper = this@SwipeMenuHelper
                                 }
                             }
                         }
+                    }
 
-                        if (_lastValueAnimator?.isRunning == true ||
-                            (_downViewHolder != null && _downViewHolder != this)
-                        ) {
-                            //快速按下其他item
+                    if (_lastValueAnimator?.isRunning == true ||
+                        (_downViewHolder != null && _downViewHolder != this)
+                    ) {
+                        //快速按下其他item
+                        _needHandleTouch = false
+                        //closeSwipeMenu(_downViewHolder)
+                    } else {
+                        _downViewHolder = this
+                        //L.i("down:${this.adapterPosition}")
+
+                        if (_swipeMenuViewHolder != null && _downViewHolder != _swipeMenuViewHolder) {
                             _needHandleTouch = false
-                            //closeSwipeMenu(_downViewHolder)
-                        } else {
-                            _downViewHolder = this
-                            //L.i("down:${this.adapterPosition}")
-
-                            if (_swipeMenuViewHolder != null && _downViewHolder != _swipeMenuViewHolder) {
-                                _needHandleTouch = false
-                                closeSwipeMenu(_swipeMenuViewHolder)
-                            }
+                            closeSwipeMenu(_swipeMenuViewHolder)
                         }
                     }
                 }
-            } else {
-                _needHandleTouch = false
             }
             return super.onDown(e)
         }
@@ -416,8 +412,8 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback) : ItemDecoration
         }
 
         override fun onFling(
-            e1: MotionEvent?,
-            e2: MotionEvent?,
+            e1: MotionEvent,
+            e2: MotionEvent,
             velocityX: Float,
             velocityY: Float
         ): Boolean {

@@ -530,7 +530,7 @@ fun DslAdapterItem.replaceIt(newItem: DslAdapterItem?, adapter: DslAdapter? = nu
 
 /**更新[DslAdapterItem]的选中状态, 并且刷新界面*/
 @UpdateByNotify
-fun DslAdapterItem.updateItemSelected(select: Boolean) {
+fun DslAdapterItem.updateItemSelected(select: Boolean = true) {
     if (itemIsSelected == select) {
         return
     }

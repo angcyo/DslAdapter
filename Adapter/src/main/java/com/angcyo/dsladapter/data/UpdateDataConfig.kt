@@ -5,6 +5,7 @@ import com.angcyo.dsladapter.annotation.UpdateByDiff
 import com.angcyo.dsladapter.annotation.UpdateFlag
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.reflect.KClass
 
 /**
  *数据更新Dsl配置项
@@ -15,6 +16,9 @@ import kotlin.math.min
  */
 
 class UpdateDataConfig {
+    /**从第几页开始更新*/
+    var startPage: Int = Page.FIRST_PAGE_INDEX
+
     /**需要加载的页码, 会偏移到指定位置*/
     var updatePage: Int = Page.FIRST_PAGE_INDEX
 
@@ -120,7 +124,7 @@ fun UpdateDataConfig.updateData(originList: List<DslAdapterItem>): List<DslAdapt
         val oldRemoveList = mutableListOf<DslAdapterItem>()
         val newAddList = mutableListOf<DslAdapterItem>()
 
-        val updateStartIndex = max(0, updatePage - 1) * pageSize
+        val updateStartIndex = max(0, updatePage - startPage) * pageSize
         val updateEndIndex = updateStartIndex + updateSize()
 
         for (i in updateStartIndex until updateEndIndex) {
@@ -287,6 +291,7 @@ fun DslAdapter.updateAdapterErrorState(error: Throwable?) {
                 dslAdapterStatusItem.itemErrorThrowable = error
                 toError()
             }
+
             isAdapterStatusLoading() -> toNone()
             else -> toLoadMoreError()
         }
@@ -339,6 +344,17 @@ fun <Item : DslAdapterItem, Bean> DslAdapter.loadDataEnd(
 
 @UpdateByDiff
 fun <Item : DslAdapterItem, Bean> DslAdapter.loadDataEndIndex(
+    itemClass: KClass<Item>,
+    dataList: List<Bean>?,
+    error: Throwable?,
+    page: Page,
+    initItem: Item.(data: Bean, index: Int) -> Unit = { _, _ -> }
+) {
+    loadDataEndIndex(itemClass.java, dataList, error, page, initItem)
+}
+
+@UpdateByDiff
+fun <Item : DslAdapterItem, Bean> DslAdapter.loadDataEndIndex(
     itemClass: Class<Item>,
     dataList: List<Bean>?,
     error: Throwable?,
@@ -356,6 +372,7 @@ fun <Item : DslAdapterItem, Bean> DslAdapter.loadDataEndIndex(
 
     //更新数据源
     updateData {
+        startPage = page.firstPageIndex
         updatePage = page.requestPageIndex
         pageSize = page.requestPageSize
         updateDataList = dataList as List<Any>?

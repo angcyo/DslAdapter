@@ -11,6 +11,7 @@ import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.os.Looper
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
@@ -91,6 +92,27 @@ fun View.cancelAnimator() {
         animator = tag
     }
     animator?.cancel()
+}
+
+/**清空属性动画的相关属性*/
+fun View.clearAnimatorProperty(
+    scale: Boolean = true,
+    translation: Boolean = true,
+    alpha: Boolean = true
+) {
+    if (scale) {
+        scaleX = 1f
+        scaleY = 1f
+    }
+
+    if (translation) {
+        translationX = 0f
+        translationY = 0f
+    }
+
+    if (alpha) {
+        this.alpha = 1f
+    }
 }
 
 fun RecyclerView.eachChildRViewHolder(
@@ -510,11 +532,37 @@ fun ViewGroup.eachChild(recursively: Boolean = false, map: (index: Int, child: V
         val childAt = getChildAt(index)
         map.invoke(index, childAt)
         if (recursively && childAt is ViewGroup) {
-            childAt.eachChild(recursively, map)
+            childAt.eachChild(true, map)
         }
     }
 }
 
+fun ViewGroup.each(recursively: Boolean = false, map: (child: View) -> Unit) {
+    eachChild(recursively) { _, child ->
+        map.invoke(child)
+    }
+}
+
+/**清空之前所有视图, 使用[layoutId]重新渲染*/
+fun ViewGroup.replace(@LayoutRes layoutId: Int, attachToRoot: Boolean = true): View {
+    if (childCount > 0 && layoutId != -1) {
+        removeAllViews()
+    }
+    return inflate(layoutId, attachToRoot)
+}
+
+/**
+ * 创建一个[MotionEvent]事件, 请主动调用 [android.view.MotionEvent.recycle]方法*/
+fun motionEvent(action: Int = MotionEvent.ACTION_UP, x: Float = 0f, y: Float = 0f): MotionEvent {
+    return MotionEvent.obtain(
+        nowTime(),
+        nowTime(),
+        action,
+        x,
+        y,
+        0
+    )
+}
 
 //<editor-fold desc="Dsl吸附">
 
@@ -522,6 +570,9 @@ val Activity._vh: DslViewHolder
     get() = window.decorView.dslViewHolder()
 
 val Fragment._vh: DslViewHolder?
+    get() = view?.dslViewHolder()
+
+val androidx.fragment.app.Fragment._vh: DslViewHolder?
     get() = view?.dslViewHolder()
 
 /**从[View]中, 获取挂载的[DslViewHolder].如果没有, 则使用本身创建一个, 并设置给tag*/

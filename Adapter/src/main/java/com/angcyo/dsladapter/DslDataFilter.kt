@@ -25,6 +25,9 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
         /**默认抖动检查时长, 毫秒. 如果多次连续调用时长小于此时间, 则跳过处理*/
         var DEFAULT_SHAKE_DELAY = 6L
 
+        /**调试信息开关*/
+        var LOG = BuildConfig.DEBUG
+
         //异步调度器
         private val asyncExecutor: ExecutorService by lazy {
             Executors.newCachedThreadPool()
@@ -245,14 +248,21 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
             val resultList = mutableListOf<DslAdapterItem>()
 
             val startTime = nowTime()
-            L.v("${dslAdapter.hash()}:${hash()} 开始计算Diff:$startTime")
-            val diffResult = calculateDiff(resultList)
+            val logBuilder = StringBuilder()
+            if (LOG) logBuilder.append("${dslAdapter.hash()}:${hash()} 开始计算Diff:$startTime")
+            val diffResult = calculateDiff(resultList, logBuilder) //diff
             val nowTime = nowTime()
-            val s = (nowTime - startTime) / 1000
+            val dt = nowTime - startTime
+            val s = dt / 1000
             //val ms = ((nowTime - startTime) % 1000) * 1f / 1000
-            val ms = (nowTime - startTime) % 1000
+            val ms = dt % 1000
             //L.v("${hash()} Diff计算耗时:${String.format("%.3f", s + ms)}s")
-            L.v("${dslAdapter.hash()}:${hash()} Diff计算耗时:${s}s${ms}ms")
+            if (LOG) {
+                logBuilder.append(" Diff计算耗时:${s}s${ms}ms")
+                if (dt > 20) {
+                    L.v(logBuilder)
+                }
+            }
 
             val oldSize = filterDataList.size
             //因为是异步操作, 所以在延迟前, 就要覆盖 filterDataList 数据源
@@ -282,7 +292,10 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
         }
 
         /**计算[Diff]*/
-        private fun calculateDiff(resultList: MutableList<DslAdapterItem>): DiffUtil.DiffResult {
+        private fun calculateDiff(
+            resultList: MutableList<DslAdapterItem>,
+            logBuilder: StringBuilder
+        ): DiffUtil.DiffResult {
             //2个数据源
             val oldList = ArrayList(filterDataList)
             val newList = filterItemList(dslAdapter.adapterItems)
@@ -292,7 +305,7 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
 
             resultList.addAll(_newList)
 
-            L.i("${dslAdapter.hash()}:${this.hash()} 数据列表->原:${oldList.size} 后:${newList.size} 终:${_newList.size}")
+            if (LOG) logBuilder.append(" 数据列表->原:${oldList.size} 后:${newList.size} 终:${_newList.size}")
 
             //开始计算diff
             val diffResult = DiffUtil.calculateDiff(
@@ -418,7 +431,15 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
 
             //任务结束
             val nowTime = System.currentTimeMillis()
-            L.i("${dslAdapter.hash()}:${hash()} 界面更新结束, 总耗时${LTime.time(_taskStartTime, nowTime)}")
+            if (LOG) {
+                if (nowTime - _taskStartTime > 20) {
+                    L.d(
+                        "${dslAdapter.hash()}:${hash()} 界面更新结束, 总耗时${
+                            LTime.time(_taskStartTime, nowTime)
+                        }"
+                    )
+                }
+            }
             _updateTaskLit.remove(this)
             taskCancel.set(true)
         }
@@ -443,7 +464,7 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
             val fromItem = _params!!.fromDslAdapterItem!!
 
             if (dependItemList.isNotEmpty()) {
-                L.v("来自:${fromItem.simpleHash()} tag:${fromItem.itemTag}的更新↓")
+                if (LOG) L.v("来自:${fromItem.simpleHash()} tag:${fromItem.itemTag}的更新↓")
             }
 
             dependItemList.forEachIndexed { index, dependItem ->
@@ -453,7 +474,7 @@ open class DslDataFilter(val dslAdapter: DslAdapter) {
                     }
                     itemUpdateFromListenerList.forEach { it(fromItem) }
                 }
-                L.v("$index->通知更新:${dependItem.simpleHash()} tag:${dependItem.itemTag}")
+                if (LOG) L.v("$index->通知更新:${dependItem.simpleHash()} tag:${dependItem.itemTag}")
             }
         }
 

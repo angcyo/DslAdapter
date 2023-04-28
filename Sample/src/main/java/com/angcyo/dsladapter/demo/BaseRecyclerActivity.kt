@@ -11,7 +11,6 @@ import com.angcyo.dsladapter.DslItemDecoration
 import com.angcyo.dsladapter.DslViewHolder
 import com.angcyo.dsladapter.HoverItemDecoration
 import com.angcyo.dsladapter.dsl.AppAdapterStatusItem
-import kotlinx.android.synthetic.main.base_recycler_layout.*
 
 /**
  *
@@ -48,7 +47,7 @@ abstract class BaseRecyclerActivity : AppCompatActivity() {
     lateinit var recyclerView: RecyclerView
 
     open fun initBaseLayout() {
-        setSupportActionBar(toolbar)
+        setSupportActionBar(dslViewHolder.v(R.id.toolbar))
         dslViewHolder.v<RecyclerView>(R.id.base_recycler_view)?.apply {
             recyclerView = this
 

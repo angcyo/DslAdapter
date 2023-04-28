@@ -2,11 +2,11 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion Integer.parseInt(C_SDK)
+    compileSdk Integer.parseInt(C_SDK)
 
     defaultConfig {
-        minSdkVersion Integer.parseInt(M_SDK)
-        targetSdkVersion Integer.parseInt(T_SDK)
+        minSdk Integer.parseInt(M_SDK)
+        targetSdk Integer.parseInt(T_SDK)
     }
     buildTypes {
         release {
@@ -16,13 +16,19 @@ android {
     }
 
     //https://developer.android.google.cn/topic/libraries/data-binding/start
-    dataBinding {
+    /*dataBinding {
         enabled = false
-    }
+    }*/
 
     //https://developer.android.google.cn/topic/libraries/view-binding
-    viewBinding {
+    /*viewBinding {
         enabled = true
+    }*/
+
+    buildFeatures {
+        //https://developer.android.google.cn/studio/releases/gradle-plugin/4.0.0#viewbinding-support
+        viewBinding false
+        dataBinding false
     }
 
     lintOptions {
@@ -42,8 +48,17 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.recyclerview:recyclerview:1.2.1'
+    //https://mvnrepository.com/artifact/androidx.recyclerview/recyclerview
+    implementation 'androidx.recyclerview:recyclerview:1.3.0'
 
-    def lifecycle_version = "2.5.1"
+    //https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-runtime-ktx
+    def lifecycle_version = "2.6.1"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
+
+    //https://mvnrepository.com/artifact/androidx.constraintlayout/constraintlayout
+    compileOnly 'androidx.constraintlayout:constraintlayout:2.1.4'
+
+    //https://mvnrepository.com/artifact/androidx.fragment
+    //https://mvnrepository.com/artifact/androidx.fragment/fragment
+    compileOnly "androidx.fragment:fragment-ktx:1.5.7"
 }

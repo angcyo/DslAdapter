@@ -1,15 +1,18 @@
 package com.angcyo.dsladapter
 
+import android.annotation.SuppressLint
 import android.os.Build
 import android.util.SparseArray
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.widget.CompoundButton
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.IdRes
+import androidx.annotation.LayoutRes
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.angcyo.dsladapter.internal.ThrottleClickListener
@@ -29,7 +32,15 @@ open class DslViewHolder(
 
     companion object {
         var DEFAULT_INITIAL_CAPACITY = 32
+
+        /**[MotionEvent] 事件类型, 点击*/
+        const val EVENT_TYPE_CLICK = 1
+
+        /**[MotionEvent] 事件类型, 长按*/
+        const val EVENT_TYPE_LONG_PRESS = 2
     }
+
+    //<editor-fold desc="属性">
 
     val context get() = itemView.context
 
@@ -41,12 +52,21 @@ open class DslViewHolder(
     /**是否绑定过界面, 用来标识是否是首次创建布局*/
     var isBindView: Boolean = false
 
+    /**自定义的一些Flag*/
+    var flag: Int = 0
+
+    //</editor-fold desc="属性">
+
+    //<editor-fold desc="基础">
+
     /**
      * 清理缓存
      */
     fun clear() {
         sparseArray.clear()
     }
+
+    //</editor-fold desc="基础">
 
     //<editor-fold desc="事件处理">
 
@@ -92,6 +112,24 @@ open class DslViewHolder(
         }
     }
 
+    /**依次点击child view
+     * [recursively] 是否递归所有 ViewGroup */
+    fun clickChild(
+        @IdRes groupId: Int,
+        recursively: Boolean = false,
+        action: (childView: View) -> Unit
+    ) {
+        val view = view(groupId)
+        if (view is ViewGroup) {
+            view.each(recursively) {
+                click(it, action)
+            }
+        } else {
+            click(view, action)
+        }
+    }
+
+    /**点击元素, 顺便设置选中状态*/
     fun selectorClick(
         @IdRes id: Int,
         listener: (selected: Boolean) -> Boolean = { false /*不拦截默认处理*/ }
@@ -138,6 +176,13 @@ open class DslViewHolder(
 
     fun throttleClickItem(action: (View) -> Unit) {
         click(itemView, ThrottleClickListener(action = action))
+    }
+
+    fun throttleClickItem(
+        throttleInterval: Long = ThrottleClickListener.DEFAULT_THROTTLE_INTERVAL,
+        action: (View) -> Unit
+    ) {
+        click(itemView, ThrottleClickListener(throttleInterval, action = action))
     }
 
     fun throttleClickItem(vararg ids: Int, action: (View) -> Unit) {
@@ -204,6 +249,71 @@ open class DslViewHolder(
 
     fun touch(view: View?, block: (view: View, event: MotionEvent) -> Boolean) {
         view?.setOnTouchListener(block)
+    }
+
+    /**长按事件识别
+     * [EVENT_TYPE_CLICK]
+     * [EVENT_TYPE_LONG_PRESS]
+     * */
+    fun longTouch(
+        @IdRes id: Int,
+        block: (view: View, event: MotionEvent, eventType: Int?) -> Boolean
+    ) {
+        longTouch(v<View>(id), block)
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    fun longTouch(
+        view: View?,
+        block: (view: View, event: MotionEvent, eventType: Int?) -> Boolean
+    ) {
+
+        view?.let {
+            var eventType: Int? = null
+            var longRunnable: Runnable? = null
+            longRunnable = Runnable {
+                if (view.isPressed) {
+                    if (eventType == null || eventType == EVENT_TYPE_LONG_PRESS) {
+                        eventType = EVENT_TYPE_LONG_PRESS
+
+                        //发送长按事件
+                        val event = motionEvent(MotionEvent.ACTION_MOVE)
+                        block(view, event, eventType)
+                        event.recycle()
+
+                        view.postDelayed(
+                            longRunnable,
+                            ViewConfiguration.getLongPressTimeout().toLong()
+                        )
+                    }
+                }
+            }
+
+            //touch
+            view.setOnTouchListener { _, event ->
+                when (event.actionMasked) {
+                    MotionEvent.ACTION_DOWN -> {
+                        view.isPressed = true //按下的状态
+                        //长按检测
+                        view.postDelayed(
+                            longRunnable,
+                            ViewConfiguration.getLongPressTimeout().toLong()
+                        )
+                    }
+
+                    MotionEvent.ACTION_MOVE -> Unit
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        view.isPressed = false
+                        if (eventType == null) {
+                            block(view, event, EVENT_TYPE_CLICK)
+                        }
+                        view.removeCallbacks(longRunnable)
+                        eventType = null
+                    }
+                }
+                true
+            }
+        }
     }
 
     /**初始化, 点击之后再次初始化*/
@@ -311,7 +421,7 @@ open class DslViewHolder(
 
     fun enable(
         @IdRes resId: Int,
-        enable: Boolean = true,
+        enable: Boolean? = true,
         recursive: Boolean = true
     ): DslViewHolder {
         val view = v<View>(resId)
@@ -319,20 +429,38 @@ open class DslViewHolder(
         return this
     }
 
-    fun enable(view: View?, enable: Boolean, recursive: Boolean = true) {
+    /**[enable] 为null时, 表示恢复之前的状态*/
+    fun enable(view: View?, enable: Boolean?, recursive: Boolean = true) {
         if (view == null) {
             return
         }
+        val _enable = if (enable == null) {
+            //恢复状态
+            val oldEnable = view.getTag(R.id.lib_tag_enable)
+            if (oldEnable is Boolean) {
+                oldEnable
+            } else {
+                return
+            }
+        } else {
+            enable
+        }
         if (view is ViewGroup && recursive) {
             for (i in 0 until view.childCount) {
-                enable(view.getChildAt(i), enable, recursive)
+                enable(view.getChildAt(i), _enable, true)
             }
         }
-        if (view.isEnabled != enable) {
-            view.isEnabled = enable
+        if (view.isEnabled != _enable) {
+            view.setTag(R.id.lib_tag_enable, view.isEnabled)//保存状态
+            view.isEnabled = _enable
         }
         if (view is EditText) {
-            view.clearFocus()
+            if (view.isEnabled) {
+                view.clearFocus()
+                //view.requestFocus() //need?
+            } else {
+                view.clearFocus()
+            }
         }
     }
 
@@ -370,7 +498,7 @@ open class DslViewHolder(
     }
 
     fun visible(@IdRes resId: Int, visible: Boolean): DslViewHolder {
-        val view = v<View>(resId)
+        val view = v<View>(resId) ?: return this
         if (visible) {
             visible(view)
         } else {
@@ -380,7 +508,7 @@ open class DslViewHolder(
     }
 
     fun invisible(@IdRes resId: Int, invisible: Boolean): DslViewHolder {
-        val view = v<View>(resId)!!
+        val view = v<View>(resId) ?: return this
         if (invisible) {
             invisible(view)
         } else {
@@ -456,7 +584,7 @@ open class DslViewHolder(
         @IdRes resId: Int,
         check: Boolean = true,
         notify: Boolean = true,
-        onCheckedChanged: (buttonView: CompoundButton, isChecked: Boolean) -> Unit
+        onCheckedChanged: (checkView: CompoundButton, isChecked: Boolean) -> Unit
     ): CompoundButton? {
         return v<CompoundButton>(resId)?.apply {
             setOnCheckedChangeListener(onCheckedChanged)
@@ -566,5 +694,32 @@ open class DslViewHolder(
     }
 
     //</editor-fold desc="属性控制">
+
+    //<editor-fold desc="ViewGroup">
+
+    /**将[itemView]的所有内容替换成新的布局[layoutId]*/
+    fun replace(@LayoutRes layoutId: Int, attachToRoot: Boolean = true) {
+        replace(itemView, layoutId, attachToRoot)
+    }
+
+    /**将[itemView]的所有内容替换成新的布局[layoutId]
+     * [groupViewId] group的布局id*/
+    fun replace(
+        @IdRes groupViewId: Int,
+        @LayoutRes layoutId: Int,
+        attachToRoot: Boolean = true
+    ) {
+        replace(view(groupViewId), layoutId, attachToRoot)
+    }
+
+    /**[replace]*/
+    fun replace(rootView: View?, @LayoutRes layoutId: Int, attachToRoot: Boolean = true) {
+        if (rootView is ViewGroup) {
+            clear()
+            rootView.replace(layoutId, attachToRoot)
+        }
+    }
+
+    //</editor-fold desc="ViewGroup">
 
 }
