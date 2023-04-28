@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.*
 import com.angcyo.dsladapter.SwipeMenuHelper.Companion.SWIPE_MENU_TYPE_DEFAULT
 import com.angcyo.dsladapter.SwipeMenuHelper.Companion.SWIPE_MENU_TYPE_FLOWING
 import com.angcyo.dsladapter.annotation.*
+import com.angcyo.dsladapter.internal.RecyclerBottomLayout
 import com.angcyo.dsladapter.internal.ThrottleClickListener
 import com.angcyo.dsladapter.item.IDslItem
 import java.lang.ref.WeakReference
@@ -455,6 +456,10 @@ open class DslAdapterItem : LifecycleOwner {
     //初始化宽高
     open fun _initItemSize(itemHolder: DslViewHolder) {
         val itemView = itemHolder.itemView
+        if (itemView is RecyclerBottomLayout) {
+            //RecyclerBottomLayout不支持调整item height
+            return
+        }
 
         //初始化默认值
         if (itemMinWidth == undefined_size && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
