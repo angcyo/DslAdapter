@@ -60,5 +60,5 @@ dependencies {
 
     //https://mvnrepository.com/artifact/androidx.fragment
     //https://mvnrepository.com/artifact/androidx.fragment/fragment
-    compileOnly "androidx.fragment:fragment-ktx:1.5.7"
+    compileOnly "androidx.fragment:fragment-ktx:1.6.0"
 }

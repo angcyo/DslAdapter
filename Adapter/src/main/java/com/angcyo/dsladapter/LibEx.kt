@@ -905,3 +905,26 @@ fun ViewGroup.removeAllDslItem(predicate: (Int, DslAdapterItem?) -> Boolean = { 
 }
 
 //<editor-fold desc="DslAdapterItem操作">
+
+
+/**在指定元素的后面插入新元素
+ * @return -1:插入失败, index:对应的元素索引*/
+fun <T> MutableList<T>.addAfterWith(with: T, element: T): Int {
+    val index = indexOf(with)
+    if (index != -1) {
+        add(index + 1, element)
+        return index + 1
+    }
+    return -1
+}
+
+/**在指定元素的前面插入新元素
+ * @return -1:插入失败, index:对应的元素索引*/
+fun <T> MutableList<T>.addBeforeWith(with: T, element: T): Int {
+    val index = indexOf(with)
+    if (index != -1) {
+        add(index, element)
+        return index
+    }
+    return -1
+}

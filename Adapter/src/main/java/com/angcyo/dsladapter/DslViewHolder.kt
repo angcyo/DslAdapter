@@ -13,6 +13,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.IdRes
 import androidx.annotation.LayoutRes
+import androidx.annotation.MainThread
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.angcyo.dsladapter.internal.ThrottleClickListener
@@ -25,6 +26,8 @@ import java.lang.ref.WeakReference
  * @date 2019/08/09
  * Copyright (c) 2019 ShenZhen O&M Cloud Co., Ltd. All rights reserved.
  */
+
+@MainThread
 open class DslViewHolder(
     itemView: View,
     initialCapacity: Int = DEFAULT_INITIAL_CAPACITY
@@ -252,19 +255,22 @@ open class DslViewHolder(
     }
 
     /**长按事件识别
+     * [loopLongPress] 是否需要循环发送长按事件, 否则只发送一次
      * [EVENT_TYPE_CLICK]
      * [EVENT_TYPE_LONG_PRESS]
      * */
     fun longTouch(
         @IdRes id: Int,
+        loopLongPress: Boolean = false,
         block: (view: View, event: MotionEvent, eventType: Int?) -> Boolean
     ) {
-        longTouch(v<View>(id), block)
+        longTouch(v<View>(id), loopLongPress, block)
     }
 
     @SuppressLint("ClickableViewAccessibility")
     fun longTouch(
         view: View?,
+        loopLongPress: Boolean = false,
         block: (view: View, event: MotionEvent, eventType: Int?) -> Boolean
     ) {
 
@@ -281,10 +287,12 @@ open class DslViewHolder(
                         block(view, event, eventType)
                         event.recycle()
 
-                        view.postDelayed(
-                            longRunnable,
-                            ViewConfiguration.getLongPressTimeout().toLong()
-                        )
+                        if (loopLongPress) {
+                            view.postDelayed(
+                                longRunnable,
+                                ViewConfiguration.getLongPressTimeout().toLong()
+                            )
+                        }
                     }
                 }
             }
@@ -305,9 +313,20 @@ open class DslViewHolder(
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                         view.isPressed = false
                         if (eventType == null) {
-                            block(view, event, EVENT_TYPE_CLICK)
+                            eventType = EVENT_TYPE_CLICK
                         }
                         view.removeCallbacks(longRunnable)
+                    }
+                }
+                if (eventType == EVENT_TYPE_CLICK) {
+                    //发送点击事件
+                    block(view, event, EVENT_TYPE_CLICK)
+                } else {
+                    //其它事件转发, 用于自定义处理
+                    block(view, event, null)
+                }
+                when (event.actionMasked) {
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                         eventType = null
                     }
                 }
@@ -366,7 +385,7 @@ open class DslViewHolder(
         }
     }
 
-    fun postDelay(delayMillis: Long, runnable: () -> Unit) {
+    fun postDelay(delayMillis: Long = 0, runnable: () -> Unit) {
         postDelay(object : Runnable {
             override fun run() {
                 runnable.invoke()
@@ -404,7 +423,7 @@ open class DslViewHolder(
     }
 
     /**获取焦点*/
-    fun focused(view: View?) {
+    fun focused(view: View? = itemView) {
         view?.isFocusable = true
         view?.isFocusableInTouchMode = true
         view?.requestFocus()
@@ -544,11 +563,38 @@ open class DslViewHolder(
         return gone(v<View>(resId))
     }
 
-    fun gone(@IdRes resId: Int, gone: Boolean) {
+    fun goneIndex(index: Int, gone: Boolean = true): DslViewHolder {
+        val view = itemView
+        if (view is ViewGroup) {
+            val child = view.getChildAt(index)
+            if (child != null) {
+                gone(child, gone)
+            }
+        }
+        return this
+    }
+
+    fun gone(view: View, gone: Boolean): DslViewHolder {
+        if (gone) {
+            gone(view)
+        } else {
+            visible(view)
+        }
+        return this
+    }
+
+    fun gone(@IdRes resId: Int, gone: Boolean): DslViewHolder {
         if (gone) {
             gone(v<View>(resId))
         } else {
             visible(resId)
+        }
+        return this
+    }
+
+    fun gone(@IdRes vararg resId: Int) {
+        for (id in resId) {
+            gone(id)
         }
     }
 
