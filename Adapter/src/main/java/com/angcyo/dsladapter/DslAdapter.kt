@@ -5,6 +5,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.NonNull
+import androidx.databinding.DataBindingUtil
+import androidx.databinding.ViewDataBinding
 import androidx.recyclerview.widget.RecyclerView
 import com.angcyo.dsladapter.annotation.UpdateByDiff
 import com.angcyo.dsladapter.annotation.UpdateByNotify
@@ -119,8 +121,19 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         }
         //viewType, 就是布局的 Id, 这是设计核心原则.
         val dslViewHolder: DslViewHolder
-        val itemView: View = LayoutInflater.from(parent.context).inflate(layoutId, parent, false)
-        dslViewHolder = DslViewHolder(itemView)
+
+        val layoutInflater = LayoutInflater.from(parent.context)
+
+        //DataBinding
+        val binding: ViewDataBinding? =
+            DataBindingUtil.inflate(layoutInflater, layoutId, parent, false)
+
+        //default
+        val itemView: View = binding?.root ?: layoutInflater.inflate(layoutId, parent, false)
+
+        dslViewHolder = DslViewHolder(itemView).apply {
+            _binding = binding
+        }
         return dslViewHolder
     }
 

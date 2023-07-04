@@ -14,6 +14,7 @@ import android.widget.TextView
 import androidx.annotation.IdRes
 import androidx.annotation.LayoutRes
 import androidx.annotation.MainThread
+import androidx.databinding.ViewDataBinding
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.angcyo.dsladapter.internal.ThrottleClickListener
@@ -70,6 +71,20 @@ open class DslViewHolder(
     }
 
     //</editor-fold desc="基础">
+
+    //<editor-fold desc="DataBinding">
+
+    var _binding: ViewDataBinding? = null
+
+    /**获取指定类型的[ViewDataBinding]对象*/
+    fun <Binding> binding(): Binding? {
+        if (_binding != null) {
+            return _binding as? Binding
+        }
+        return null
+    }
+
+    //</editor-fold desc="DataBinding">
 
     //<editor-fold desc="事件处理">
 

@@ -1,6 +1,8 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
+apply plugin: 'kotlin-kapt'
+
 android {
     compileSdk Integer.parseInt(C_SDK)
 
@@ -28,7 +30,8 @@ android {
     buildFeatures {
         //https://developer.android.google.cn/studio/releases/gradle-plugin/4.0.0#viewbinding-support
         viewBinding false
-        dataBinding false
+        //https://developer.android.google.cn/jetpack/androidx/releases/databinding?hl=zh-cn
+        dataBinding true
     }
 
     lintOptions {
