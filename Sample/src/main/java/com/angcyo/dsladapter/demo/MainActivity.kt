@@ -5,9 +5,24 @@ import android.content.Intent
 import android.graphics.Color
 import android.view.Gravity
 import android.widget.TextView
-import com.angcyo.dsladapter.*
-import com.angcyo.dsladapter.dsl.*
+import com.angcyo.dsladapter.DslAdapter
+import com.angcyo.dsladapter.DslAdapterItem
+import com.angcyo.dsladapter.DslAdapterStatusItem
+import com.angcyo.dsladapter.dpi
+import com.angcyo.dsladapter.dsl.BindingData
+import com.angcyo.dsladapter.dsl.DslBindingTextItem
+import com.angcyo.dsladapter.dsl.DslDemoItem
+import com.angcyo.dsladapter.dsl.DslUpdateChildItem
+import com.angcyo.dsladapter.dsl.DslUpdateParentItem
+import com.angcyo.dsladapter.dsl.DslViewBindingItem
+import com.angcyo.dsladapter.dsl.DslWrapItem
+import com.angcyo.dsladapter.dsl.dslImageItem
+import com.angcyo.dsladapter.dsl.dslTextItem
+import com.angcyo.dsladapter.dslItem
 import com.angcyo.dsladapter.filter.batchLoad
+import com.angcyo.dsladapter.findItemByTag
+import com.angcyo.dsladapter.nowTime
+import com.angcyo.dsladapter.renderEmptyItem
 
 /**
  *
@@ -194,7 +209,21 @@ class MainActivity : BaseRecyclerActivity() {
                 }
             }
 
+            //ViewBinding测试
             this + DslViewBindingItem()
+
+            //DataBinding测试
+            DslBindingTextItem()() {
+                itemData = BindingData().apply {
+                    text = "DataBinding演示\n?点我试试?~~"
+                }
+
+                itemClick = {
+                    itemData = BindingData().apply {
+                        text = "\\(^o^)/\nClick...${nowTime()}"
+                    }
+                }
+            }
 
             this + DslUpdateParentItem() + DslUpdateChildItem() + DslUpdateChildItem()
 

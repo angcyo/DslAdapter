@@ -33,7 +33,7 @@ class DslViewBindingItem : DslAdapterItem() {
 
         itemViewBindingItemBinding?.apply {
             button.setOnClickListener {
-                textView.animate().rotationBy(90f).setDuration(300).start()
+                textView.animate().rotationBy(180f).setDuration(300).start()
                 textView.text = "${nowTime()}"
             }
         }

@@ -6,6 +6,8 @@ apply plugin: 'kotlin-parcelize'
 
 apply from: "$gradleHost/master/key.gradle"
 
+apply plugin: 'kotlin-kapt'
+
 android {
     compileSdk Integer.parseInt(C_SDK)
     defaultConfig {
@@ -38,7 +40,7 @@ android {
     buildFeatures {
         //https://developer.android.google.cn/studio/releases/gradle-plugin/4.0.0#viewbinding-support
         viewBinding true
-        dataBinding false
+        dataBinding true
     }
 
     lintOptions {
@@ -65,7 +67,7 @@ dependencies {
     //https://mvnrepository.com/artifact/androidx.constraintlayout/constraintlayout
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     //https://mvnrepository.com/artifact/com.google.android.material/material
-    implementation 'com.google.android.material:material:1.6.1'
+    implementation 'com.google.android.material:material:1.9.0'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
