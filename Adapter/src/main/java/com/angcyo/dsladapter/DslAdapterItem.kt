@@ -268,7 +268,9 @@ open class DslAdapterItem : LifecycleOwner {
     /**布局的xml id, 必须设置.*/
     open var itemLayoutId: Int = -1
 
-    /**附加的数据*/
+    /**附加的数据
+     * 影响[thisAreItemsTheSame].[thisAreContentsTheSame]的判断
+     * */
     var itemData: Any? = null
         set(value) {
             field = value
