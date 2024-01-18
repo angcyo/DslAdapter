@@ -58,6 +58,7 @@ typealias HolderBindAction = (
 open class DslAdapterItem : LifecycleOwner {
 
     companion object {
+
         /**负载,请求刷新部分界面*/
         const val PAYLOAD_UPDATE_PART = 0x0001
 
@@ -72,6 +73,9 @@ open class DslAdapterItem : LifecycleOwner {
 
         /**负载,请求更新[itemIsSelected]*/
         const val PAYLOAD_UPDATE_SELECT = 0x010
+
+        /**负载最后一个*/
+        const val PAYLOAD_UPDATE_LAST = PAYLOAD_UPDATE_SELECT shl 1
 
         /**占满宽度的item*/
         const val FULL_ITEM = -1
@@ -88,10 +92,16 @@ open class DslAdapterItem : LifecycleOwner {
 
     //<editor-fold desc="update操作">
 
+    /**在每次[updateAdapterItem] [updateItemDepend] [updateItemDependPayload]时, 触发的回调*/
+    var itemUpdateAction: (payload: Any?) -> Unit = {
+
+    }
+
     /**[com.angcyo.dsladapter.DslAdapter.notifyItemChanged]*/
     @AnyThread
     @UpdateByNotify
     open fun updateAdapterItem(payload: Any? = PAYLOAD_UPDATE_PART, useFilterList: Boolean = true) {
+        itemUpdateAction(payload)
         if (itemDslAdapter?._recyclerView?.isComputingLayout == true || !isMain()) {
             //L.w("跳过操作! [RecyclerView]正在计算布局, 请不要在RecyclerView正在布局时, 更新Item. ")
             itemDslAdapter?._recyclerView?.post {
@@ -128,6 +138,7 @@ open class DslAdapterItem : LifecycleOwner {
     /**负载更新, 通常用于更新媒体item*/
     @UpdateByDiff
     open fun updateItemDependPayload(payload: Any? = mediaPayload()) {
+        itemUpdateAction(payload)
         updateItemDepend(
             FilterParams(
                 fromDslAdapterItem = this,
@@ -152,12 +163,19 @@ open class DslAdapterItem : LifecycleOwner {
             payload = PAYLOAD_UPDATE_PART
         )
     ) {
+        itemUpdateAction(filterParams.payload)
         itemDslAdapter?.updateItemDepend(filterParams).elseNull {
             L.w("跳过操作! updateItemDepend需要[itemDslAdapter],请赋值.")
         }
     }
 
-    /**更新选项*/
+    /**更新选项
+     * [updateItemSelect]
+     * [updateItemSelector]
+     * [com.angcyo.dsladapter.DslAdapterItem.updateItemSelected]
+     * */
+    @UpdateByDiff
+    @UpdateByNotify
     open fun updateItemSelector(select: Boolean, notifyUpdate: Boolean = false) {
         itemDslAdapter?.itemSelectorHelper?.selector(
             SelectorParams(
@@ -172,7 +190,13 @@ open class DslAdapterItem : LifecycleOwner {
         }
     }
 
-    /**更新选项*/
+    /**更新选项
+     * [updateItemSelect]
+     * [updateItemSelector]
+     * [com.angcyo.dsladapter.DslAdapterItem.updateItemSelected]
+     * */
+    @UpdateByDiff
+    @UpdateByNotify
     open fun updateItemSelect(
         select: Boolean,
         selectorParams: SelectorParams = SelectorParams(
@@ -224,7 +248,7 @@ open class DslAdapterItem : LifecycleOwner {
      * 在[StaggeredGridLayoutManager]中, 会使用[layoutParams.isFullSpan]的方式满屏
      *
      * [com.angcyo.dsladapter.DslAdapterItem.fullWidthItem]
-     * [com.angcyo.dsladapter.AdapterLibEx.fullSpan]
+     * [com.angcyo.dsladapter.fullSpan]
      *
      * */
     var itemSpanCount = 1
@@ -234,7 +258,11 @@ open class DslAdapterItem : LifecycleOwner {
     //<editor-fold desc="标准属性">
 
     /**item的布局类型, 当[itemLayoutId]一样, 只是内部的内容不一样时, 阔以使用.
-     * 比如im聊天界面*/
+     * 比如im聊天界面
+     *
+     * itemType不指定的情况下会取itemLayoutId的值
+     * 相同的itemLayoutId可以指定不同的itemType
+     * */
     open var itemViewType: Int? = null
 
     /**布局的xml id, 必须设置.*/
@@ -244,11 +272,11 @@ open class DslAdapterItem : LifecycleOwner {
     var itemData: Any? = null
         set(value) {
             field = value
-            onSetItemData(value)
+            onSelfSetItemData(value)
         }
 
     /**[itemData]*/
-    open fun onSetItemData(data: Any?) {
+    open fun onSelfSetItemData(data: Any?) {
 
     }
 
@@ -269,6 +297,7 @@ open class DslAdapterItem : LifecycleOwner {
     var itemBackgroundDrawable: Drawable? = UndefinedDrawable()
 
     /**是否激活item, 目前只能控制click, longClick事件不被回调*/
+    @UpdateByLocal
     var itemEnable: Boolean = true
         set(value) {
             field = value
@@ -618,7 +647,8 @@ open class DslAdapterItem : LifecycleOwner {
     @UpdateByDiff
     var itemGroupExtend: Boolean by UpdateDependProperty(
         true,
-        listOf(PAYLOAD_UPDATE_PART, PAYLOAD_UPDATE_EXTEND)
+        listOf(PAYLOAD_UPDATE_PART, PAYLOAD_UPDATE_EXTEND),
+        this::onSelfItemGroupExtendChanged
     )
 
     /**是否需要隐藏item*/
@@ -627,6 +657,23 @@ open class DslAdapterItem : LifecycleOwner {
         false,
         listOf(PAYLOAD_UPDATE_PART, PAYLOAD_UPDATE_HIDDEN)
     )
+
+    /**[onSelfItemGroupExtendChanged]*/
+    val itemGroupExtendChangeListenerList = mutableSetOf<ItemAction>()
+
+    fun observeItemGroupExtendChange(action: ItemAction): ItemAction {
+        itemGroupExtendChangeListenerList.add(action)
+        return action
+    }
+
+    fun removeItemGroupExtendChangeObserver(action: ItemAction): Boolean {
+        return itemGroupExtendChangeListenerList.remove(action)
+    }
+
+    /**[itemGroupExtend]改变之后回调*/
+    open fun onSelfItemGroupExtendChanged(from: Boolean, to: Boolean) {
+        itemGroupExtendChangeListenerList.forEach { it(this) }
+    }
 
     /**查找与[dslAdapterItem]相同分组的所有[DslAdapterItem]
      * [dslAdapterItem] 查询的目标
@@ -1248,7 +1295,7 @@ open class DslAdapterItem : LifecycleOwner {
     //<editor-fold desc="定向更新">
 
     /**标识此[Item]是否发生过改变, 可用于实现退出界面提示是否保存内容.
-     * [itemChanging]*/
+     * 更高级的属性 [itemChanging]*/
     @UpdateByDiff
     @UpdateByNotify
     var itemChanged = false
@@ -1399,6 +1446,8 @@ open class DslAdapterItem : LifecycleOwner {
         { from, to -> from != to }
 
     /**监听item select改变事件*/
+    @UpdateByDiff
+    @UpdateByNotify
     var onItemSelectorChange: ItemSelectAction = {
         if (it.updateItemDepend) {
             updateItemOnHaveDepend()
@@ -1585,6 +1634,7 @@ open class DslAdapterItem : LifecycleOwner {
      *
      * 子项列表
      * [com.angcyo.dsladapter.internal.SubItemFilterInterceptor.loadSubItemList]
+     * [renderSubItem]
      * */
     var itemSubList: MutableList<DslAdapterItem> = mutableListOf()
 
@@ -1642,7 +1692,8 @@ open class DslAdapterItem : LifecycleOwner {
 @UpdateByDiff
 class UpdateDependProperty<T>(
     var value: T,
-    val payload: Any? = DslAdapterItem.PAYLOAD_UPDATE_PART
+    val payload: Any? = DslAdapterItem.PAYLOAD_UPDATE_PART,
+    val onValueChanged: (from: T, to: T) -> Unit = { _, _ -> }
 ) : ReadWriteProperty<DslAdapterItem, T> {
     override fun getValue(thisRef: DslAdapterItem, property: KProperty<*>): T = value
 
@@ -1650,6 +1701,7 @@ class UpdateDependProperty<T>(
         val old = this.value
         this.value = value
         if (old != value) {
+            onValueChanged(old, value)
             thisRef.itemUpdateFlag = true
             thisRef.updateItemDepend(
                 FilterParams(thisRef, updateDependItemWithEmpty = true, payload = payload)

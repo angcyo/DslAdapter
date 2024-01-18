@@ -65,6 +65,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
      * */
     var onceFilterParams: FilterParams? = null
 
+
     /**默认的[FilterParams]*/
     @SuppressLint("KotlinNullnessAnnotation")
     @NonNull
@@ -88,7 +89,11 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
 
     val itemUpdateDependObserver = mutableSetOf<ItemUpdateDependAction>()
 
-    //关联item type和item layout id
+    /**关联item type和item layout id
+     * itemType 和 itemLayoutId 的对应关系
+     * itemType 不指定的情况下等于 itemLayoutId
+     * 相同的itemLayoutId可以指定不同的itemType
+     * */
     val _itemLayoutHold = hashMapOf<Int, Int>()
 
     init {
@@ -208,6 +213,10 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
 
     //<editor-fold desc="其他方法">
 
+    /**
+     * 调度diff更新之前的通知事件
+     * [com.angcyo.dsladapter.DslDataFilter.UpdateTaskRunnable.onDiffResult]
+     * */
     override fun onDispatchUpdatesBefore(dslAdapter: DslAdapter) {
         dispatchUpdatesBeforeList.forEach {
             it.invoke(dslAdapter)
@@ -216,6 +225,7 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
 
     /**
      * [Diff]操作结束之后的通知事件
+     * [com.angcyo.dsladapter.DslDataFilter.UpdateTaskRunnable.onDiffResult]
      * */
     override fun onDispatchUpdatesAfter(dslAdapter: DslAdapter) {
         onDispatchUpdatesAfterOnce?.invoke(dslAdapter)
@@ -576,6 +586,19 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         removeItem(list)
         removeHeaderItem(list)
         removeFooterItem(list)
+    }
+
+    /**根据条件, 移除所有符合条件的item*/
+    @UpdateFlag
+    fun removeAllItemBy(predicate: (DslAdapterItem) -> Boolean) {
+        removeItem(dataItems.filter(predicate))
+        removeHeaderItem(headerItems.filter(predicate))
+        removeFooterItem(footerItems.filter(predicate))
+    }
+
+    /**当前数据集中是否有指定的item*/
+    fun haveItemBy(useFilterList: Boolean = true, predicate: (DslAdapterItem) -> Boolean): Boolean {
+        return getDataList(useFilterList).any(predicate)
     }
 
     /**在指定的item[with], 后面插入新的item[newItem]
@@ -1171,6 +1194,15 @@ open class DslAdapter(dataItems: List<DslAdapterItem>? = null) :
         return getDataList(useFilterList).filter {
             it.className() == itemClass.java.className()
         } as List<Item>
+    }
+
+    /**
+     * ```
+     * this[DslAdapterItem]
+     * ```
+     * */
+    inline operator fun <reified Item : DslAdapterItem> get(useFilterList: Boolean = true): List<Item> {
+        return getDataList(useFilterList).filterIsInstance<Item>()
     }
 
     //</editor-fold desc="操作符重载">

@@ -242,6 +242,23 @@ fun DslAdapterItem.drawLeftRightOnBottom(
     itemDecorationColor = color
 }
 
+/**在顶部绘制分割线*/
+fun DslAdapterItem.drawTop(
+    insertTop: Int,
+    offsetLeft: Int,
+    offsetRight: Int,
+    color: Int
+) {
+    itemLeftOffset = offsetLeft
+    itemRightOffset = offsetRight
+
+    itemTopInsert = insertTop
+    itemBottomInsert = 0
+
+    onlyDrawOffsetArea = false
+    itemDecorationColor = color
+}
+
 /**在底部绘制分割线*/
 fun DslAdapterItem.drawBottom(
     insertBottom: Int,
@@ -344,7 +361,7 @@ fun DslAdapterItem.isItemDetached(): Boolean {
 
 /**是否是占满宽度的item
  *
- * [com.angcyo.dsladapter.AdapterLibExKt.fullSpan]
+ * [com.angcyo.dsladapter.fullSpan]
  * */
 fun DslAdapterItem.fullWidthItem() {
     itemSpanCount = DslAdapterItem.FULL_ITEM
@@ -528,14 +545,28 @@ fun DslAdapterItem.replaceIt(newItem: DslAdapterItem?, adapter: DslAdapter? = nu
     return reslut
 }
 
-/**更新[DslAdapterItem]的选中状态, 并且刷新界面*/
+/**更新[DslAdapterItem]的选中状态, 并且刷新界面
+ * [DslAdapterItem.updateItemSelect]
+ * [DslAdapterItem.updateItemSelector]
+ * */
 @UpdateByNotify
-fun DslAdapterItem.updateItemSelected(select: Boolean = true) {
+fun DslAdapterItem.updateItemSelected(select: Boolean = true, update: Boolean = true) {
     if (itemIsSelected == select) {
         return
     }
     itemIsSelected = select
-    updateAdapterItem()
+    if (update) {
+        updateAdapterItem()
+    }
+}
+
+/**使用dsl的方式, 将数据添加到 [DslAdapterItem.itemSubList]中
+ * [DslAdapterItem.itemLoadSubList]
+ * */
+fun DslAdapterItem.renderSubItem(action: DslAdapter.() -> Unit) {
+    val dslAdapter = DslAdapter()
+    dslAdapter.action()
+    itemSubList.addAll(dslAdapter.adapterItems)
 }
 
 //</editor-fold desc="操作扩展">
@@ -661,7 +692,7 @@ inline fun <reified Item : DslAdapterItem> DslAdapter._updateOrInsertItem(
     }
 }
 
-/**[itemSubList]*/
+/**用来更新[DslAdapterItem.itemSubList]*/
 fun DslAdapterItem.updateSubItem(action: UpdateDataConfig.() -> Unit) {
     val config = UpdateDataConfig()
     config.updatePage = Page.FIRST_PAGE_INDEX
