@@ -62,6 +62,8 @@ dependencies {
     //https://mvnrepository.com/artifact/androidx.appcompat/appcompat
     //api "androidx.appcompat:appcompat:1.5.1" //minCompileSdk (32)
     implementation "androidx.appcompat:appcompat:1.6.1"
+    //https://mvnrepository.com/artifact/androidx.activity/activity-ktx
+    implementation "androidx.activity:activity-ktx:1.7.2"
     //https://mvnrepository.com/artifact/androidx.constraintlayout/constraintlayout
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     //https://mvnrepository.com/artifact/com.google.android.material/material

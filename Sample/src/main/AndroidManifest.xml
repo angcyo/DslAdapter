@@ -16,6 +16,10 @@
             android:exported="false"
             android:label="树结构示例" />
         <activity
+            android:name=".TreeSelectDemoActivity"
+            android:exported="false"
+            android:label="树结构示例(带选择)" />
+        <activity
             android:name=".StaggeredGridLayoutActivity"
             android:exported="false"
             android:label="拖拽+滑动删除示例" />
