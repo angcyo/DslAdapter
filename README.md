@@ -198,3 +198,6 @@ dependencies {
 
 # 👏 感谢
 [![angcyo/DslAdapter](https://reporoster.com/stars/angcyo/DslAdapter)](https://github.com/angcyo/DslAdapter/stargazers)
+
+## 访问统计
+<img height="30px" src = "https://profile-counter.glitch.me/DslAdapter/count.svg" alt ="Loading">
