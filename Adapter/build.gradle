@@ -62,3 +62,5 @@ dependencies {
     //https://mvnrepository.com/artifact/androidx.fragment/fragment
     compileOnly "androidx.fragment:fragment-ktx:1.6.2"
 }
+
+apply from: "$gradleHost/master/publish.gradle"
