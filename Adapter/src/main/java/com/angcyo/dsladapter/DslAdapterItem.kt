@@ -1656,7 +1656,7 @@ open class DslAdapterItem : LifecycleOwner {
 
     //<editor-fold desc="Lifecycle支持">
 
-    val lifecycleRegistry = LifecycleRegistry(this)
+    var lifecycleRegistry = LifecycleRegistry(this)
 
     override val lifecycle: Lifecycle
         get() = lifecycleRegistry
@@ -1664,7 +1664,12 @@ open class DslAdapterItem : LifecycleOwner {
     /**请勿覆盖[itemViewAttachedToWindow]*/
     @CallSuper
     open fun onItemViewAttachedToWindow(itemHolder: DslViewHolder, itemPosition: Int) {
-        lifecycleRegistry.currentState = Lifecycle.State.STARTED
+        try {
+            lifecycleRegistry.currentState = Lifecycle.State.STARTED
+        } catch (e: IllegalStateException) {
+            lifecycleRegistry = LifecycleRegistry(this)
+            lifecycleRegistry.currentState = Lifecycle.State.STARTED
+        }
     }
 
     /**请勿覆盖[itemViewDetachedToWindow]*/

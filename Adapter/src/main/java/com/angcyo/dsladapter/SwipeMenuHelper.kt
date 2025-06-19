@@ -100,6 +100,7 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback) : ItemDecoration
                     _resetScrollValue()
                     gestureDetectorCompat?.onTouchEvent(e)
                 }
+
                 else -> {
                     if (_needHandleTouch) {
                         gestureDetectorCompat?.onTouchEvent(e)
@@ -286,7 +287,7 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback) : ItemDecoration
         }
 
         override fun onScroll(
-            e1: MotionEvent,
+            e1: MotionEvent?,
             e2: MotionEvent,
             distanceX: Float,
             distanceY: Float
@@ -298,7 +299,7 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback) : ItemDecoration
 
             if (absDx >= _slop || absDy >= _slop) {
                 _dragCallbackHelper?._shouldReactToLongPress = false
-                _cancelDragHelper(e1)
+                _cancelDragHelper(e1 ?: e2)
 
                 if (absDx > absDy) {
                     _lastDistanceX = distanceX
@@ -412,7 +413,7 @@ class SwipeMenuHelper(var swipeMenuCallback: SwipeMenuCallback) : ItemDecoration
         }
 
         override fun onFling(
-            e1: MotionEvent,
+            e1: MotionEvent?,
             e2: MotionEvent,
             velocityX: Float,
             velocityY: Float
