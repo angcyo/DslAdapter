@@ -163,7 +163,7 @@ dependencies {
 
 # 更新日志
 
-[点击查看](https://github.com/angcyo/DslAdapter/blob/androidx/CHANGELOG.md)
+[点击查看](https://github.com/angcyo/DslAdapter/blob/master/CHANGELOG.md)
 
 # DslItem
 
