@@ -83,6 +83,7 @@ dslAdapter.render {
 17. 支持将`DslAdapterItem`添加到任意`ViewGroup`中(`5.1.0`后)
 18. 支持单独将`DslAdapterItem`的`itemBind`逻辑绑定在任意`View`中(`5.1.0`后)
 19. 新增`IDslItem`,并支持自动初始化(`6.0.0`后 `minApi>=14`)
+20. `7.0.0`-> `minSdk->21` `compileSdk->35`
 
 # 功能展示
 
@@ -144,7 +145,7 @@ allprojects {
 ```kotlin
 dependencies {
     //androidx(推荐)
-    implementation 'com.github.angcyo:DslAdapter:6.0.4'
+    implementation 'com.github.angcyo:DslAdapter:7.0.0'
     //支持DataBinding
     implementation 'com.github.angcyo:DslAdapter:3.0.0-binding'
 
