@@ -8,9 +8,11 @@ apply from: "$gradleHost/master/key.gradle"
 
 android {
     compileSdk Integer.parseInt(C_SDK)
+    if (project.android.hasProperty("namespace")) namespace 'com.angcyo.dsladapter.demo'
+
     defaultConfig {
         applicationId "com.angcyo.dsladapter.demo"
-        minSdk 16
+        minSdk Integer.parseInt(M_SDK)
         targetSdk Integer.parseInt(T_SDK)
 
         versionCode 1
