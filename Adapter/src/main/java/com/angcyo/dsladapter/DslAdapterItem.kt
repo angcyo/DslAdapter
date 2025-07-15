@@ -1675,7 +1675,9 @@ open class DslAdapterItem : LifecycleOwner {
     /**请勿覆盖[itemViewDetachedToWindow]*/
     @CallSuper
     open fun onItemViewDetachedToWindow(itemHolder: DslViewHolder, itemPosition: Int) {
-        lifecycleRegistry.currentState = Lifecycle.State.CREATED
+        if (lifecycleRegistry.currentState != Lifecycle.State.DESTROYED) {
+            lifecycleRegistry.currentState = Lifecycle.State.CREATED
+        }
     }
 
     /**请勿覆盖[itemViewRecycled]*/
@@ -1683,6 +1685,7 @@ open class DslAdapterItem : LifecycleOwner {
     open fun onItemViewRecycled(itemHolder: DslViewHolder, itemPosition: Int) {
         if (lifecycleRegistry.currentState.isAtLeast(Lifecycle.State.CREATED)) {
             lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
+            lifecycleRegistry = LifecycleRegistry(this)
         }
         if (itemAnimateRes != 0) {
             itemHolder.itemView.cancelAnimator()
