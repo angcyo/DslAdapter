@@ -93,8 +93,15 @@ open class DslAdapterItem : LifecycleOwner {
     //<editor-fold desc="update操作">
 
     /**在每次[updateAdapterItem] [updateItemDepend] [updateItemDependPayload]时, 触发的回调*/
+    @ThreadDes("AnyThread")
     var itemUpdateAction: (payload: Any?) -> Unit = {
 
+    }
+
+    /**设置[itemUpdateAction], 并立即出发*/
+    fun itemUpdateAction(action: (payload: Any?) -> Unit) {
+        itemUpdateAction = action
+        action(null)
     }
 
     /**[com.angcyo.dsladapter.DslAdapter.notifyItemChanged]*/
@@ -111,6 +118,10 @@ open class DslAdapterItem : LifecycleOwner {
         }
         itemDslAdapter?.notifyItemChanged(this, payload, useFilterList).elseNull {
             L.w("跳过操作! updateAdapterItem需要[itemDslAdapter],请赋值.")
+        }
+        //--
+        if (isInViewGroup()) {
+            updateInViewGroup()
         }
     }
 
@@ -1191,6 +1202,9 @@ open class DslAdapterItem : LifecycleOwner {
 
     //<editor-fold desc="Diff相关">
 
+    /**标识当前的item一直都是一个新的item, 会影响[thisAreItemsTheSame]的比对*/
+    var itemAlwaysNewFlag: Boolean = false
+
     /**标识当前的item是否被移除了, 被移除之后, 会影响[thisAreItemsTheSame]的比对*/
     var itemRemoveFlag: Boolean = false
 
@@ -1219,7 +1233,7 @@ open class DslAdapterItem : LifecycleOwner {
         oldItemPosition: Int, newItemPosition: Int
     ) -> Boolean = { fromItem, newItem, oldItemPosition, newItemPosition ->
         var result = this == newItem
-        if (itemRemoveFlag) {
+        if (itemRemoveFlag || itemAlwaysNewFlag || newItem.itemAlwaysNewFlag) {
             result = false
         } else if (!result) {
             val thisItemClassname = this.className()
@@ -1400,7 +1414,8 @@ open class DslAdapterItem : LifecycleOwner {
 
     //<editor-fold desc="单选/多选相关">
 
-    /**是否选中, 需要 [ItemSelectorHelper.selectorModel] 的支持. */
+    /**是否选中, 需要 [ItemSelectorHelper.selectorModel] 的支持.
+     * [observeItemSelectedChange]*/
     var itemIsSelected = false
         set(value) {
             val old = field
@@ -1411,6 +1426,18 @@ open class DslAdapterItem : LifecycleOwner {
                 itemSelectMutexFromItem = null
             }
         }
+
+    /**[itemIsSelected]*/
+    val itemSelectedListenerList = mutableSetOf<ItemAction>()
+
+    fun observeItemSelectedChange(action: ItemAction): ItemAction {
+        itemSelectedListenerList.add(action)
+        return action
+    }
+
+    fun removeItemSelectedChange(action: ItemAction): Boolean {
+        return itemSelectedListenerList.remove(action)
+    }
 
     /**简单的互斥操作支持
      * [onSetItemSelected]*/
@@ -1441,13 +1468,15 @@ open class DslAdapterItem : LifecycleOwner {
                 }
             }
         }
+        itemSelectedListenerList.forEach { it(this) }
     }
 
     /**是否 允许改变选中状态*/
     var isItemCanSelected: (fromSelector: Boolean, toSelector: Boolean) -> Boolean =
         { from, to -> from != to }
 
-    /**监听item select改变事件*/
+    /**监听item select改变事件
+     * [observeItemSelect]*/
     @UpdateByDiff
     @UpdateByNotify
     var onItemSelectorChange: ItemSelectAction = {

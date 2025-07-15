@@ -640,6 +640,26 @@ fun View?.setDslAdapterItemDecoration(dslAdapterItem: DslAdapterItem?) {
     )
 }
 
+/**判断当前的[DslAdapterItem]是否在[ViewGroup]中, 而不是在[RecyclerView]中*/
+fun DslAdapterItem.isInViewGroup(): Boolean {
+    val parent = getTag(itemLayoutId) as? ViewGroup
+    return parent != null
+}
+
+/**在ViewGroup中更新[DslAdapterItem]*/
+fun DslAdapterItem.updateInViewGroup(viewGroup: ViewGroup? = getTag(itemLayoutId) as? ViewGroup): DslViewHolder? {
+    var result: DslViewHolder? = null
+    viewGroup?.forEach { index, child ->
+        val dslItem = child.tagDslAdapterItem()
+        if (this == dslItem) {
+            val viewHolder = child.dslViewHolder()
+            itemBind(viewHolder, index, this, emptyList())
+            result = viewHolder
+        }
+    }
+    return result
+}
+
 //</editor-fold desc="Dsl吸附">
 
 //</editor-fold desc="DslAdapterItem操作">
