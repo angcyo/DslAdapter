@@ -1,5 +1,14 @@
 # 2025-07-15
 
+`7.1.0`
+
+- support in `ViewGroup`
++ `itemUpdateAction`回调
++ `observeItemSelectedChange`回调
++ `itemAlwaysNewFlag`标识
+
+# 2025-07-15
+
 `7.0.1`
 
 - 兼容`lifecycle:2.9.1`
